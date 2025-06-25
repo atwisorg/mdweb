@@ -135,6 +135,41 @@ is_file ()
     test -f "${1:-}"
 }
 
+get_file_descriptor ()
+{
+    case "${1:-1}" in
+        1|stdout)
+            echo 1 ;;
+        2|stderr|stderror)
+            echo 2 ;;
+        * ) echo "$1"
+    esac
+}
+
+is_terminal ()
+{
+    test -t "$(get_file_descriptor "${1:-1}")"
+}
+
+is_not_terminal ()
+{
+    is_terminal "${1:-1}" && return 1 || return 0
+}
+
+get_inode ()
+{
+    INODE="$(ls -Li "/dev/fd/$(get_file_descriptor "${1:-1}")")"
+    echo "${INODE%%[[:blank:]]*}"
+}
+
+is_equal_fds ()
+{
+    is_not_empty "${1:-}" &&
+    is_not_empty "${2:-}" &&
+    STATUS="$(ls -Li "/dev/fd/1" 2>&1)" || return 0
+    is_equal "$(get_inode "$1")" "$(get_inode "$2")"
+}
+
 request ()
 {
     while :
@@ -181,18 +216,35 @@ main ()
     is_empty "${HELP:-}"    || show_help
     is_empty "${VERSION:-}" || show_version
     check_args
+
     is_empty "${OUTPUT:-}" && exec 3>&1 || exec 3>"$OUTPUT"
-    {
-        open_html
-        add_title
-        open_head
-        add_style
-        close_head
-        open_body
-        convert_md2html
-        close_body
-        close_html
-    } >&3
+    is_empty "${OUTPUT:-}" && {
+        is_terminal stdout && {
+            is_terminal stderr && convert >&3 || report_and_convert
+        }
+    } || {
+        is_not_terminal stderr && is_equal_fds stderr 3 && convert >&3 || report_and_convert
+    }
+}
+
+report_and_convert ()
+{
+    say "convert a file: $INPUT" >&2
+    convert >&3
+    say "conversion completed" >&2
+}
+
+convert ()
+{
+    open_html
+    add_title
+    open_head
+    add_style
+    close_head
+    open_body
+    convert_md2html
+    close_body
+    close_html
 }
 
 open_html ()
