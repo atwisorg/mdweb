@@ -28,6 +28,7 @@ show_help ()
     usage
     echo "
 Options:
+  -c, --only-content        convert markdown without opening an html document
   -f, --force               do not prompt before overwriting
   -i, --input=FILE          specify the path to the file for tagging the code
   -o, --output=<path>       specify the path to save
@@ -273,6 +274,15 @@ argparse ()
                 shift
                 set -- '' "$ARG" "$@"
                 ;;
+            -c|--only-content)
+                ONLY_CONTENT="$1"
+                ;;
+            -c*)
+                ONLY_CONTENT="${1%"${1#??}"}"
+                ARG="-${1#??}"
+                shift
+                set -- '' "$ARG" "$@"
+                ;;
             -f|--force)
                 FORCE="$1"
                 ;;
@@ -454,7 +464,7 @@ convert_string ()
         s%\\!%\x13%g
         s%\\(%\x14%g
         s%\\)%\x15%g
-        s%\#%\x16%g
+        s%\\#%\x16%g
         s%\\|%\x17%g
 
         : add_tag_code
@@ -1255,14 +1265,11 @@ convert_md2html ()
             while :
             do
                     get_string_indent ||
-                        add_to_buffer && read_string_again || break
-                        # print_heading ||
-                        # add_to_buffer && read_string_again || break
                 #     add_to_code_block ||
                 #     add_to_blockquote ||
-                #         print_heading ||
+                        # print_heading ||
                 # print_horizontal_rule ||
-                        # add_to_buffer && read_string_again || break
+                        add_to_buffer && read_string_again || break
             done
         done < "$INPUT"
         if is_equal "${CODE_BLOCK:-}" "open"
@@ -1331,15 +1338,20 @@ close_html ()
 
 convert ()
 {
-    open_html
-    add_title
-    open_head
-    add_style
-    close_head
-    open_body
-    convert_md2html
-    close_body
-    close_html
+    if is_empty "${ONLY_CONTENT:-}"
+    then
+        open_html
+        add_title
+        open_head
+        add_style
+        close_head
+        open_body
+        convert_md2html
+        close_body
+        close_html
+    else
+        convert_md2html
+    fi
 }
 
 report_and_convert ()
