@@ -204,957 +204,6 @@ get_pkg_vars ()
     PKG_DIR="${PKG_DIR:-/}"
     PKG_DIR="$(abs_dirpath "$PKG_DIR")"
     PKG_PATH="$PKG_DIR/$PKG"
-    MASK_NEW_LINE="$(tr '\n' '\01' <<< "")"
-    NEW_LINE='
-'
-}
-
-main ()
-{
-    get_pkg_vars
-    argparse "$@"
-    is_empty "${HELP:-}"    || show_help
-    is_empty "${VERSION:-}" || show_version
-    check_args
-
-    is_empty "${OUTPUT:-}" && exec 3>&1 || exec 3>"$OUTPUT"
-    is_empty "${OUTPUT:-}" && {
-        is_terminal stdout && {
-            is_terminal stderr && convert >&3 || report_and_convert
-        }
-    } || {
-        is_not_terminal stderr && is_equal_fds stderr 3 && convert >&3 || report_and_convert
-    }
-}
-
-report_and_convert ()
-{
-    say "convert a file: $INPUT" >&2
-    convert >&3
-    say "conversion completed" >&2
-}
-
-convert ()
-{
-    open_html
-    add_title
-    open_head
-    add_style
-    close_head
-    open_body
-    convert_md2html
-    close_body
-    close_html
-}
-
-open_html ()
-{
-    echo "\
-<!DOCTYPE html>
-<html lang=\"en\">"
-}
-
-add_title ()
-{
-    echo "<title>${PAGE_TITLE:-}</title>"
-}
-
-open_head ()
-{
-    echo "\
-<head>
-<meta charset=\"UTF-8\">
-<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
-}
-
-add_style ()
-{
-    is_empty "${PAGE_STYLE:-}" || {
-        echo "<style>"
-        cat "$PAGE_STYLE" || die "$STATUS"
-        echo "</style>"
-    }
-}
-
-close_head ()
-{
-    echo "</head>"
-}
-
-open_body ()
-{
-    echo "\
-<body>
-<article class=\"markdown-body\">"
-}
-
-close_body ()
-{
-    echo "\
-</article>
-</body>"
-}
-
-close_html ()
-{
-    echo "</html>"
-}
-
-convert_md2html ()
-{
-
-    STRING_NUM=0
-    SAVE_STRING=
-    STRING_BUFFER=
-
-    MD_SAVE_INDENT=
-    MD_EXCESS_INDENT=
-    MD_INDENT_WIDTH=3
-    TAG_INDENT_WIDTH=0
-    STAR_TAG_INDENT="    "
-    STAR_TAG_INDENT=""
-
-    MAP_OPENING_TAG=()
-    MAP_CLOSING_TAG=()
-    OPENING_TAG_BUFFER=()
-    CLOSING_TAG_BUFFER=()
-
-    BLOCKQUOTE_IS_OPEN="no"
-    CODE_BLOCK=
-
-    ID_NUM=0
-    declare -A ID_BASE
-
-    while IFS= read -r STRING || is_not_empty "${STRING:-}"
-    do
-        ROW_NESTING_DEPTH=
-        TAG_INDENT="${STAR_TAG_INDENT:-}"
-        while :
-        do
-                get_string_indent ||
-                add_to_code_block ||
-                add_to_blockquote ||
-                    print_heading ||
-            print_horizontal_rule ||
-                    add_to_buffer && read_string_again || break
-        done
-    done < "$INPUT"
-
-    if is_equal "${CODE_BLOCK:-}" "open"
-    then
-        print_code_block
-    else
-        print_buffer
-    fi
-}
-
-get_string_indent ()
-{
-    MD_INDENT="${STRING%%[![:blank:]]*}"
-    STRING="${STRING#"${MD_INDENT:-}"}"
-
-    is_not_empty "${STRING:-}" || {
-        # is_equal "$BLOCKQUOTE_IS_OPEN" "no" && {
-        #     add_to_code_block || print_buffer
-        # } || {
-        #     is_not_empty "${ROW_NESTING_DEPTH:-}" || {
-        #         print_buffer
-        #         BLOCKQUOTE_IS_OPEN="no"
-        #     }
-        # }
-
-        add_to_code_block || {
-            is_not_empty "${ROW_NESTING_DEPTH:-}" || {
-                print_buffer
-                BLOCKQUOTE_IS_OPEN="no"
-            }
-        }
-        return
-    }
-
-    if is_equal "${INDENTED_CODE_BLOCK:-}" "open"
-    then
-        test "${#MD_INDENT}" -ge "$((MD_INDENT_WIDTH + 1))" &&
-        STRING="${MD_INDENT#????}$STRING" || {
-            print_code_block
-            MD_EXCESS_INDENT="${MD_INDENT:-}"
-        }
-    elif is_equal "${CODE_BLOCK:-}" "open"
-    then
-        STRING="${MD_INDENT:"${#MD_EXCESS_INDENT}"}$STRING"
-    elif test "${#MD_INDENT}" -ge "$((MD_INDENT_WIDTH + 1))"
-    then
-        is_empty "${STRING_BUFFER:-}" && {
-            is_not_empty "${ROW_NESTING_DEPTH:-}" || print_buffer
-            add_code_block_tag
-            INDENTED_CODE_BLOCK="open"
-            STRING="${MD_INDENT#????}$STRING"
-        } || {
-            add_to_buffer
-            return
-        }
-    else
-        MD_EXCESS_INDENT="${MD_INDENT:-}"
-    fi
-    return 1
-
-    # MD_INDENT="$(printf "%$((${#MD_INDENT} ))s" '')"
-    # # MD_INDENT="$(printf "%$((${#MD_INDENT} / MD_INDENT_WIDTH * MD_INDENT_WIDTH))s" '')"
-    # test "${#MD_SAVE_INDENT}" -ge "${#MD_INDENT}" ||
-    # MD_INDENT="$(printf "%$((${#MD_SAVE_INDENT} + MD_INDENT_WIDTH))s" '')"
-}
-
-masking_characters ()
-{
-    # |   |   extra    |   need    |
-    # |---|------------|-----------|
-    # | ` | \x06  [^F] | \x1d [^]] |
-    # | [ | \x10  [^P] | \x1e [^^] |
-    # | ] | \x11  [^Q] | \x0e [^N] |
-    # | ( | \x13  [^S] | \x1c [^\] |
-    # | ) | \x14  [^T] | \x0c [^L] |
-    # |---|------------|-----------|
-    # \[[^][)(]*]([[:blank:]]*[^][)([:blank:]]*[[:blank:]]*)
-    sed '
-        s/\\\\/\x02/g
-        s/\\&/\x03/g
-        s/&lt;/\x04/g
-        s/&gt;/\x05/g
-        s/\(&amp;\|&\)/\x03/g
-        s/\\`/\x06/g
-        s/\\_/\x07/g
-        s/\\~/\x08/g
-        s/\\\*/\x1a/g
-        s/\\\[/\x10/g
-        s/\\]/\x11/g
-        s/\\!/\x12/g
-        s/\\(/\x13/g
-        s/\\)/\x14/g
-        s/\$/\x15/g
-        s/\//\x16/g
-        s/"/\x17/g
-        s/|/\x18/g
-        s/%/\x19/g
-        s/]$/\x11/g
-
-        :masking_nested_links
-        {
-            s/\(\[[^][)(]*\)(\([^]]*\]\)/\1\x13\2/g
-            s/\(\[[^][)(]*\))\([^]]*\]\)/\1\x14\2/g
-            s/\(\[[^[]*\)\[\([^][)(]*\)]\([^[]*]([[:blank:]]*[^[:blank:]]*[[:blank:]]*)\)/\1\x10\2\x11\3/g
-            s/\[\([^]]*\)]\([^][)(]*]([[:blank:]]*[^[:blank:]]*[[:blank:]]*)\)/\x10\1\x11\2/
-            s/\(\[[^[]*\)(\([^][)(]*]([[:blank:]]*[^[:blank:]]*[[:blank:]]*)\)/\1\x13\2/
-            s/\(\[[^[]*\))\([^][)(]*]([[:blank:]]*[^[:blank:]]*[[:blank:]]*)\)/\1\x14\2/
-
-            s/\(\[[^][)(]*]([[:blank:]]*[^][)([:blank:]]*\)(\([^)[:blank:]]*\))\([^[:blank:]]*[[:blank:]]*)\)/\1\x13\2\x14\3/g
-            s/\(\[[^][)(]*]([[:blank:]]*[^][)([:blank:]]*\)(\([^[:blank:]]*[[:blank:]]*)\)/\1\x13\2/
-            s/\(\[[^][)(]*]([[:blank:]]*[^][)([:blank:]]*\)\[\([^[:blank:]]*[[:blank:]]*)\)/\1\x10\2/
-            s/\(\[[^][)(]*]([[:blank:]]*[^][)([:blank:]]*\)]\([^[:blank:]]*[[:blank:]]*)\)/\1\x11\2/
-        }
-        t masking_nested_links
-
-        s/\[\([^][)(]*\)](\([[:blank:]]*[^][)([:blank:]]*[[:blank:]]*\))/\x1e\1\x0e\x1c\2\x0c/g
-
-        s/\[/\x10/g
-        s/]/\x11/g
-        s/(/\x13/g
-        s/)/\x14/g
-        s/\x1e/\[/g
-        s/\x0e/]/g
-        s/\x1c/(/g
-        s/\x0c/)/g
-        
-        s/`\+/`/g
-
-        :code
-        {
-            :href
-            s/^\([^`]*\[[^][`]*]([^)`]*\)`\([^)]*)\)/\1\x06\2/
-            t href
-            s/^\([^`]*`[^`]*\)\[\([^`]*`\)/\1\x10\2/
-            s/^\([^`]*`[^`]*\)]\([^`]*`\)/\1\x11\2/
-            s/^\([^`]*`[^`]*\)(\([^`]*`\)/\1\x13\2/
-            s/^\([^`]*`[^`]*\))\([^`]*`\)/\1\x14\2/
-            s/^\([^`]*`[^`]*\)\*\([^`]*`\)/\1\x1a\2/
-            s/^\([^`]*`[^`]*\)_\([^`]*`\)/\1\x07\2/
-            s/^\([^`]*`[^`]*\)~\([^`]*`\)/\1\x08\2/
-        }
-        t code
-        
-        s/^\([^`]*\)`\([^`]*\)`/\1\x1d\2\x1d/
-        t masking_nested_links
-
-        s/`/\x06/g
-        s/\x1d/`/g'
-}
-
-unmasking_characters ()
-{
-    sed 's/\x02/\\/g
-         s/\x03/\&amp;/g
-         s/\x04/\&lt;/g
-         s/\x05/\&gt;/g
-         s/\x06/`/g
-         s/\x07/_/g
-         s/\x08/~/g
-         s/\x1a/*/g
-         s/\x10/\[/g
-         s/\x11/]/g
-         s/\x12/!/g
-         s/\x13/(/g
-         s/\x14/)/g
-         s/\x15/$/g
-         s/\x16/\//g
-         s/\x17/"/g
-         s/\x18/|/g
-         s/\x19/%/g
-         s/\x01/<br>\n/g'
-}
-
-convert_href_link ()
-{
-    sed 's/\x02/%5C/g
-         s/\x17/%22/g
-         s/#/%23/g
-         s/</%3C/g
-         s/>/%3E/g
-         s/?/%3F/g
-         s/\x10/%5B/g
-         s/\x11/%5D/g
-         s/\^/%5E/g
-         s/`/%60/g
-         s/{/%7B/g
-         s/}/%7D/g
-         s/\x18/%7C/g
-         s/\&/\\\&amp;/g
-         s/\*/\x1a/g
-         s/_/\x07/g
-         s/~/\x08/g'
-}
-
-convert_name_link ()
-{
-    sed 's/\&/\\\&amp;/g
-         s/</\\\&lt;/g
-         s/>/\\\&gt;/g'
-}
-
-convert_alt_link ()
-{
-    sed 's/\&/\\\&amp;/g
-         s/\x17/\\\&quot;/g
-         s/\*/\x1a/g
-         s/`/\x06/g
-         s/_/\x07/g
-         s/~/\x08/g'
-}
-
-create_img_link ()
-{
-    
-    ALT_LINK="$(sed 's|\!\[\([^][]*\)]([[:blank:]]*[^)[:blank:]]*[[:blank:]]*)|\1|g' <<< "$LINK")"
-    SRC_LINK="$(sed 's|\!\[[^][]*]([[:blank:]]*\([^)[:blank:]]*\)[[:blank:]]*)|\1|g' <<< "$LINK")"
-    ALT_LINK="$(convert_alt_link  <<< "$ALT_LINK")"
-    SRC_LINK="$(convert_href_link <<< "$SRC_LINK")"
-    HTML_LINK="<img alt=\"$ALT_LINK\" src=\"$SRC_LINK\">"
-}
-
-create_a_link ()
-{
-    HREF_LINK="$(sed 's|\[[^][]*]([[:blank:]]*\([^)[:blank:]]*\)[[:blank:]]*)|\1|g' <<< "$LINK")"
-    NAME_LINK="$(sed 's|\[\([^][]*\)]([[:blank:]]*[^)[:blank:]]*[[:blank:]]*)|\1|g' <<< "$LINK")"
-    HREF_LINK="$(convert_href_link <<< "$HREF_LINK")"
-    NAME_LINK="$(convert_name_link <<< "$NAME_LINK")"
-    HTML_LINK="<a href=\"$HREF_LINK\">$NAME_LINK</a>"
-}
-
-print_link ()
-{
-    while IFS= read -r LINK || is_not_empty "${LINK:-}"
-    do
-        case "$LINK" in
-            !*) create_img_link ;;
-             *) create_a_link
-        esac
-        LINK="$(sed 's/\\//g; s/\*/\\*/g; s/\[/\\[/g' <<< "$LINK")"
-        LINE="$(sed "s/\\\//g; s|$LINK|$HTML_LINK|" <<< "$LINE")"
-    done < <(grep -o '!\?\[[^][]*]([[:blank:]]*[^()[:blank:]]*[[:blank:]]*)' <<< "$LINE")
-    echo "$LINE"
-}
-
-print_text ()
-{
-    sed '
-        : code
-        /`/! b del_text
-        /^[^`]*`\+[^`]*$/ b del_text
-
-        #  line: [word `code 0` word]
-        # match: (word )`(code 0)`( word)
-        /^[^`]*\(`\{1,\}\)[^`].*[^`]\1\([^`]\|$\)/!{
-            : unique_tildes
-
-            #  line: [word ``\x1dcode `0]
-            # match: (word `)`(\x1dcode )
-            s%^\([^`]*`*\)`\(\x06\+[^`]*\)%\1\x1d\2%
-            t unique_tildes
-
-            #  line: [word ```code `0]
-            # match: (word ``)`(code )
-            s%^\([^`\x1d]*`*\)`\([^`]*\)%\1\x1d\2%
-            t unique_tildes
-
-            s%\x1d%\x06%g
-            b code
-        }
-
-        #  line: [word `code 0` word]
-        # match: (word )`(code 0)`( word)
-        s%^\([^`]*\)\(`\{1,\}\)\([^`]\+\)\2\([^`]\|$\)%\1<code>\3</code>\4%
-        t code
-
-        #  line: [word`cat file0; `` `` word`cat file0`; ``` word]
-        # match: (word)`(cat file0; `` `` word)`(c)
-        s%^\([^`]*\)`\(\([^`]\+`\{2,\}\)\+[^`]\+\)`\([^`]\|$\)%\1\x1d\2\x1d\4%
-        {
-            : tildes_inside_single_tilde
-
-            #  line: [\x1dcat file0; `` `` wordx1d ]
-            # match: (\x1dcat file0; )`(` `` word\x1d )
-            s%\(\x1d[^`\x1d]*\)`\([^\x1d]*\x1d\)%\1\x06\2%
-            t tildes_inside_single_tilde
-
-            s%\x1d%`%g
-            t code
-        }
-
-        #  line: [word ```word`cat file0; ``` word`cat file0`; ``` word]
-        # match: (word )```(word`cat file0; )```( )
-        s%^\([^`]*\)\(`\{2,\}\)\(\([^`]\+`\+\)\+[^`]*[^`]\)\2\([^`]\|$\)%\1\x1d\3\x1d\5%
-        {
-            : tildes_inside_multi_tilde
-
-            #  line: [\x1d word`cat file0; x1d ]
-            # match: (\x1d word)`(cat file0; \x1d )
-            s%\(\x1d[^`\x1d]*\)`\([^\x1d]*\x1d\)%\1\x06\2%
-            t tildes_inside_multi_tilde
-
-            s%\x1d%`%g
-            t code
-        }
-
-        : del_text
-        /~~/! b text
-        
-        #  line: [word~word~]
-        # match: (word)~(word)~
-        s%\(^\|[^~]\)~\([^~]\|$\)%\1\x08\2%g
-        t del_text
-
-        #  line: [word ~~ word]
-        # match: (word )~~( )
-        s%^\([^~]*[~\x08]*\)~\([~\x08]*[[:blank:]]\|$\)%\1\x08\2%
-        t del_text
-
-        #  line: [word ~~del-word~~]
-        # match: (word )~~(del-word)~~
-        s%\(^\|[^~]\)~~\([^~[:blank:]]\+[^~]*\)~~\([^~]\|$\)%\1<del>\2</del>\3%g
-        t remove_triple_tildes
-
-        #  line: [word ~~del-word~~~0~~ word]
-        # match: (word ~~del-word)~~~(0)
-        /^\([^~]*\(~~[^~[:blank:]]\)\?[^~]*\)~\{3,\}\([^~]\|$\)/{
-            : remove_triple_tildes
-            
-            s%^\([^~]*\(~~[^~[:blank:]][^~]*\)\?\x08\)~%\1\x08%
-            t remove_triple_tildes
-            
-            s%^\([^~]*\(~~[^~[:blank:]][^~]*\)\?\)~\(~~\+\)%\1\x08\3%
-            t remove_triple_tildes
-            b del_text
-        }
-
-        b exit
-
-        /\*/! b exit
-
-        : text
-
-        #  line: [word ** word]
-        # match: (word )**( )
-        s%^\([^*]*[*\x1a]*\)\*\([*\x1a]*[[:blank:]]\|$\)%\1\x1a\2%
-        t text
-
-        #  line: [word ***bold 0** word]
-        # match: (word **)*(bold 0** word)
-        s%^\([^*]*\*\*\)\*\([^*[:blank:]]\+[^*]*[^*[:blank:]]\*\*[^*]*$\)%\1\x1a\2%
-        t text
-
-        #  line: [word ***bold 0** word]
-        # match: (word *)**(bold 0* word)
-        s%^\([^*]*\*\)\*\*\([^*[:blank:]]\+[^*]*[^*[:blank:]]\*[^*]*$\)%\1\x1a\2%
-        t text
-
-        #  line: [word *italic 0* word]
-        # match: (word )*(italic 0)*( word)
-        s%^\([^*]*\)\*\([^*[:blank:]]\+[^*]*[^*[:blank:]]\)\*\([^*]\|$\)%\1<em>\2</em>\3%
-        t text
-
-        #  line: [word **bold 0** word]
-        # match: (word )**(bold 0)**
-        s%^\([^*]*\)\*\*\([^*[:blank:]]\+[^*]*[^*[:blank:]]\)\*\*%\1<strong>\2</strong>%
-        t text
-
-        #  line: [word ***bold-italic 0*** word]
-        # match: (word **)*(bold-italic 0)*(**) word
-        s%^\([^*]*\*\*\)\*\([^*[:blank:]]\+[^*]*[^*[:blank:]]\)\*\(\*\*\)%\1<em>\2</em>\3%
-        t text
-
-        #  line: [***italic-bold 0** italic 0*]
-        # match: (*)**(italic-bold 0)**( italic 0*)
-        s%^\([^*]*\*\)\*\*\([^*[:blank:]]\+[^*]*\)\*\*\([^*]*\*\)%\1<strong>\2</strong>\3%
-        t text
-
-        #  line: [*italic 0 **italic-bold 0***]  | [*italic 0 **italic-bold 0** italic 1*]
-        # match: (*italic 0 )**(italic-bold 0)**
-        s%^\([^*]*\*[^*]*\)\*\*\([^*[:blank:]]\+[^*]*[^*[:blank:]]\)\*\*%\1<strong>\2</strong>%
-        t text
-
-        #  line: [**bold 0 *bold-italic 0* bold 1**] | [**bold 0 *bold-italic 0***]
-        # match: (**bold 0 )*(bold-italic 0)*
-        s%^\([^*]*\*\*[^*]*\)\*\([^*[:blank:]]\+[^*]*[^*[:blank:]]\)\*%\1<em>\2</em>%
-        t text
-
-        #  line: [word *italic 0 ***bold 0** word]
-        # match: (word )*(italic 0 )*(**)
-        s%^\([^*]*\)\*\([^*[:blank:]]\+[^*]*\)\*\(\*\*[^*].*\)%\1<em>\2</em>\3%
-        t text
-
-        #  line: [word **bold 0 **bold 1** word]
-        # match: (word **bold 0 )**
-        /^[^*]*\*\*[^*[:blank:]]*[^*]*[[:blank:]]\*\{1,\}.*[^*[:blank:]]\*\*\([^*]\|$\)/{
-          : inside_bold_blank_asterisks
-            s%^\([^*]*\*\*[^*[:blank:]]*[^*]*[[:blank:]][*\x1a]*\)\*%\1\x1a%
-          t inside_bold_blank_asterisks
-          b text
-        }
-
-        #  line: [word **bold 0* **bold 1** word]
-        # match: (word **bold 0)*( )
-        /^[^*]*\*\*[^*[:blank:]]*[^*]*[^*[:blank:]]\*[^*]*.*[^*[:blank:]]\*\*/{
-          : inside_bold_star_blank
-            s%^\([^*]*\*\*[^*[:blank:]]*[^*]*[^*[:blank:]]\)\*\([[:blank:]]\|$\)%\1\x1a\2%
-          t inside_bold_star_blank
-          b text
-        }
-
-        #  line: [word *italic 0 **** italic 1* word]
-        # match: (word *italic 0 )****(i)
-        /^[^*]*\*[^*[:blank:]]*[^*]*[[:blank:]]\*\+.*[^*[:blank:]]\*\([^*]\|$\)/{
-          : inside_italics_asterisks_end
-            s%^\([^*]*\*[^*[:blank:]]*[^*]*[[:blank:]][*\x1a]*\)\*\([^*]\|$\)%\1\x1a\2%
-          t inside_italics_asterisks_end
-          b text
-        }
-
-        #  line: [**italic 0* word **]
-        # match: (*)*(italic 0* )
-        /^[^*]*\*\*[^*[:blank:]]*[^*]*[^*[:blank:]]\*\([[:blank:]]\|$\)/{
-          : inside_italics_asterisks_start
-          s%^\([^*]*\*\)\*\([^*[:blank:]]*[^*]*[^*[:blank:]]\*\([[:blank:]]\|$\)\)%\1\x1a\2%
-          t inside_italics_asterisks_start
-          b text
-        }
-
-        #  line: [word *italic 0** italic 1* word]
-        # match: (word *italic 0)**( italic 1*)
-        /^[^*]*\*[^*[:blank:]]*[^*]*[^*[:blank:]]\(\*\{2\}\|\*\{4,\}\).*[^*[:blank:]]\*[^*]*/{
-          : inside_italics_asterisks
-          s%^\([^*]*\*[^*[:blank:]]*[^*]*[^[:blank:]]\)\*\([^*]\)%\1\x1a\2%
-          t inside_italics_asterisks
-          b text
-        }
-
-        #  line: [word *italic 0 * word]
-        # match: (word )*(italic 0 )*( word)
-        s%^\([^*]*\)\*\([^*[:blank:]]\+[^*]*\)\*\([^*]\+\|$\)%\1<em>\2</em>\3%
-        t text
-
-        #  line: [word *italic 0 **** word]
-        # match: (word *italic 0 ***)*( word)
-        s%^\([^*]*\)\*\([^*[:blank:]]\+[^*]*\*\{2,\}\)\*\([^*]*$\)%\1<em>\2</em>\3%
-        t text
-
-        s/\x1a/*/g
-
-        : exit
-
-        s/\x06/`/g
-        s/\x08/~/g
-        '
-}
-
-wrap_text_with_tags ()
-{
-    masking_characters | while IFS= read -r LINE || is_not_empty "${LINE:-}"
-    do
-        print_link | print_text
-    done | unmasking_characters
-}
-
-format_string ()
-{
-    STRING="$(wrap_text_with_tags <<< "${STRING//$NEW_LINE/$MASK_NEW_LINE}")"
-}
-
-is_code_block ()
-{
-    [[ "${STRING:-}" =~ ^([[:blank:]]{3})*\`{3}([[:blank:]]+)*$ ]]
-}
-
-is_code_block_with_lang ()
-{
-    [[ "${STRING:-}" =~ ^\`{3}([^\`]|[[:blank:]]+).+$ ]]
-}
-
-close_code_block ()
-{
-    is_code_block && print_code_block
-}
-
-add_to_code_block ()
-{
-    if is_equal "${CODE_BLOCK:-}" "open"
-    then
-        is_equal "${INDENTED_CODE_BLOCK:-}" "closed" &&
-        close_code_block ||
-        STRING_BUFFER="${STRING_BUFFER:+"$STRING_BUFFER$NEW_LINE"}${STRING:-}"
-    else
-        is_code_block || {
-            is_code_block_with_lang && {
-                CURRENT_CODE_LANG="$(
-                    sed 's/^[`[:blank:]]\+\(.\+\)$/\1/g
-                         s/[[:blank:]]\+$//g
-                         s/[[:blank:]]/-/g
-                         s/[^a-zA-Z0-9_-]//g
-                         s/-\+/-/g' <<< "$STRING"
-                )"
-                CURRENT_CODE_LANG="${CURRENT_CODE_LANG,,}"
-            }
-        } && {
-            is_empty "${STRING_BUFFER:-}" || print_buffer
-            add_code_block_tag
-        }
-    fi
-}
-
-add_code_block_tag ()
-{
-    get_tag code-block
-    add_tag_to_a_tag_map
-    CODE_BLOCK="open"
-}
-
-print_code_block ()
-{
-    print_buffer 1
-    CODE_BLOCK="closed"
-    INDENTED_CODE_BLOCK="closed"
-}
-
-add_to_blockquote ()
-{
-    [[ "$STRING" =~ ^\>[[:blank:]]+ ]] && STRING="${STRING#??}" || {
-                [[ "$STRING" =~ ^\> ]] && STRING="${STRING#?}"  || return
-    }
-    BLOCKQUOTE_IS_OPEN="yes"
-
-    get_tag blockquote
-    add_tag_to_the_buffer
-    ROW_NESTING_DEPTH="$((${ROW_NESTING_DEPTH:--1} + 1))"
-    is_equal "${#MAP_CLOSING_TAG[@]}" 0 || is_empty  "${MAP_CLOSING_TAG[$ROW_NESTING_DEPTH]:-}" && {
-        is_empty "${STRING_BUFFER:-}"   || {
-            print_buffer 0
-            # exit
-        }
-    } || {
-        if is_equal "${MAP_CLOSING_TAG[$ROW_NESTING_DEPTH]}" "$CLOSING_TAG"
-        then
-            # блок для переноса строки c нижнего на текущий уровень
-            [[ "$STRING" =~ ^\> ]] || {
-                if is_equal "${MAP_CLOSING_TAG[$((ROW_NESTING_DEPTH + 1))]:-}" "$CLOSING_TAG"
-                then
-                    print_buffer "$((${#MAP_CLOSING_TAG[@]} - $((ROW_NESTING_DEPTH + 1))))"
-                fi
-            }
-            READ_STRING_AGAIN="yes"
-            OPENING_TAG_BUFFER=()
-            CLOSING_TAG_BUFFER=()
-            return
-        fi
-    }
-
-    add_tag_to_a_tag_map
-    READ_STRING_AGAIN="yes"
-}
-
-print_heading ()
-{
-    if [[ "${STRING:-}" =~ ^#{1,6}([[:blank:]].*|$) ]]
-    then
-        HEADER="${STRING%%[[:blank:]]*}"
-        STRING="${STRING#"$HEADER"}"
-        TAG="h${#HEADER}"
-        TAG_CLASS="atx"
-    elif [[ "${STRING:-}" =~ ^=+$ ]]
-    then
-        is_not_empty "${STRING_BUFFER:-}"   &&
-        is_equal "$BLOCKQUOTE_IS_OPEN" "no" || return
-        STRING="$STRING_BUFFER" STRING_BUFFER=
-        TAG=h1
-        TAG_CLASS="setext"
-    elif [[ "${STRING:-}" =~ ^-+$ ]]
-    then
-        is_not_empty "${STRING_BUFFER:-}"   &&
-        is_equal "$BLOCKQUOTE_IS_OPEN" "no" || return
-        STRING="$STRING_BUFFER" STRING_BUFFER=
-        TAG=h2
-        TAG_CLASS="setext"
-    else
-        false
-    fi && {
-        trim_white_space
-        format_string
-        get_tag "$TAG"
-        STRING="${TAG_INDENT:-}$OPENING_TAG$STRING$CLOSING_TAG"
-        print_buffer
-        echo -n "$STRING"
-    }
-}
-
-print_horizontal_rule ()
-{
-    [[ "$(tr -d '[:blank:]' <<< "${STRING:-}")" =~ ^(-{3,}|_{3,}|\*{3,})$ ]] && {
-        get_tag hr
-        STRING="${TAG_INDENT:-}$OPENING_TAG$NEW_LINE"
-        is_empty "${ROW_NESTING_DEPTH:-}" &&
-        print_buffer ||
-        print_buffer 0
-        echo -n "$STRING"
-    }
-}
-
-add_to_buffer ()
-{
-    is_empty "${STRING_BUFFER:-}" && {
-        is_empty  "${!MAP_CLOSING_TAG_INDENT[@]}" ||
-        TAG_INDENT="${MAP_CLOSING_TAG_INDENT[-1]}"
-        get_tag_indent +
-        BUFFER_INDENT="${TAG_INDENT:-}"
-        STRING_BUFFER="${MD_INDENT:-}$STRING"
-    } || {
-        STRING_BUFFER="$STRING_BUFFER$NEW_LINE${BUFFER_INDENT:-}${MD_INDENT:-}$STRING"
-    }
-    STRING=
-}
-
-print_buffer ()
-{
-    SAVE_STRING="${STRING:-}"   STRING=
-    STRING="${STRING_BUFFER:-}" STRING_BUFFER=
-    STRING="${STRING%"${STRING##*[!"$NEW_LINE"]}"}"
-    add_an_open_tag
-    add_a_closed_tag "${1:-}"
-    echo -n "${STRING:-}"
-    STRING="${SAVE_STRING:-}"   SAVE_STRING=
-}
-
-add_an_open_tag ()
-{
-    TAG=
-    # for i in "${MAP_OPENING_TAG[@]}"
-    # do
-    #     TAG="${TAG:-}$i"
-    # done
-    for i in "${!MAP_OPENING_TAG[@]}"
-    do
-        TAG="${TAG:-}${MAP_OPENING_TAG_INDENT[$i]:-}${MAP_OPENING_TAG[$i]}"
-    done
-    add_tag_p
-    STRING="${TAG:-}${STRING:-}"
-    MAP_OPENING_TAG_INDENT=()
-    MAP_OPENING_TAG=()
-}
-
-add_a_closed_tag ()
-{
-    is_diff "${#MAP_CLOSING_TAG[@]}" 0 || return 0
-
-    
-
-    if is_not_empty "${1:-}"
-    then
-        is_diff "$1" 0 || return 0
-
-        SHIFT="$1"
-        TAG=
-        # for i in $(seq 1 $SHIFT)
-        # do
-        #     TAG="${TAG:-}${MAP_CLOSING_TAG[-1]}"
-        #     unset -v "MAP_CLOSING_TAG[-1]"
-        # done
-        for i in $(seq 1 $SHIFT)
-        do
-            TAG="${TAG:-}${MAP_CLOSING_TAG_INDENT[-1]:-}${MAP_CLOSING_TAG[-1]}"
-            unset -v "MAP_CLOSING_TAG[-1]" "MAP_CLOSING_TAG_INDENT[-1]"
-        done
-        # ROW_NESTING_DEPTH="$((ROW_NESTING_DEPTH-SHIFT))"
-        # TAG_INDENT="${TAG_INDENT%"$(printf "%$((TAG_INDENT_WIDTH*SHIFT+2))s" '')"}"
-    else
-        TAG=
-        # for i in "${MAP_CLOSING_TAG[@]}"
-        # do
-        #     TAG="$i${TAG:-}"
-        # done
-        for i in "${!MAP_CLOSING_TAG[@]}"
-        do
-            TAG="${MAP_CLOSING_TAG_INDENT[$i]:-}${MAP_CLOSING_TAG[$i]}${TAG:-}"
-        done
-        MAP_CLOSING_TAG_INDENT=()
-        MAP_CLOSING_TAG=()
-        # ROW_NESTING_DEPTH=
-        TAG_INDENT="${STAR_TAG_INDENT:-}"
-    fi
-    STRING="${STRING:-}${TAG:-}"
-}
-
-read_string_again ()
-{
-    is_empty "${ROW_NESTING_DEPTH:-}" || {
-        TOTAL_NESTING_DEPTH="$ROW_NESTING_DEPTH"
-        # ROW_NESTING_DEPTH=
-    }
-    is_equal "${READ_STRING_AGAIN:="no"}" "yes" && READ_STRING_AGAIN="no"
-}
-
-trim_leading_white_space ()
-{
-    STRING="${STRING#"${STRING%%[![:blank:]]*}"}"
-}
-
-trim_trailing_white_space ()
-{
-    STRING="${STRING%"${STRING##*[![:blank:]]}"}"
-}
-
-trim_white_space ()
-{
-    trim_leading_white_space
-    trim_trailing_white_space
-}
-
-get_tag_indent ()
-{
-    case "$1" in
-        -) TAG_INDENT="$(printf "%$((${#TAG_INDENT} - ${2:-"${TAG_INDENT_WIDTH:=2}"}))s" '')" ;;
-        +) TAG_INDENT="$(printf "%$((${#TAG_INDENT} + ${2:-"${TAG_INDENT_WIDTH:=2}"}))s" '')" ;;
-    esac
-}
-
-get_tag ()
-{
-    case "$1" in
-        code-block)
-            get_tag_indent +
-            OPENING_TAG="<pre><code class=\"${CURRENT_CODE_LANG:+fenced-code-block language-}${CURRENT_CODE_LANG:-indented-$1}\">"
-            CLOSING_TAG="</code></pre>$NEW_LINE"
-            CURRENT_CODE_LANG=
-            OPENING_TAG_INDENT="${TAG_INDENT:-}"
-            CLOSING_TAG_INDENT=""
-            ;;
-        blockquote|li|ul)
-            get_tag_indent +
-            OPENING_TAG="<$1>$NEW_LINE"
-            CLOSING_TAG="</$1>$NEW_LINE"
-            OPENING_TAG_INDENT="${TAG_INDENT:-}"
-            CLOSING_TAG_INDENT="${TAG_INDENT:-}"
-            ;;
-        ol)
-            get_tag_indent +
-            is_not_empty "${OL_START:-}" &&
-            TAG="<$1 start="$OL_START">" ||
-            TAG="<$1>"
-            OPENING_TAG="$TAG$NEW_LINE"
-            CLOSING_TAG="$TAG$NEW_LINE"
-            OPENING_TAG_INDENT="${TAG_INDENT:-}"
-            CLOSING_TAG_INDENT="${TAG_INDENT:-}"
-            ;;
-        h[1-6])
-            get_tag_indent +
-            ID="${STRING,,}"
-            ID="${ID//"$NEW_LINE"/-}"
-            ID="$(sed 's/\(<br>\|[[:blank:]]\)/-/g
-                       s/[^a-zA-Z0-9_-]//g
-                       s/-\+/-/g
-                       s/\(^-\+\|-\+$\)//g' <<< "${ID:-}")"
-            is_empty "${ID:-}" || {
-                is_empty "${ID_BASE["$ID"]:-}" || ID="$ID-$((ID_NUM+1))"
-                ID_BASE["$ID"]="$ID"
-            }
-            OPENING_TAG="<$1 class=\"${TAG_CLASS:-atx}\" id=\"${ID:-}\">"
-            CLOSING_TAG="</$1>$NEW_LINE"
-            TAG_CLASS=
-            OPENING_TAG_INDENT="${TAG_INDENT:-}"
-            CLOSING_TAG_INDENT=""
-            ;;
-        hr)
-            get_tag_indent +
-            OPENING_TAG="<$1>"
-            CLOSING_TAG="</$1>$NEW_LINE"
-            ;;
-        p)
-            OPENING_TAG="<$1>"
-            CLOSING_TAG="</$1>$NEW_LINE"
-            ;;
-    esac
-}
-
-add_tag_p ()
-{
-    is_empty "${STRING:-}" || {
-        # STRING="$(format_string <<< "${STRING//$NEW_LINE/$MASK_NEW_LINE}")"
-        format_string
-        if is_diff "${#MAP_CLOSING_TAG[@]}" 0
-        then
-            if [[ "${MAP_CLOSING_TAG[-1]}" =~ ^[[:blank:]]*\</blockquote\>"$NEW_LINE" ]]
-            then
-                get_tag p
-                STRING="${BUFFER_INDENT:-}$OPENING_TAG$STRING$CLOSING_TAG"
-            fi
-        else
-            get_tag p
-            STRING="${BUFFER_INDENT:-}$OPENING_TAG$STRING$CLOSING_TAG"
-        fi
-        BUFFER_INDENT=
-    }
-}
-
-add_tag_to_the_buffer ()
-{
-    OPENING_TAG_BUFFER=( "${OPENING_TAG_BUFFER[@]}" "$OPENING_TAG" )
-    CLOSING_TAG_BUFFER=( "${CLOSING_TAG_BUFFER[@]}" "$CLOSING_TAG" )
-}
-
-add_tag_to_a_tag_map ()
-{
-    MAP_OPENING_TAG_INDENT=( "${MAP_OPENING_TAG_INDENT[@]}" "${OPENING_TAG_INDENT:-}" )
-    MAP_CLOSING_TAG_INDENT=( "${MAP_CLOSING_TAG_INDENT[@]}" "${CLOSING_TAG_INDENT:-}" )
-
-    MAP_OPENING_TAG=( "${MAP_OPENING_TAG[@]}" "${OPENING_TAG_BUFFER[@]:-"$OPENING_TAG"}" )
-    MAP_CLOSING_TAG=( "${MAP_CLOSING_TAG[@]}" "${CLOSING_TAG_BUFFER[@]:-"$CLOSING_TAG"}" )
-
-    OPENING_TAG_BUFFER=() OPENING_TAG=
-    CLOSING_TAG_BUFFER=() CLOSING_TAG=
 }
 
 arg_is_not_empty ()
@@ -1182,7 +231,7 @@ arg_is_not_empty ()
                         esac
                     done
                     is_equal "$RETURN" 0
-            esac 
+            esac
     esac || {
         is_equal "${#1}" 2 &&
         try 2 "option requires an argument -- '${1#?}'" ||
@@ -1352,6 +401,969 @@ check_args ()
                 die "$STATUS"
         fi
         STATUS="$(touch "$OUTPUT" 2>&1)" || die "$STATUS"
+    }
+}
+
+convert_string ()
+{
+    # search for links
+    # |   |   extra    |   need    |
+    # |---|------------|-----------|
+    # | ` | \x07  [^G] | \x1d [^]] |
+    # | [ | \x11  [^Q] | \x1e [^^] |
+    # | ] | \x12  [^R] | \x0e [^N] |
+    # | ( | \x14  [^T] | \x1c [^\] |
+    # | ) | \x15  [^U] | \x0c [^L] |
+    # |---|------------|-----------|
+    # [[^][)(]*]([[:blank:]]*[^][)([:blank:]]*[[:blank:]]*)
+
+    sed '
+        /^\x1f/!{
+            # skip a line that contains an html tag or is a code
+            b end_of_line
+        }
+
+        # delete MARKER_FORMAT_STRING
+        s%^\x1f%%
+
+        # mask escaped characters
+        s%\\\\%\x02%g
+        s%\\&%\x03%g
+        /[<>]/ {
+            s%\\<%\&lt;%g
+            s%\\>%\&gt;%g
+            : mask_html_tags
+            {
+                s%^\([^<>]*\)>%\1\&gt;%
+                s%^\([^<>]*\)<\([^<>]*<\)%\1\&lt;\2%
+                s%^\([^<>]*\)<\([^<>]\+\)>%\1\x04\2\x05%
+            }
+            t mask_html_tags
+            s%\x04%<%g
+            s%\x05%>%g
+        }
+        s%&lt;%\x04%g
+        s%&gt;%\x05%g
+        s%\(&\|&amp;\)%\x03%g
+        s%\\\*%\x06%g
+        s%\\`%\x07%g
+        s%\\_%\x08%g
+        s%\\~%\x10%g
+        s%\\\[%\x11%g
+        s%\\]%\x12%g
+        s%\\!%\x13%g
+        s%\\(%\x14%g
+        s%\\)%\x15%g
+        s%\#%\x16%g
+        s%\\|%\x17%g
+
+        : add_tag_code
+        /^[^[`]*`\+[^`]*`$/! {
+            /^[^[`]*`[^[]*\[/ {
+                : mask_first_acute
+                s%^\([^[`]*\)`\([^[]*\[\)%\1\06\2%
+                t mask_first_acute
+            }
+            b add_tag_link
+        }
+
+        # string: [word `code 0` word]
+        # match : (word )`(code 0)`( word)
+        /^[^`]*\(`\{1,\}\)[^`].*[^`]\1\([^`]\|$\)/! {
+            : masking_the_first_non-paired_acute
+            {
+                # string: [word ``\x1dcode `0]
+                # match : (word `)`(\x1dcode )
+                s%^\([^`]*`*\)`\(\x07\+[^`]*\)%\1\x1d\2%
+
+                # string: [word ```code `0]
+                # match : (word ``)`(code )
+                s%^\([^`\x1d]*`*\)`\([^`]*\)%\1\x1d\2%
+            }
+            t masking_the_first_non-paired_acute
+
+            s%\x1d%\x07%g
+            b add_tag_code
+        }
+
+        # string: [word `code 0` word]
+        # match : (word )`(code 0)`( word)
+        /^\([^`]*\)\(`\{1,\}\)\([^`]\+\)\2\([^`]\|$\)/ {
+
+            # mask characters in code: []()*_~
+            : mask_characters_nested_in_code
+            {
+                s%^\([^`]*`[^`]*\)\[\([^`]*`\)%\1\x11\2%
+                s%^\([^`]*`[^`]*\)]\([^`]*`\)%\1\x12\2%
+                s%^\([^`]*`[^`]*\)(\([^`]*`\)%\1\x14\2%
+                s%^\([^`]*`[^`]*\))\([^`]*`\)%\1\x15\2%
+                s%^\([^`]*`[^`]*\)\*\([^`]*`\)%\1\x06\2%
+                s%^\([^`]*`[^`]*\)_\([^`]*`\)%\1\x08\2%
+                s%^\([^`]*`[^`]*\)~\([^`]*`\)%\1\x10\2%
+            }
+            t mask_characters_nested_in_code
+        }
+
+        s%^\([^`]*\)\(`\{1,\}\)\([^`]\+\)\2\([^`]\|$\)%\1<code>\3</code>\4%
+        t add_tag_code
+
+        # string: [word`cat file0; `` `` word`cat file0`; ``` word]
+        # match : (word)`(cat file0; `` `` word)`(c)
+        s%^\([^`]*\)`\(\([^`]\+`\{2,\}\)\+[^`]\+\)`\([^`]\|$\)%\1\x1d\2\x1d\4%
+        {
+            # string: [\x1dcat file0; `` `` wordx1d ]
+            # match : (\x1dcat file0; )`(` `` word\x1d )
+
+            : masking_nested_acute_in_a_single_pair
+            s%\(\x1d[^`\x1d]*\)`\([^\x1d]*\x1d\)%\1\x07\2%
+            t masking_nested_acute_in_a_single_pair
+
+            s%\x1d%`%g
+            t add_tag_code
+        }
+
+        # string: [word ```word`cat file0; ``` word`cat file0`; ``` word]
+        # match : (word )```(word`cat file0; )```( )
+        s%^\([^`]*\)\(`\{2,\}\)\(\([^`]\+`\+\)\+[^`]*[^`]\)\2\([^`]\|$\)%\1\x1d\3\x1d\5%
+        {
+            # string: [\x1d word`cat file0; x1d ]
+            # match : (\x1d word)`(cat file0; \x1d )
+
+            : masking_nested_acute_in_multipare
+            s%\(\x1d[^`\x1d]*\)`\([^\x1d]*\x1d\)%\1\x07\2%
+            t masking_nested_acute_in_multipare
+
+            s%\x1d%`%g
+            t add_tag_code
+        }
+
+        : add_tag_link
+        /^[^[`]*\[.*]([^)]*)/! {
+            /^[^[`]*\[[^`]*`/ {
+                : mask_first_square_bracket
+                s%^\([^[`]*\)\[\([^`]*`\)%\1\x11%
+                t mask_first_square_bracket
+                b add_tag_code
+            }
+            b add_tag_del
+        }
+
+        : mask_nested_links
+        {
+            # string: word [name (link)] word
+            # match : {word [name }({link)]}
+            s%^\([^[`]*\[[^][)(]*\)(\([^]]*\]\)%\1\x14\2%
+
+            # string: word [name \x14link)] word
+            # match : {word [name \x14link}){]}
+            s%^\([^[`]*\[[^][)(]*\))\([^]]*\]\)%\1\x15\2%
+
+            # string: word [name [subname](sublink)](link)
+            # match : {word [name }[{subname}]{(sublink)](link)}
+            s%^\([^`]*\[[^[]*\)\[\([^][)(]*\)]\([^[]*]([[:blank:]]*[^[:blank:]]*[[:blank:]]*)\)%\1\x11\2\x12\3%
+
+            # string: word [name [subword] name](link)
+            # match : {word [name }[{subword}]{ name](link)}
+            s%^\([^`]*\)\[\([^]]*\)]\([^][)(]*]([[:blank:]]*[^[:blank:]]*[[:blank:]]*)\)%\1\x11\2\x12\3%
+
+            # string: word [name \x11subname\x12(sublink)](link)
+            # match : {word [name \x11subname\x12}({sublink)](link)}
+            s%^\([^`]*\[[^[]*\)(\([^][)(]*]([[:blank:]]*[^[:blank:]]*[[:blank:]]*)\)%\1\x14\2%
+
+            # string: word [name \x11subname\x12\x14sublink)](link)
+            # match : {word [name \x11subname\x12\x14sublink}){](link)}
+            s%^\([^`]*\[[^[]*\))\([^][)(]*]([[:blank:]]*[^[:blank:]]*[[:blank:]]*)\)%\1\x15\2%
+
+            # string: word [name](link(subword)link)
+            # match : {word [name](link}({subword}){link)}
+            s%\([^`]*\[[^][)(]*]([[:blank:]]*[^][)([:blank:]]*\)(\([^)[:blank:]]*\))\([^[:blank:]]*[[:blank:]]*)\)%\1\x14\2\x15\3%
+
+            # string: word [name](link(subword)
+            # match : {word [name](link}({subword)}
+            s%\([^`]*\[[^][)(]*]([[:blank:]]*[^][)([:blank:]]*\)(\([^[:blank:]]*[[:blank:]]*)\)%\1\x14\2%
+
+            # string: word [name](link[subword])
+            # match : {word [name](link}[{subword])}
+            s%\([^`]*\[[^][)(]*]([[:blank:]]*[^][)([:blank:]]*\)\[\([^[:blank:]]*[[:blank:]]*)\)%\1\x11\2%
+
+            # string: word [name](link\x11subword])
+            # match : {word [name](link\x11subword}]{)}
+            s%\([^`]*\[[^][)(]*]([[:blank:]]*[^][)([:blank:]]*\)]\([^[:blank:]]*[[:blank:]]*)\)%\1\x12\2%
+        }
+        t mask_nested_links
+
+        : mask_nested_acute
+        # string: word [name](`link`)
+        # match : {word [name](}`{link`)}
+        s%^\([^`]*\[[^][)(`]*]([^)`]*\)`\([^)]*)\)%\1\x07\2%
+        t mask_nested_acute
+
+        # string: word [name link](link)
+        # match : {word }[{name link}]({link})
+        s%^\([^[`]*\)\[\([^][)(]*\)](\([[:blank:]]*[^][)([:blank:]]*[[:blank:]]*\))%\1\x1e\2\x0e\x1c\3\x0c%
+
+        s/\[/\x11/g
+        s/]/\x12/g
+        s/(/\x14/g
+        s/)/\x15/g
+        s/\x1e/\[/g
+        s/\x0e/]/g
+        s/\x1c/(/g
+        s/\x0c/)/g
+
+        /^[^[`]*`/ b add_tag_code
+
+        # mask characters in alt: *`_~"
+        /^[^[`]*\!\[[^]]*[*`_~"][^]]*]/ {
+
+            # string: word ![ alt * ]( link )
+            # match : {word ![ alt }*{ ]}
+
+            : mask_alt
+            s%^\([^[`]*\!\[[^*]*\)\*\([^]]*]\)%\1\x06\2%
+            s%^\([^[`]*\!\[[^`]*\)`\([^]]*]\)%\1\x07\2%
+            s%^\([^[`]*\!\[[^_]*\)_\([^]]*]\)%\1\x08\2%
+            s%^\([^[`]*\!\[[^~]*\)~\([^]]*]\)%\1\x10\2%
+            s%^\([^[`]*\!\[[^"]*\)"\([^]]*]\)%\1\&quot;\2%
+            t mask_alt
+        }
+
+        : mask_quot_in_name_link
+        s%^\([^[`]*\!\?\[[^"]*\)"\([^]]*]\)%\1\&quot;\2%
+        t mask_quot_in_name_link
+
+        # mask characters in link: \<>`[]#"|?^{}_~*
+        /^[^[`]*\!\?\[[^]]*]([^)]*[\x02\\\x04\x05\x07\x11\x12\x16#\x17|"?^{}_~*][^)]*)/ {
+
+            # string: word [ name link ]( link* )
+            # match : {word [ name link ]( link}*{ )}
+
+            : mask_link
+            s%^\([^[`]*\!\?\[[^]]*]([^)\x02]*\)\x02\([^)]*)\)%\1\%5C\2%
+            s%^\([^[`]*\!\?\[[^]]*]([^)\x04]*\)\x04\([^)]*)\)%\1\%3C\2%
+            s%^\([^[`]*\!\?\[[^]]*]([^)\x05]*\)\x05\([^)]*)\)%\1\%3E\2%
+            s%^\([^[`]*\!\?\[[^]]*]([^)\x07]*\)\x07\([^)]*)\)%\1\%60\2%
+            s%^\([^[`]*\!\?\[[^]]*]([^)\x11]*\)\x11\([^)]*)\)%\1\%5B\2%
+            s%^\([^[`]*\!\?\[[^]]*]([^)\x12]*\)\x12\([^)]*)\)%\1\%5D\2%
+            s%^\([^[`]*\!\?\[[^]]*]([^)\x16#]*\)\(#\|\x16\)\([^)]*)\)%\1\%23\3%
+            s%^\([^[`]*\!\?\[[^]]*]([^)\x17|]*\)\(|\|\x17\)\([^)]*)\)%\1\%7C\3%
+            s%^\([^[`]*\!\?\[[^]]*]([^)"]*\)"\([^)]*)\)%\1\%22\2%
+            s%^\([^[`]*\!\?\[[^]]*]([^)?]*\)?\([^)]*)\)%\1\%3F\2%
+            s%^\([^[`]*\!\?\[[^]]*]([^)^]*\)^\([^)]*)\)%\1\%5E\2%
+            s%^\([^[`]*\!\?\[[^]]*]([^){]*\){\([^)]*)\)%\1\%7B\2%
+            s%^\([^[`]*\!\?\[[^]]*]([^)}]*\)}\([^)]*)\)%\1\%7D\2%
+            s%^\([^[`]*\!\?\[[^]]*]([^)_]*\)_\([^)]*)\)%\1\x08\2%
+            s%^\([^[`]*\!\?\[[^]]*]([^)~]*\)~\([^)]*)\)%\1\x10\2%
+            s%^\([^[`]*\!\?\[[^]]*]([^)*]*\)\*\([^)]*)\)%\1\x06\2%
+            t mask_link
+        }
+
+        # insert tag a
+        # string: word ![ alt ]( link )
+        # match : {word }![ {alt} ]( {link} )
+        s%^\([^[`]*\)\!\[[[:blank:]]*\([^][:blank:]]*[^]]*[^][:blank:]]\)[[:blank:]]*\]([[:blank:]]*\([^)[:blank:]]*\)[[:blank:]]*)%\1<img src="\3" alt="\2">%
+        b add_tag_link
+
+        # string: word [ name link ]( link )
+        # match : {word }[{ name link }]( {link} )
+        s%^\([^[`]*\)\[\([^]]*\)\]([[:blank:]]*\([^)[:blank:]]*\)[[:blank:]]*)%\1<a href="\3">\2</a>%
+        b add_tag_link
+
+        : add_tag_del
+        /~~/! b add_tag_strong-em_by_asterisk
+
+        # string: [word~word~]
+        # match : (word)~(word)~
+        s%\(^\|[^~]\)~\([^~]\|$\)%\1\x10\2%g
+        t add_tag_del
+
+        # string: [word ~~ word]
+        # match : (word )~~( )
+        s%^\([^~]*[~\x10]*\)~\([~\x10]*[[:blank:]]\|$\)%\1\x10\2%
+        t add_tag_del
+
+        # string: [word ~~del-word~~]
+        # match : (word )~~(del-word)~~
+        s%\(^\|[^~]\)~~\([^~[:blank:]]\+[^~]*\)~~\([^~]\|$\)%\1<del>\2</del>\3%g
+        t masking_nested_tildes
+
+        # string: [word ~~del-word~~~0~~ word]
+        # match : (word ~~del-word)~~~(0)
+        /^\([^~]*\(~~[^~[:blank:]]\)\?[^~]*\)~\{3,\}\([^~]\|$\)/ {
+            : masking_nested_tildes
+
+            # string: [word ~~del-word\x10~~0~~ word]
+            # match : (word ~~del-word\x10)~
+            s%^\([^~]*\(~~[^~[:blank:]][^~]*\)\?\x10\)~%\1\x10%
+            t masking_nested_tildes
+
+            # string: [word ~~del-word~~~0~~ word]
+            # match : (word ~~del-word)~(~~)
+            s%^\([^~]*\(~~[^~[:blank:]][^~]*\)\?\)~\(~~\+\)%\1\x10\3%
+            t masking_nested_tildes
+            b add_tag_del
+        }
+
+        /\*/! b unmask
+
+        : add_tag_strong-em_by_asterisk
+
+        # string: [word ** word]
+        # match : (word )**( )
+        s%^\([^*]*[*\x06]*\)\*\([*\x06]*[[:blank:]]\|$\)%\1\x06\2%
+        t add_tag_strong-em_by_asterisk
+
+        # string: [word ***bold 0** word]
+        # match : (word **)*(bold 0** word)
+        s%^\([^*]*\*\*\)\*\([^*[:blank:]]\+[^*]*[^*[:blank:]]\*\*[^*]*$\)%\1\x06\2%
+        t add_tag_strong-em_by_asterisk
+
+        # string: [word *italic 0* word]
+        # match : (word )*(italic 0)*( word)
+        s%^\([^*]*\)\*\([^*[:blank:]]\+[^*]*[^*[:blank:]]\)\*\([^*]\|$\)%\1<em>\2</em>\3%
+        t add_tag_strong-em_by_asterisk
+
+        # string: [word **bold 0** word]
+        # match : (word )**(bold 0)**
+        s%^\([^*]*\)\*\*\([^*[:blank:]]\+[^*]*[^*[:blank:]]\)\*\*%\1<strong>\2</strong>%
+        t add_tag_strong-em_by_asterisk
+
+        # string: [word ***bold-italic 0*** word]
+        # match : (word **)*(bold-italic 0)*(**) word
+        s%^\([^*]*\*\*\)\*\([^*[:blank:]]\+[^*]*[^*[:blank:]]\)\*\(\*\*\)%\1<em>\2</em>\3%
+        t add_tag_strong-em_by_asterisk
+
+        # string: [***italic-bold 0** italic 0*]
+        # match : (*)**(italic-bold 0)**( italic 0*)
+        s%^\([^*]*\*\)\*\*\([^*[:blank:]]\+[^*]*\)\*\*\([^*]*\*\)%\1<strong>\2</strong>\3%
+        t add_tag_strong-em_by_asterisk
+
+        # string: [*italic 0 **italic-bold 0***]  | [*italic 0 **italic-bold 0** italic 1*]
+        # match : (*italic 0 )**(italic-bold 0)**
+        s%^\([^*]*\*[^*]*\)\*\*\([^*[:blank:]]\+[^*]*[^*[:blank:]]\)\*\*%\1<strong>\2</strong>%
+        t add_tag_strong-em_by_asterisk
+
+        # string: [**bold 0 *bold-italic 0* bold 1**] | [**bold 0 *bold-italic 0***]
+        # match : (**bold 0 )*(bold-italic 0)*
+        s%^\([^*]*\*\*[^*]*\)\*\([^*[:blank:]]\+[^*]*[^*[:blank:]]\)\*%\1<em>\2</em>%
+        t add_tag_strong-em_by_asterisk
+
+        # string: [word *italic 0 ***bold 0** word]
+        # match : (word )*(italic 0 )*(**)
+        s%^\([^*]*\)\*\([^*[:blank:]]\+[^*]*\)\*\(\*\*[^*].*\)%\1<em>\2</em>\3%
+        t add_tag_strong-em_by_asterisk
+
+        # string: [word **bold 0 **bold 1** word]
+        # match : (word **bold 0 )**
+        /^[^*]*\*\*[^*[:blank:]]*[^*]*[[:blank:]]\*\{1,\}.*[^*[:blank:]]\*\*\([^*]\|$\)/ {
+          : inside_bold_blank_asterisks
+            s%^\([^*]*\*\*[^*[:blank:]]*[^*]*[[:blank:]][*\x06]*\)\*%\1\x06%
+          t inside_bold_blank_asterisks
+          b add_tag_strong-em_by_asterisk
+        }
+
+        # string: [word **bold 0* **bold 1** word]
+        # match : (word **bold 0)*( )
+        /^[^*]*\*\*[^*[:blank:]]*[^*]*[^*[:blank:]]\*[^*]*.*[^*[:blank:]]\*\*/ {
+          : inside_bold_star_blank
+            s%^\([^*]*\*\*[^*[:blank:]]*[^*]*[^*[:blank:]]\)\*\([[:blank:]]\|$\)%\1\x06\2%
+          t inside_bold_star_blank
+          b add_tag_strong-em_by_asterisk
+        }
+
+        # string: [word *italic 0 **** italic 1* word]
+        # match : (word *italic 0 )****(i)
+        /^[^*]*\*[^*[:blank:]]*[^*]*[[:blank:]]\*\+.*[^*[:blank:]]\*\([^*]\|$\)/ {
+          : inside_italics_asterisks_end
+            s%^\([^*]*\*[^*[:blank:]]*[^*]*[[:blank:]][*\x06]*\)\*\([^*]\|$\)%\1\x06\2%
+          t inside_italics_asterisks_end
+          b add_tag_strong-em_by_asterisk
+        }
+
+        # string: [**italic 0* word **]
+        # match : (*)*(italic 0* )
+        /^[^*]*\*\*[^*[:blank:]]*[^*]*[^*[:blank:]]\*\([[:blank:]]\|$\)/ {
+          : inside_italics_asterisks_start
+          s%^\([^*]*\*\)\*\([^*[:blank:]]*[^*]*[^*[:blank:]]\*\([[:blank:]]\|$\)\)%\1\x06\2%
+          t inside_italics_asterisks_start
+          b add_tag_strong-em_by_asterisk
+        }
+
+        # string: [word *italic 0** italic 1* word]
+        # match : (word *italic 0)**( italic 1*)
+        /^[^*]*\*[^*[:blank:]]*[^*]*[^*[:blank:]]\(\*\{2\}\|\*\{4,\}\).*[^*[:blank:]]\*[^*]*/ {
+          : inside_italics_asterisks
+          s%^\([^*]*\*[^*[:blank:]]*[^*]*[^[:blank:]]\)\*\([^*]\)%\1\x06\2%
+          t inside_italics_asterisks
+          b add_tag_strong-em_by_asterisk
+        }
+
+        # string: [word *italic 0 * word]
+        # match : (word )*(italic 0 )*( word)
+        s%^\([^*]*\)\*\([^*[:blank:]]\+[^*]*\)\*\([^*]\+\|$\)%\1<em>\2</em>\3%
+        t add_tag_strong-em_by_asterisk
+
+        # string: [word *italic 0 **** word]
+        # match : (word *italic 0 ***)*( word)
+        s%^\([^*]*\)\*\([^*[:blank:]]\+[^*]*\*\{2,\}\)\*\([^*]*$\)%\1<em>\2</em>\3%
+        t add_tag_strong-em_by_asterisk
+
+        : unmask
+        s%\x01%<br>\n%g
+        s%\x02%\\%g
+        s%\x03%\&amp;%g
+        s%\x04%\&lt;%g
+        s%\x05%\&gt;%g
+        s%\x06%*%g
+        s%\x07%`%g
+        s%\x08%_%g
+        s%\x10%~%g
+        s%\x11%[%g
+        s%\x12%]%g
+        s%\x13%!%g
+        s%\x14%(%g
+        s%\x15%)%g
+        s%\x16%$%g
+        s%\x17%|%g
+
+        # add tag p
+        s%^\x1a\([^\x1b]*\)\x1b\(.*\)$%\1<p>\2</p>%
+        t end_of_line
+
+        : end_of_line'
+}
+
+merge_strings ()
+{
+    sed '
+        /\x18/ {
+            s%\x18%%
+            : merge
+            $!N
+            s/\n//
+            /\x19/ {
+                s%\x19%%
+                b end
+            }
+            t merge
+        }
+        : end'
+}
+
+get_tag_indent ()
+{
+    case "$1" in
+        -) TAG_INDENT="$(printf "%$((${#TAG_INDENT} - ${2:-"${TAG_INDENT_WIDTH:=2}"}))s" '')" ;;
+        +) TAG_INDENT="$(printf "%$((${#TAG_INDENT} + ${2:-"${TAG_INDENT_WIDTH:=2}"}))s" '')" ;;
+    esac
+}
+
+get_tag ()
+{
+    case "$1" in
+        code-block)
+            OPENING_TAG="<pre><code class=\"${CURRENT_CODE_LANG:+fenced-code-block language-}${CURRENT_CODE_LANG:-indented-$1}\">$MARKER_START_MERGE_STRING"
+            CLOSING_TAG="</code></pre>$MARKER_STOP_MERGE_STRING"
+            CURRENT_CODE_LANG=
+            OPENING_TAG_INDENT="${TAG_INDENT:-}"
+            CLOSING_TAG_INDENT=""
+            get_tag_indent +
+            ;;
+        blockquote|li|ul)
+            OPENING_TAG="<$1>"
+            CLOSING_TAG="</$1>"
+            OPENING_TAG_INDENT="${TAG_INDENT:-}"
+            CLOSING_TAG_INDENT="${TAG_INDENT:-}"
+            get_tag_indent +
+            ;;
+        ol)
+            OPENING_TAG="<$1${OL_START:+ start="$OL_START"}>"
+            CLOSING_TAG="</$1>"
+            OPENING_TAG_INDENT="${TAG_INDENT:-}"
+            CLOSING_TAG_INDENT="${TAG_INDENT:-}"
+            get_tag_indent +
+            ;;
+        h[1-6])
+            ID="${STRING,,}"
+            ID="$(sed  ': merge
+                        $!N
+                        s%[\]*\n%-%
+                        t merge
+                        s/[[:blank:]]/-/g
+                        s/[^a-zA-Z0-9_-]//g
+                        s/-\+/-/g
+                        s/\(^-\+\|-\+$\)//g' <<< "${ID:-}")"
+            is_empty "${ID:-}" || {
+                is_empty "${ID_BASE["$ID"]:-}" || ID="$ID-$((ID_NUM+1))"
+                ID_BASE["$ID"]="$ID"
+            }
+            OPENING_TAG="<$1 class=\"${TAG_CLASS:-atx}\" id=\"${ID:-}\">$MARKER_START_MERGE_STRING"
+            CLOSING_TAG="</$1>$MARKER_STOP_MERGE_STRING"
+            TAG_CLASS=
+            OPENING_TAG_INDENT="${TAG_INDENT:-}"
+            CLOSING_TAG_INDENT=""
+            ;;
+    esac
+}
+
+print_opening_tags ()
+{
+    is_empty "${!MAP_OPENING_TAG[@]}" || {
+        TAG=
+        for i in "${!MAP_OPENING_TAG[@]}"
+        do
+            TAG="${TAG:-}${MAP_OPENING_TAG_INDENT[$i]:-}${MAP_OPENING_TAG[$i]}"
+        done
+        MAP_OPENING_TAG_INDENT=()
+        MAP_OPENING_TAG=()
+        echo "${TAG:-}"
+    }
+}
+
+print_string ()
+{
+    is_empty "${STRING:-}" || {
+        STRING="${STRING//\\$NEW_STRING/$MARKER_NEW_STRING}"
+        STRING="${STRING//$NEW_STRING/ }"
+        if  is_equal "${#MAP_CLOSING_TAG[@]}" 0 ||
+            [[ "${MAP_CLOSING_TAG[-1]}" =~ ^[[:blank:]]*\</blockquote\> ]]
+        then
+            STRING="$MARKER_FORMAT_STRING$MARKER_ADD_TAG_P${BUFFER_INDENT:-}$POSITION_TAG_P$STRING"
+        else
+            STRING="$MARKER_FORMAT_STRING${BUFFER_INDENT:-}$STRING"
+        fi
+        BUFFER_INDENT=
+        echo "${STRING:-}"
+    }
+}
+
+print_closing_tags ()
+{
+    is_diff "${#MAP_CLOSING_TAG[@]}" 0 || return 0
+
+    if is_not_empty "${1:-}"
+    then
+        is_diff "$1" 0 || return 0
+
+        SHIFT="$1"
+        TAG=
+        for i in $(seq 1 $SHIFT)
+        do
+            TAG="${TAG:-}${MAP_CLOSING_TAG_INDENT[-1]:-}${MAP_CLOSING_TAG[-1]}"
+            unset -v "MAP_CLOSING_TAG[-1]" "MAP_CLOSING_TAG_INDENT[-1]"
+        done
+        # ROW_NESTING_DEPTH="$((ROW_NESTING_DEPTH-SHIFT))"
+        # TAG_INDENT="${TAG_INDENT%"$(printf "%$((TAG_INDENT_WIDTH*SHIFT+2))s" '')"}"
+    else
+        TAG=
+        for i in "${!MAP_CLOSING_TAG[@]}"
+        do
+            TAG="${MAP_CLOSING_TAG_INDENT[$i]:-}${MAP_CLOSING_TAG[$i]}${TAG:-}"
+        done
+        MAP_CLOSING_TAG_INDENT=()
+        MAP_CLOSING_TAG=()
+        # ROW_NESTING_DEPTH=
+        TAG_INDENT="${MAIN_TAG_INDENT:-}"
+    fi
+    echo "${TAG:-}"
+}
+
+print_buffer ()
+{
+    SAVE_STRING="${STRING:-}"   STRING=
+    STRING="${STRING_BUFFER:-}" STRING_BUFFER=
+    STRING="${STRING%"${STRING##*[!"$NEW_STRING"]}"}"
+    print_opening_tags
+    print_string
+    print_closing_tags "${1:-}"
+    STRING="${SAVE_STRING:-}"   SAVE_STRING=
+}
+
+print_code_block ()
+{
+    print_buffer 1
+    CODE_BLOCK="closed"
+    INDENTED_CODE_BLOCK="closed"
+}
+
+is_code_block ()
+{
+    [[ "${STRING:-}" =~ ^([[:blank:]]{3})*\`{3}([[:blank:]]+)*$ ]]
+}
+
+is_code_block_with_lang ()
+{
+    [[ "${STRING:-}" =~ ^\`{3}([^\`]|[[:blank:]]+).+$ ]]
+}
+
+close_code_block ()
+{
+    is_code_block && print_code_block
+}
+
+add_tag_to_a_tag_map ()
+{
+    MAP_OPENING_TAG_INDENT=( "${MAP_OPENING_TAG_INDENT[@]}" "${OPENING_TAG_INDENT:-}" )
+    MAP_CLOSING_TAG_INDENT=( "${MAP_CLOSING_TAG_INDENT[@]}" "${CLOSING_TAG_INDENT:-}" )
+
+    MAP_OPENING_TAG=( "${MAP_OPENING_TAG[@]}" "${OPENING_TAG_BUFFER[@]:-"$OPENING_TAG"}" )
+    MAP_CLOSING_TAG=( "${MAP_CLOSING_TAG[@]}" "${CLOSING_TAG_BUFFER[@]:-"$CLOSING_TAG"}" )
+
+    OPENING_TAG_BUFFER=() OPENING_TAG=
+    CLOSING_TAG_BUFFER=() CLOSING_TAG=
+}
+
+add_code_block_tag ()
+{
+    get_tag code-block
+    add_tag_to_a_tag_map
+    CODE_BLOCK="open"
+}
+
+add_to_code_block ()
+{
+    if is_equal "${CODE_BLOCK:-}" "open"
+    then
+        is_equal "${INDENTED_CODE_BLOCK:-}" "closed" &&
+        close_code_block ||
+        STRING_BUFFER="${STRING_BUFFER:+"$STRING_BUFFER$NEW_STRING"}${STRING:-}"
+    else
+        is_code_block || {
+            is_code_block_with_lang && {
+                CURRENT_CODE_LANG="$(
+                    sed 's/^[`[:blank:]]\+\(.\+\)$/\1/g
+                         s/[[:blank:]]\+$//g
+                         s/[[:blank:]]/-/g
+                         s/[^a-zA-Z0-9_-]//g
+                         s/-\+/-/g' <<< "$STRING"
+                )"
+                CURRENT_CODE_LANG="${CURRENT_CODE_LANG,,}"
+            }
+        } && {
+            is_empty "${STRING_BUFFER:-}" || print_buffer
+            add_code_block_tag
+        }
+    fi
+}
+
+add_to_buffer ()
+{
+    is_empty "${STRING_BUFFER:-}" && {
+        is_empty  "${!MAP_CLOSING_TAG_INDENT[@]}" ||
+        TAG_INDENT="${MAP_CLOSING_TAG_INDENT[-1]}"
+        BUFFER_INDENT="${TAG_INDENT:-}"
+        STRING_BUFFER="${MD_INDENT:-}$STRING"
+    } || {
+        STRING_BUFFER="$STRING_BUFFER$NEW_STRING${BUFFER_INDENT:-}${MD_INDENT:-}$STRING"
+    }
+    STRING=
+}
+
+get_string_indent ()
+{
+    MD_INDENT="${STRING%%[![:blank:]]*}"
+    STRING="${STRING#"${MD_INDENT:-}"}"
+
+    is_not_empty "${STRING:-}" || {
+        # is_equal "$BLOCKQUOTE_IS_OPEN" "no" && {
+        #     add_to_code_block || print_buffer
+        # } || {
+        #     is_not_empty "${ROW_NESTING_DEPTH:-}" || {
+        #         print_buffer
+        #         BLOCKQUOTE_IS_OPEN="no"
+        #     }
+        # }
+        # add_to_code_block || {
+        #     is_not_empty "${ROW_NESTING_DEPTH:-}" || {
+        #         print_buffer
+        #         BLOCKQUOTE_IS_OPEN="no"
+        #     }
+        # }
+        return
+    }
+    # if is_equal "${INDENTED_CODE_BLOCK:-}" "open"
+    # then
+    #     test "${#MD_INDENT}" -ge "$((MD_INDENT_WIDTH + 1))" &&
+    #     STRING="${MD_INDENT#????}$STRING" || {
+    #         print_code_block
+    #         MD_EXCESS_INDENT="${MD_INDENT:-}"
+    #     }
+    # elif is_equal "${CODE_BLOCK:-}" "open"
+    # then
+    #     STRING="${MD_INDENT:"${#MD_EXCESS_INDENT}"}$STRING"
+    # elif test "${#MD_INDENT}" -ge "$((MD_INDENT_WIDTH + 1))"
+    # then
+    #     is_empty "${STRING_BUFFER:-}" && {
+    #         is_not_empty "${ROW_NESTING_DEPTH:-}" || print_buffer
+    #         add_code_block_tag
+    #         INDENTED_CODE_BLOCK="open"
+    #         STRING="${MD_INDENT#????}$STRING"
+    #     } || {
+    #         add_to_buffer
+    #         return
+    #     }
+    # else
+    #     MD_EXCESS_INDENT="${MD_INDENT:-}"
+    # fi
+    return 1
+
+    # MD_INDENT="$(printf "%$((${#MD_INDENT} ))s" '')"
+    # # MD_INDENT="$(printf "%$((${#MD_INDENT} / MD_INDENT_WIDTH * MD_INDENT_WIDTH))s" '')"
+    # test "${#MD_SAVE_INDENT}" -ge "${#MD_INDENT}" ||
+    # MD_INDENT="$(printf "%$((${#MD_SAVE_INDENT} + MD_INDENT_WIDTH))s" '')"
+}
+
+add_tag_to_the_buffer ()
+{
+    OPENING_TAG_BUFFER=( "${OPENING_TAG_BUFFER[@]}" "$OPENING_TAG" )
+    CLOSING_TAG_BUFFER=( "${CLOSING_TAG_BUFFER[@]}" "$CLOSING_TAG" )
+}
+
+add_to_blockquote ()
+{
+    [[ "$STRING" =~ ^\>[[:blank:]]+ ]] && STRING="${STRING#??}" || {
+                [[ "$STRING" =~ ^\> ]] && STRING="${STRING#?}"  || return
+    }
+    BLOCKQUOTE_IS_OPEN="yes"
+
+    get_tag blockquote
+    add_tag_to_the_buffer
+    ROW_NESTING_DEPTH="$((${ROW_NESTING_DEPTH:--1} + 1))"
+    is_equal "${#MAP_CLOSING_TAG[@]}" 0 || is_empty  "${MAP_CLOSING_TAG[$ROW_NESTING_DEPTH]:-}" && {
+        is_empty "${STRING_BUFFER:-}"   || {
+            print_buffer 0
+            # exit
+        }
+    } || {
+        if is_equal "${MAP_CLOSING_TAG[$ROW_NESTING_DEPTH]}" "$CLOSING_TAG"
+        then
+            # блок для переноса строки c нижнего на текущий уровень
+            [[ "$STRING" =~ ^\> ]] || {
+                if is_equal "${MAP_CLOSING_TAG[$((ROW_NESTING_DEPTH + 1))]:-}" "$CLOSING_TAG"
+                then
+                    print_buffer "$((${#MAP_CLOSING_TAG[@]} - $((ROW_NESTING_DEPTH + 1))))"
+                fi
+            }
+            READ_STRING_AGAIN="yes"
+            OPENING_TAG_BUFFER=()
+            CLOSING_TAG_BUFFER=()
+            return
+        fi
+    }
+
+    add_tag_to_a_tag_map
+    READ_STRING_AGAIN="yes"
+}
+
+trim_white_space ()
+{
+    STRING="${STRING#"${STRING%%[![:blank:]]*}"}"
+    STRING="${STRING%"${STRING##*[![:blank:]]}"}"
+}
+
+print_heading ()
+{
+    if [[ "${STRING:-}" =~ ^#{1,6}([[:blank:]].*|$) ]]
+    then
+        HEADER="${STRING%%[[:blank:]]*}"
+        STRING="${STRING#"$HEADER"}"
+        TAG="h${#HEADER}"
+        TAG_CLASS="atx"
+    elif [[ "${STRING:-}" =~ ^=+$ ]]
+    then
+        is_not_empty "${STRING_BUFFER:-}"   &&
+        is_equal "$BLOCKQUOTE_IS_OPEN" "no" || return
+        STRING="$STRING_BUFFER" STRING_BUFFER=
+        TAG=h1
+        TAG_CLASS="setext"
+    elif [[ "${STRING:-}" =~ ^-+$ ]]
+    then
+        is_not_empty "${STRING_BUFFER:-}"   &&
+        is_equal "$BLOCKQUOTE_IS_OPEN" "no" || return
+        STRING="$STRING_BUFFER" STRING_BUFFER=
+        TAG=h2
+        TAG_CLASS="setext"
+    else
+        false
+    fi && {
+        print_buffer 0
+        trim_white_space
+        get_tag "$TAG"
+        add_tag_to_a_tag_map
+        add_to_buffer
+        print_buffer 1
+    }
+}
+
+print_horizontal_rule ()
+{
+    [[ "$(tr -d '[:blank:]' <<< "${STRING:-}")" =~ ^(-{3,}|_{3,}|\*{3,})$ ]] && {
+        STRING="${TAG_INDENT:-}<hr>$NEW_STRING"
+        is_empty "${ROW_NESTING_DEPTH:-}" &&
+        print_buffer ||
+        print_buffer 0
+        echo -n "$STRING"
+    }
+}
+
+read_string_again ()
+{
+    is_empty "${ROW_NESTING_DEPTH:-}" || {
+        TOTAL_NESTING_DEPTH="$ROW_NESTING_DEPTH"
+        # ROW_NESTING_DEPTH=
+    }
+    is_equal "${READ_STRING_AGAIN:="no"}" "yes" && READ_STRING_AGAIN="no"
+}
+
+convert_md2html ()
+{
+    STRING_NUM=0
+    SAVE_STRING=
+    STRING_BUFFER=
+
+    MD_SAVE_INDENT=
+    MD_EXCESS_INDENT=
+    MD_INDENT_WIDTH=3
+    TAG_INDENT_WIDTH=0
+    MAIN_TAG_INDENT="    "
+    MAIN_TAG_INDENT=""
+
+    MAP_OPENING_TAG=()
+    MAP_CLOSING_TAG=()
+    OPENING_TAG_BUFFER=()
+    CLOSING_TAG_BUFFER=()
+
+    BLOCKQUOTE_IS_OPEN="no"
+    CODE_BLOCK=
+
+    ID_NUM=0
+    declare -A ID_BASE
+
+    MARKER_START_MERGE_STRING="$(tr '\n' '\030' <<< "")" # ^X [\x18]
+     MARKER_STOP_MERGE_STRING="$(tr '\n' '\031' <<< "")" # ^Y [\x19]
+         MARKER_FORMAT_STRING="$(tr '\n' '\037' <<< "")" # ^_ [\x1f]
+            MARKER_NEW_STRING="$(tr '\n' '\001' <<< "")" # ^A [\x01]
+             MARKER_ADD_TAG_P="$(tr '\n' '\032' <<< "")" # ^Z [\x1a]
+               POSITION_TAG_P="$(tr '\n' '\033' <<< "")" # ^[ [\x1b]
+                   NEW_STRING=$'\n'                      # $  [\x0a]
+    {
+        while IFS= read -r STRING || is_not_empty "${STRING:-}"
+        do
+            is_diff "$STRING" '@@@' || break
+            ROW_NESTING_DEPTH=
+            TAG_INDENT="${MAIN_TAG_INDENT:-}"
+            while :
+            do
+                    get_string_indent ||
+                        add_to_buffer && read_string_again || break
+                        # print_heading ||
+                        # add_to_buffer && read_string_again || break
+                #     add_to_code_block ||
+                #     add_to_blockquote ||
+                #         print_heading ||
+                # print_horizontal_rule ||
+                        # add_to_buffer && read_string_again || break
+            done
+        done < "$INPUT"
+        if is_equal "${CODE_BLOCK:-}" "open"
+        then
+            print_code_block
+        else
+            print_buffer
+        fi
+    # }
+    # } | convert_string
+    } | convert_string | merge_strings
+}
+
+open_html ()
+{
+    echo "\
+<!DOCTYPE html>
+<html lang=\"en\">"
+}
+
+add_title ()
+{
+    echo "<title>${PAGE_TITLE:-}</title>"
+}
+
+open_head ()
+{
+    echo "\
+<head>
+<meta charset=\"UTF-8\">
+<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
+}
+
+add_style ()
+{
+    is_empty "${PAGE_STYLE:-}" || {
+        echo "<style>"
+        cat "$PAGE_STYLE" || die "$STATUS"
+        echo "</style>"
+    }
+}
+
+close_head ()
+{
+    echo "</head>"
+}
+
+open_body ()
+{
+    echo "\
+<body>
+<article class=\"markdown-body\">"
+}
+
+close_body ()
+{
+    echo "\
+</article>
+</body>"
+}
+
+close_html ()
+{
+    echo "</html>"
+}
+
+convert ()
+{
+    open_html
+    add_title
+    open_head
+    add_style
+    close_head
+    open_body
+    convert_md2html
+    close_body
+    close_html
+}
+
+report_and_convert ()
+{
+    say "convert a file: $INPUT" >&2
+    convert >&3
+    say "conversion completed" >&2
+}
+
+main ()
+{
+    get_pkg_vars
+    argparse "$@"
+    is_empty "${HELP:-}"    || show_help
+    is_empty "${VERSION:-}" || show_version
+    check_args
+
+    is_empty "${OUTPUT:-}" && exec 3>&1 || exec 3>"$OUTPUT"
+    is_empty "${OUTPUT:-}" && {
+        is_terminal stdout && {
+            is_terminal stderr && convert >&3 || report_and_convert
+        }
+    } || {
+        is_not_terminal stderr && is_equal_fds stderr 3 && convert >&3 || report_and_convert
     }
 }
 
