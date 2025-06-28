@@ -145,15 +145,14 @@ run_test_file ()
                 LOAD_TEST="yes"
                 TEST_NUMBER="$((TEST_NUMBER + 1))"
                 STRING_NUM_TEST="$STRING_NUM"
-                is_not_empty  "${LINE#:test:}" &&
-                    TEST_NAME="${LINE#:test:}: " ||
-                    TEST_NAME="${TEST_NAME:-}"
+                TEST_NAME="${LINE#:test:}"
+                TEST_NAME="${TEST_NAME:-noname}"
                 ;;
             :test)
                 LOAD_TEST="yes"
                 TEST_NUMBER="$((TEST_NUMBER + 1))"
                 STRING_NUM_TEST="$STRING_NUM"
-                TEST_NAME="${TEST_NAME:-}"
+                TEST_NAME="${TEST_NAME:-noname}"
                 ;;
             :expect|:expect-out|:expect-stdout|:expect:*|:expect-out:*|:expect-stdout:*)
                 NEXT_LINE="expect-stdout"
@@ -174,7 +173,7 @@ run_test_file ()
                 ;;
             :run|:run:*)
                 is_equal "$LOAD_TEST" "yes" || continue
-                PREFIX="    test file: [$TESTED_FILE]$NEW_STRING         test: [$TEST_NAME$TEST_NUMBER]$NEW_STRING       string: [$STRING_NUM_TEST]"
+                PREFIX="    test file: [$TESTED_FILE]$NEW_STRING         test: [$TEST_NAME] num: [$TEST_NUMBER]$NEW_STRING       string: [$STRING_NUM_TEST]"
                 NAME_TESTED_FILE="${TESTED_FILE##*/}"
                 NAME_TESTED_FILE="${NAME_TESTED_FILE%.txt}"
                 STDOUT="$PKG_DIR/${NAME_TESTED_FILE}_$STRING_NUM_TEST.out"
@@ -224,6 +223,7 @@ main ()
 {
     exec 3>&1
     get_pkg_vars
+    INDENT="               |"
     GLOBAL_ARGS=()
     CLEAR_RESULTS="no"
     SAVE_RESULTS="no"
@@ -232,7 +232,6 @@ main ()
     TESTED_FILES=()
     TESTED_SHELL="/bin/bash"
     TESTED_SCRIPT="$PKG_DIR/../mdweb.sh"
-    INDENT='               |'
     is_exists "$TESTED_SCRIPT" || die 2 "no such file: -- '$TESTED_SCRIPT'" 2>&3
     while is_diff $# 0
     do
