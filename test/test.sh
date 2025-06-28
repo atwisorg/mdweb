@@ -261,6 +261,7 @@ main ()
                 ;;
             --save-results)
                 SAVE_RESULTS="yes"
+                shift
                 ;;
             *)
                 GLOBAL_ARGS+=( "${1:-}" )
