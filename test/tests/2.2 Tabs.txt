@@ -111,9 +111,9 @@ bar</code></pre>
 # https://spec.commonmark.org/0.31.2/#example-10
 :test:2.2 Tabs: Example 10
 :sample: |
-#	foo
+#	Foo
 :expect: |
-<h1>Foo</h1>
+<h1 class="atx" id="foo">Foo</h1>
 :run:
 
 # https://spec.commonmark.org/0.31.2/#example-11
