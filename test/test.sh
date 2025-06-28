@@ -251,6 +251,14 @@ main ()
                     shift
                 done
                 ;;
+            --clear)
+                CLEAR_RESULTS="yes"
+                shift
+                ;;
+            --save-results)
+                SAVE_RESULTS="yes"
+                shift
+                ;;
             --test-file)
                 shift
                 while is_diff $# 0
@@ -262,14 +270,6 @@ main ()
                     TESTED_FILES+=( "${1:-}" )
                     shift
                 done
-                ;;
-            --clear)
-                CLEAR_RESULTS="yes"
-                shift
-                ;;
-            --save-results)
-                SAVE_RESULTS="yes"
-                shift
                 ;;
             *)
                 GLOBAL_ARGS+=( "${1:-}" )
