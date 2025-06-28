@@ -37,7 +37,9 @@ Options:
   -v, --version             display version information and exit
   -h, -?, --help            display this help and exit
 
-  An argument of '--' disables further option processing
+An argument of '--' disables further option processing
+When FILE is '-', read standard input. Standard input takes priority over the
+input file.
 
 Report bugs to: bug-$PKG@atwis.org
 $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
@@ -46,7 +48,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.0.1} - (C) 25.06.2025
+    echo "${0##*/} ${1:-0.1.0} - (C) 28.06.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -56,35 +58,39 @@ Email      info@atwis.org"
 
 try ()
 {
-    get_rc "$@" >&2
-    echo "Try '$PKG --help' for more information."
+    say "$@" >&2
+    echo "Try '$PKG --help' for more information." >&2
     exit "$RETURN"
 }
 
 say ()
 {
-    echo "$PKG:${FUNC_NAME:+" $FUNC_NAME:"}${1:+" $@"}"
-}
-
-get_rc ()
-{
     RETURN="$?"
-    case "${1:-}" in
-        *[!0-9]*|"")
-            ;;
-        *)
-            RETURN="$1"
-            shift
-    esac
+    SAVE_ONE_LINE="${ONE_LINE:-}" ONE_LINE=
+    while is_diff $# 0
+    do
+        case "${1:-}" in
+            -n) 
+                ONE_LINE="-n"
+                ;;
+            *[!0-9]*|"")
+                break
+                ;;
+            *)
+                RETURN="$1"
+        esac
+        shift
+    done
     case "$@" in
         ?*)
-            say "$*"
+            echo ${ONE_LINE:-} "$PKG:${FUNC_NAME:+" $FUNC_NAME:"}${1:+" $@"}"
     esac
+    ONE_LINE="${SAVE_ONE_LINE:-}" SAVE_ONE_LINE=
 }
 
 die ()
 {
-    get_rc "$@" >&2
+    say "$@" >&2
     exit "$RETURN"
 }
 
@@ -139,6 +145,8 @@ is_file ()
 get_file_descriptor ()
 {
     case "${1:-1}" in
+        0|stdin)
+            echo 0 ;;
         1|stdout)
             echo 1 ;;
         2|stderr|stderror)
@@ -243,8 +251,9 @@ arg_is_not_empty ()
 argparse ()
 {
     PARSE_OPTIONS="yes"
-    SHORT_OPTIONS="?hvfiost"
-     LONG_OPTIONS="help version force input output style title"
+    SHORT_OPTIONS="?hvcfiost"
+     LONG_OPTIONS="help version only-content force input output style title"
+    STDIN="terminal"
     ARGS=()
     while is_diff $# 0
     do
@@ -340,7 +349,10 @@ argparse ()
             -t*)
                 PAGE_TITLE="${1#??}"
                 ;;
-            -|--*)
+            -)
+                STDIN="pipeline"
+                ;;
+            --*)
                 try 2 "unknow option: '$1'"
                 ;;
             -*)
@@ -353,19 +365,22 @@ argparse ()
         shift
     done
 
-    is_equal "${#ARGS[@]}" 0 || {
+    is_terminal stdin || STDIN="pipeline"
+
+    is_equal  "${#ARGS[@]}" 0 || {
         set -- "${ARGS[@]}"
+        is_equal "$STDIN" "terminal" &&
         while is_diff $# 0
         do
-            if is_empty "${INPUT:-}"
-            then
-                INPUT="$1"
-            elif is_empty "${OUTPUT:-}"
-            then
-                OUTPUT="$1"
-            else
-                try 2 "unknow argument: '$1'"
-            fi
+            is_empty  "${INPUT:-}" &&  INPUT="$1" || {
+            is_empty "${OUTPUT:-}" && OUTPUT="$1"
+            } || try 2 "unknow argument: '$1'"
+            shift
+        done ||
+        while is_diff $# 0
+        do
+            is_empty "${OUTPUT:-}" && OUTPUT="$1" ||
+            try 2 "unknow argument: '$1'"
             shift
         done
     }
@@ -380,9 +395,12 @@ check_args ()
         } || die 2 "no such file: -- '$PAGE_STYLE'"
     }
 
-    is_not_empty "${INPUT:-}" || try 2 "input file not specified"
-    is_file       "$INPUT"    || die 2 "no such file: -- '$INPUT'"
-    INPUT="$(readlink -e -- "$INPUT" 2>&1)" || die "$INPUT"
+    is_equal "$STDIN" "pipeline"  && INPUT= || {
+        is_not_empty "${INPUT:-}" || try 2 "input file not specified"
+        is_file       "$INPUT"    || die 2 "no such file: -- '$INPUT'"
+        INPUT="$(readlink -e -- "$INPUT" 2>&1)" || die "$INPUT"
+        is_diff "$INPUT" "$PKG_PATH" || try 2 "i can't be an input file: -- '$INPUT'"
+    }
 
     is_empty "${OUTPUT:-}" || {
         if is_exists "$OUTPUT"
@@ -390,25 +408,31 @@ check_args ()
             is_file "$OUTPUT" || {
                 is_dir "$OUTPUT" &&
                 OUTPUT="$(sed 's|\.[mM][dD]$||g' <<< "$OUTPUT/${INPUT##*/}").html" ||
-                    die 2 "is not a file/directory: -- '$OUTPUT'"
+                die 2 "is not a file/directory: -- '$OUTPUT'"
                 is_file "$OUTPUT" || {
                     is_exists "$OUTPUT" &&
-                        die 2 "exists, but it is not a file: -- '$OUTPUT'"
+                    die 2 "exists, but it is not a file: -- '$OUTPUT'"
                 }
             } && {
+                OUTPUT="$(readlink -m -- "$OUTPUT" 2>&1)"
+                is_diff "$OUTPUT" "$PKG_PATH"  || try 2 "i can't be an output file: -- '$OUTPUT'"
+                is_diff "${INPUT:-}" "$OUTPUT" || die 2 "input and output file match"
                 is_not_empty "${FORCE:-}" || {
-                    say "file '$OUTPUT' exists," >&2
-                    request " overwrite it (y/N): " >&2 || die 0 'сanceled'
-                }
+                    if is_terminal stdin
+                    then
+                        request "output file '$OUTPUT' exists, overwrite it (y/N): " ||
+                        die 0 'сanceled'
+                    else
+                        say "output file exists: -- '$OUTPUT'"
+                        try "add the '--force' option to overwrite the file"
+                    fi
+                } >&2
             } || :
-            OUTPUT="$(readlink -m -- "$OUTPUT" 2>&1)"
-            is_diff "$INPUT" "$OUTPUT" || die 2 "input and output file match"
         else
-            OUTPUT="$(readlink -m -- "$OUTPUT" 2>&1)"
-            is_diff "$INPUT" "$OUTPUT" || die 2 "input and output file match"
+            is_diff "${INPUT:-}" "$OUTPUT" || die 2 "input and output file match"
             BASEDIR="${OUTPUT%/*}"
             STATUS="$(mkdir -vp -- "${BASEDIR:-/}" 2>&1)" && say "$STATUS" ||
-                die "$STATUS"
+            die "$STATUS"
         fi
         STATUS="$(touch "$OUTPUT" 2>&1)" || die "$STATUS"
     }
@@ -1271,15 +1295,13 @@ convert_md2html ()
                 # print_horizontal_rule ||
                         add_to_buffer && read_string_again || break
             done
-        done < "$INPUT"
+        done < <(cat "${INPUT:--}")
         if is_equal "${CODE_BLOCK:-}" "open"
         then
             print_code_block
         else
             print_buffer
         fi
-    # }
-    # } | convert_string
     } | convert_string | merge_strings
 }
 
@@ -1356,7 +1378,9 @@ convert ()
 
 report_and_convert ()
 {
-    say "convert a file: $INPUT" >&2
+    is_equal "$STDIN" "pipeline" &&
+    say "converting stdin" >&2 ||
+    say "converting a file: $INPUT" >&2
     convert >&3
     say "conversion completed" >&2
 }
