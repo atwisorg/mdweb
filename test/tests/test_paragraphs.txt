@@ -1,0 +1,9 @@
+:test:4.8 Paragraphs
+:expect
+<p>John MacFarlane</p>
+:expect-err
+mdweb.sh: converting stdin
+mdweb.sh: conversion completed
+:sample
+John MacFarlane
+:run
