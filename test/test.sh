@@ -298,7 +298,6 @@ main ()
     do
         grep "^[[:blank:]]*${TESTED_FILE##*/}" "$PKG_DIR/tests/.testignor" &>/dev/null && continue
         is_exists "$TESTED_FILE" || die 2 "no such file: -- '$TESTED_FILE'" 2>&3
-        echo ":${TESTED_FILE##*/}:"
         run_test_file
     done
     report >&3
