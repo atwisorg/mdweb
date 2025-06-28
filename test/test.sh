@@ -192,6 +192,9 @@ run_test_file ()
             :break|:break:*)
                 break
                 ;;
+            :stop|:stop:*)
+                return 1
+                ;;
             *)
                 is_equal "$LOAD_TEST" "yes" || continue
                 if is_equal "$NEXT_LINE" "expect-stdout"
@@ -291,13 +294,13 @@ main ()
     for TESTED_FILE in "${TESTED_FILES[@]}"
     do
         is_exists "$TESTED_FILE" || die 2 "no such file: -- '$TESTED_FILE'" 2>&3
-        run_test_file
+        run_test_file || break
     done ||
     for TESTED_FILE in "$PKG_DIR"/tests/*.txt
     do
         grep "^[[:blank:]]*${TESTED_FILE##*/}" "$PKG_DIR/tests/.testignor" &>/dev/null && continue
         is_exists "$TESTED_FILE" || die 2 "no such file: -- '$TESTED_FILE'" 2>&3
-        run_test_file
+        run_test_file || break
     done
     report >&3
 }
