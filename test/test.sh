@@ -192,7 +192,7 @@ run_test_file ()
             :break|:break:*)
                 break
                 ;;
-            :stop|:stop:*)
+            :exit|:exit:*)
                 return 1
                 ;;
             *)
