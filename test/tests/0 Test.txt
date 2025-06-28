@@ -1,4 +1,4 @@
-:test:4.8 Paragraphs
+:test:Testing the test
 :expect
 <p>John MacFarlane</p>
 :expect-err
