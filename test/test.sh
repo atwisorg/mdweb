@@ -137,7 +137,7 @@ run_test_file ()
     do
         STRING_NUM="$((STRING_NUM + 1))"
         case "${LINE:-}" in
-            \#:expect:|\#:expect:*)
+            \#:test|\#:test:*)
                 LOAD_TEST="no"
                 continue
                 ;;
