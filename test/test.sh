@@ -241,7 +241,10 @@ main ()
                 shift
                 while is_diff $# 0
                 do
-                    is_diff "${1:-}" "--test-file" || break
+                    is_diff "${1:-}" "--args"         &&
+                    is_diff "${1:-}" "--clear"        &&
+                    is_diff "${1:-}" "--save-results" &&
+                    is_diff "${1:-}" "--test-file"    || break
                     GLOBAL_ARGS+=( "${1:-}" )
                     shift
                 done
@@ -250,7 +253,10 @@ main ()
                 shift
                 while is_diff $# 0
                 do
-                    is_diff "${1:-}" "--args" || break
+                    is_diff "${1:-}" "--args"         &&
+                    is_diff "${1:-}" "--clear"        &&
+                    is_diff "${1:-}" "--save-results" &&
+                    is_diff "${1:-}" "--test-file"    || break
                     TESTED_FILES+=( "${1:-}" )
                     shift
                 done
