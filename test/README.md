@@ -38,27 +38,35 @@ The order of other keywords in the body of the test does not matter.
 ### Keywords
 
 ***`:test`***
+
 Start of the test body. If desired, you can specify the test name:`:test:name test`
 
 ***`:args`***
+
 Pass options to the test program for the current test
 
 ***`:sample`***
+
 Test data. All subsequent lines are loaded, including empty ones, until the end of the test file or until the next keyword.
 
 ***`:expect`***
+
 Expected result received on `stdout` from the program under test
 
 ***`:expect-err`***
+
 Expected result received on `stderr` from the program under test
 
 ***`:run`***
+
 Run the test
 
 ### Control keywords
 
 ***`:break`***
+
 Abort further execution of tests in the current test file
 
 ***`:exit`***
+
 Abort execution of all test files
