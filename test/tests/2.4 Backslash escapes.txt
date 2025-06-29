@@ -29,15 +29,7 @@
 \[foo]: /url "not a reference"
 \&ouml; not a character entity
 :expect: |
-<p>*not emphasized*
-&lt;br/&gt; not a tag
-[not a link](/foo)
-`not code`
-1. not a list
-* not a list
-# not a heading
-[foo]: /url &quot;not a reference&quot;
-&amp;ouml; not a character entity</p>
+<p>*not emphasized* &lt;br/&gt; not a tag [not a link](/foo) `not code` 1. not a list * not a list # not a heading [foo]: /url &quot;not a reference&quot; &amp;ouml; not a character entity</p>
 :run:
 
 # https://spec.commonmark.org/0.31.2/#example-15
