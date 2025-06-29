@@ -1,0 +1,12 @@
+# Architecturally, the sh and bash shell use the NULL
+# character (Unicode; U+0000, Hex: \\x00, Oct: \\000) as a separator,
+# and this character cannot be part of the value of variables
+# and, accordingly, cannot be replaced.
+
+# The next test is always successful and is only of a reporting nature.
+
+# https://spec.commonmark.org/0.31.2/#insecure-characters
+:test:2.3 Insecure characters
+:sample: |
+:expect: |
+:run:
