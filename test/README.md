@@ -26,6 +26,8 @@
                             by default, only the results of failed tests are saved
   --test-file TEST_FILE...  specify the test file;
                             file `.testignor` is not used
+  --test-num NUM ...        specify test numbers separated by commas/spaces
+                            and/or ranges of test numbers to run
 ```
 
 ## Test file syntax

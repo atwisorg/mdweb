@@ -83,6 +83,37 @@ get_pkg_vars ()
     PKG_PATH="$PKG_DIR/$PKG"
 }
 
+get_test_nums ()
+{
+    TEST_NUM=( $(IFS="$IFS,"; set -- ${TEST_NUM[@]}; echo "$@") )
+    set -- "${TEST_NUM[@]}"
+    TEST_NUM=()
+    while is_diff $# 0
+    do
+        case "$1" in
+            -)
+                false
+                ;;
+            [0-9])
+                TEST_NUM+=( "$1" )
+                ;;
+            *)
+                [[ "$1" =~ ^[0-9]+-[0-9]+$ ]] && {
+                    test "${1%%-*}" -le "${1##*-}" &&
+                    for NUM in $(seq "${1%%-*}" "${1##*-}")
+                    do
+                        TEST_NUM+=( "$NUM" )
+                    done
+                } || {
+                    [[ "$1" =~ ^[0-9]+$ ]] && TEST_NUM+=( "$1" )
+                }
+
+        esac || die 2 "unrecognized test number: -- '$1'"
+        shift
+    done
+    TEST_NUM=( $(printf '%s\n' ${TEST_NUM[@]} | sort -n | uniq) )
+}
+
 save_result ()
 {
     STATUS=":test:$TEST_NAME$NEW_STRING"
@@ -105,12 +136,12 @@ cmp_results ()
         STDOUT_RESULT="$(cat "$STDOUT")"
         if is_equal "${STDOUT_RESULT:-}" "${EXPECT:-}"
         then
-            echo -e "       stdout: |\033[1;32m${STDOUT_RESULT//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[1;32m}\033[0m|"
+            echo -e "        stdout: |\033[1;32m${STDOUT_RESULT//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[1;32m}\033[0m|"
             SUCCESS="$((SUCCESS+1))"
             is_equal "$SAVE_RESULTS" "yes" || rm -f "$STDOUT"
         else
-            echo -e "       expect: |\033[0;33m${EXPECT//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[0;33m}\033[0m|"
-            echo -e "       stdout: |\033[1;31m${STDOUT_RESULT//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[1;31m}\033[0m|"
+            echo -e "        expect: |\033[0;33m${EXPECT//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[0;33m}\033[0m|"
+            echo -e "        stdout: |\033[1;31m${STDOUT_RESULT//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[1;31m}\033[0m|"
             FAIL+=( "$(sed 's/[[:blank:]]\+/ /g' <<< "${PREFIX//$NEW_STRING/}: stdout" )" )
             RETURN=1
         fi
@@ -119,18 +150,23 @@ cmp_results ()
         STDERR_RESULT="$(cat "$STDERR")"
         if is_equal "${STDERR_RESULT:-}" "$EXPECT_ERR"
         then
-            echo -e "       stderr: |\033[1;32m${STDERR_RESULT//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[1;32m}\033[0m|"
+            echo -e "        stderr: |\033[1;32m${STDERR_RESULT//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[1;32m}\033[0m|"
             SUCCESS="$((SUCCESS+1))"
             is_equal "$SAVE_RESULTS" "yes" || rm -f "$STDERR"
         else
-            echo -e "expect-stderr: |\033[0;33m${EXPECT_ERR//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[0;33m}\033[0m|"
-            echo -e "       stderr: |\033[1;31m${STDERR_RESULT//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[1;31m}\033[0m|"
+            echo -e " expect-stderr: |\033[0;33m${EXPECT_ERR//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[0;33m}\033[0m|"
+            echo -e "        stderr: |\033[1;31m${STDERR_RESULT//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[1;31m}\033[0m|"
             FAIL+=( "$(sed 's/[[:blank:]]\+/ /g' <<< "${PREFIX//$NEW_STRING/}: stderr" )" )
             RETURN=1
         fi
     }
     rm -f "$STDOUT" "$STDERR"
     return "$RETURN"
+}
+
+check_test_num ()
+{
+    grep "\<$TOTAL_TEST_NUMBER\>" <<< "${TEST_NUM[@]}" &>/dev/null
 }
 
 trim_white_space ()
@@ -142,17 +178,22 @@ trim_white_space ()
 run_test_file ()
 {
     STRING_NUM=0
+    TEST_NUMBER=0
     while IFS= read -r LINE || is_not_empty "${LINE:-}"
     do
         STRING_NUM="$((STRING_NUM + 1))"
         case "${LINE:-}" in
             \#:test|\#:test:*)
                 LOAD_TEST="no"
+                TEST_NUMBER="$((TEST_NUMBER + 1))"
+                TOTAL_TEST_NUMBER="$((TOTAL_TEST_NUMBER + 1))"
                 continue
                 ;;
             :test:*)
-                LOAD_TEST="yes"
                 TEST_NUMBER="$((TEST_NUMBER + 1))"
+                TOTAL_TEST_NUMBER="$((TOTAL_TEST_NUMBER + 1))"
+                is_equal "${#TEST_NUM[@]}" 0 || check_test_num || continue
+                LOAD_TEST="yes"
                 STRING_NUM_TEST="$STRING_NUM"
                 TEST_NAME="${LINE#:test:}"
                 TEST_NAME="${TEST_NAME:-noname}"
@@ -186,14 +227,15 @@ run_test_file ()
                 ;;
             :run|:run:*)
                 is_equal "$LOAD_TEST" "yes" || continue
-                PREFIX="    test file: [$TESTED_FILE]$NEW_STRING       string: [$STRING_NUM_TEST]$NEW_STRING         test: [$TEST_NAME] num: [$TEST_NUMBER]"
+                PREFIX="     test file: [$TESTED_FILE]$NEW_STRING    string num: [$STRING_NUM_TEST]$NEW_STRING     test name: [$TEST_NAME]$NEW_STRING      test num: [$TEST_NUMBER]"
+                is_diff "${#TESTED_FILES[@]}" 0 || PREFIX="$PREFIX${NEW_STRING}total test num: [$TOTAL_TEST_NUMBER]"
                 NAME_TESTED_FILE="${TESTED_FILE##*/}"
                 NAME_TESTED_FILE="${NAME_TESTED_FILE%.txt}"
                 STDOUT="$PKG_DIR/${NAME_TESTED_FILE}_$STRING_NUM_TEST.out"
                 STDERR="$PKG_DIR/${NAME_TESTED_FILE}_$STRING_NUM_TEST.err"
                 is_diff "${#TESTED_ARGS[@]}" 0 || TESTED_ARGS=( "${GLOBAL_ARGS[@]}" )
                 ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_SCRIPT" "${TESTED_ARGS[@]}" <<< "$SAMPLE" > "$STDOUT" 2> "$STDERR"
-                echo "=============$NEW_STRING$PREFIX$NEW_STRING-------------$NEW_STRING       sample: |${SAMPLE//$NEW_STRING/|$NEW_STRING$INDENT}|$NEW_STRING-------------"
+                echo "===============$NEW_STRING$PREFIX$NEW_STRING---------------$NEW_STRING        sample: |${SAMPLE//$NEW_STRING/|$NEW_STRING$INDENT}|$NEW_STRING---------------"
                 if cmp_results
                 then
                     is_equal "$SAVE_RESULTS" "no" || save_result "$TEST_OK"
@@ -225,24 +267,25 @@ run_test_file ()
 
 report ()
 {
-    echo "============="
+    echo "==============="
         for FAIL in "${FAIL[@]}"
         do
-            echo "   $FAIL"
+            echo "    $FAIL"
         done
-    echo "       failed: [${#FAIL[@]}]"
-    echo "   successful: [$SUCCESS]"
-    echo "============="
+    echo "        failed: [${#FAIL[@]}]"
+    echo "    successful: [$SUCCESS]"
+    echo "==============="
 }
 
 main ()
 {
     exec 3>&1
     get_pkg_vars
-    INDENT="               |"
+    INDENT="                |"
     GLOBAL_ARGS=()
     CLEAR_RESULTS="no"
     SAVE_RESULTS="no"
+    TEST_NUM=()
     TEST_OK="$PKG_DIR/test_ok"
     TEST_FAILURE="$PKG_DIR/test_failure"
     TESTED_FILES=()
@@ -253,46 +296,65 @@ main ()
     do
         case "${1:-}" in
             --args)
-                shift
                 while is_diff $# 0
                 do
-                    is_diff "${1:-}" "--args"         &&
-                    is_diff "${1:-}" "--clear"        &&
-                    is_diff "${1:-}" "--save-results" &&
-                    is_diff "${1:-}" "--test-file"    || break
-                    GLOBAL_ARGS+=( "${1:-}" )
+                    is_not_empty "${2:-}"             &&
+                    is_diff "${2:-}" "--args"         &&
+                    is_diff "${2:-}" "--clear"        &&
+                    is_diff "${2:-}" "--save-results" &&
+                    is_diff "${2:-}" "--test-file"    &&
+                    is_diff "${2:-}" "--test-num"     || break
+                    GLOBAL_ARGS+=( "${2:-}" )
                     shift
                 done
                 ;;
             --clear)
                 CLEAR_RESULTS="yes"
-                shift
                 ;;
             --save-results)
                 SAVE_RESULTS="yes"
-                shift
                 ;;
             --test-file)
-                shift
                 while is_diff $# 0
                 do
-                    is_diff "${1:-}" "--args"         &&
-                    is_diff "${1:-}" "--clear"        &&
-                    is_diff "${1:-}" "--save-results" &&
-                    is_diff "${1:-}" "--test-file"    || break
-                    TESTED_FILES+=( "${1:-}" )
+                    is_not_empty "${2:-}"             &&
+                    is_diff "${2:-}" "--args"         &&
+                    is_diff "${2:-}" "--clear"        &&
+                    is_diff "${2:-}" "--save-results" &&
+                    is_diff "${2:-}" "--test-file"    &&
+                    is_diff "${2:-}" "--test-num"     || break
+                    TESTED_FILES+=( "${2:-}" )
                     shift
                 done
                 ;;
-            *)
+            --test-num)
+                while is_diff $# 0
+                do
+                    is_not_empty "${2:-}"             &&
+                    is_diff "${2:-}" "--args"         &&
+                    is_diff "${2:-}" "--clear"        &&
+                    is_diff "${2:-}" "--save-results" &&
+                    is_diff "${2:-}" "--test-file"    &&
+                    is_diff "${2:-}" "--test-num"     || break
+                    TEST_NUM+=( "${2:-}" )
+                    shift
+                done
+                ;;
+            *[!0-9,-]*)
                 GLOBAL_ARGS+=( "${1:-}" )
-                shift
+                ;;
+            *)
+                TEST_NUM+=( "${1:-}" )
         esac
+        shift
     done
+
+    is_equal "${#TEST_NUM[@]}" 0 || get_test_nums
+
     FUNC_NAME="[${TESTED_SCRIPT##*/}]"
     SUCCESS=0
     FAIL=()
-    TOTAL_TESTS=0
+    TOTAL_TEST_NUMBER=0
     LOAD_TEST="no"
     TEST_NUMBER=0
     STRING_NUM=0
