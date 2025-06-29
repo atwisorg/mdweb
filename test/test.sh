@@ -213,12 +213,12 @@ run_test_file ()
 report ()
 {
     echo "============="
-    echo "   successful: [$SUCCESS]"
-    echo "       failed: [${#FAIL[@]}]"
         for FAIL in "${FAIL[@]}"
         do
             echo "   $FAIL"
         done
+    echo "       failed: [${#FAIL[@]}]"
+    echo "   successful: [$SUCCESS]"
     echo "============="
 }
 
