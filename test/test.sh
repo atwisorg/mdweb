@@ -133,6 +133,12 @@ cmp_results ()
     return "$RETURN"
 }
 
+trim_white_space ()
+{
+    STRING="${1#"${1%%[![:blank:]]*}"}"
+    STRING="${STRING%"${STRING##*[![:blank:]]}"}"
+}
+
 run_test_file ()
 {
     STRING_NUM=0
@@ -150,6 +156,8 @@ run_test_file ()
                 STRING_NUM_TEST="$STRING_NUM"
                 TEST_NAME="${LINE#:test:}"
                 TEST_NAME="${TEST_NAME:-noname}"
+                trim_white_space "$TEST_NAME"
+                TEST_NAME="$STRING"
                 ;;
             :test)
                 LOAD_TEST="yes"

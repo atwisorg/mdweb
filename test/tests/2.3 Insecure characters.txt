@@ -6,7 +6,7 @@
 # The next test is always successful and is only of a reporting nature.
 
 # https://spec.commonmark.org/0.31.2/#insecure-characters
-:test:2.3 Insecure characters
+:test: 2.3 Insecure characters
 :sample: |
 :expect: |
 :run:

@@ -1,7 +1,7 @@
 # https://spec.commonmark.org/0.31.2/#tabs
 
 # https://spec.commonmark.org/0.31.2/#example-1
-:test:2.2 Tabs: Example 1
+:test: 2.2 Tabs (Example 1)
 :sample: |
 	foo	baz		bim
 :expect: |
@@ -9,7 +9,7 @@
 :run:
 
 # https://spec.commonmark.org/0.31.2/#example-2
-:test:2.2 Tabs: Example 2
+:test: 2.2 Tabs (Example 2)
 :sample: |
   	foo	baz		bim
 :expect: |
@@ -17,7 +17,7 @@
 :run:
 
 # https://spec.commonmark.org/0.31.2/#example-3
-:test:2.2 Tabs: Example 3
+:test: 2.2 Tabs (Example 3)
 :sample: |
     a	a
     ὐ	a
@@ -27,7 +27,7 @@
 :run:
 
 # https://spec.commonmark.org/0.31.2/#example-4
-:test:2.2 Tabs: Example 4
+:test: 2.2 Tabs (Example 4)
 :sample: |
   - foo
 
@@ -42,7 +42,7 @@
 :run:
 
 # https://spec.commonmark.org/0.31.2/#example-5
-:test:2.2 Tabs: Example 5
+:test: 2.2 Tabs (Example 5)
 :sample: |
 - foo
 
@@ -57,7 +57,7 @@
 :run:
 
 # https://spec.commonmark.org/0.31.2/#example-6
-:test:2.2 Tabs: Example 6
+:test: 2.2 Tabs (Example 6)
 :sample: |
 >		foo
 :expect: |
@@ -67,7 +67,7 @@
 :run:
 
 # https://spec.commonmark.org/0.31.2/#example-7
-:test:2.2 Tabs: Example 7
+:test: 2.2 Tabs (Example 7)
 :sample: |
 -		foo
 :expect: |
@@ -79,7 +79,7 @@
 :run:
 
 # https://spec.commonmark.org/0.31.2/#example-8
-:test:2.2 Tabs: Example 8
+:test: 2.2 Tabs (Example 8)
 :sample: |
     foo
 	bar
@@ -89,7 +89,7 @@ bar</code></pre>
 :run:
 
 # https://spec.commonmark.org/0.31.2/#example-9
-:test:2.2 Tabs: Example 9
+:test: 2.2 Tabs (Example 9)
 :sample: |
  - foo
    - bar
@@ -109,7 +109,7 @@ bar</code></pre>
 :run:
 
 # https://spec.commonmark.org/0.31.2/#example-10
-:test:2.2 Tabs: Example 10
+:test: 2.2 Tabs (Example 10)
 :sample: |
 #	Foo
 :expect: |
@@ -117,7 +117,7 @@ bar</code></pre>
 :run:
 
 # https://spec.commonmark.org/0.31.2/#example-11
-:test:2.2 Tabs: Example 11
+:test: 2.2 Tabs (Example 11)
 :sample: |
 *	*	*	
 :expect: |
