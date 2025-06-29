@@ -136,12 +136,12 @@ cmp_results ()
         STDOUT_RESULT="$(cat "$STDOUT")"
         if is_equal "${STDOUT_RESULT:-}" "${EXPECT:-}"
         then
-            echo -e "        stdout: |\033[1;32m${STDOUT_RESULT//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[1;32m}\033[0m|"
+            echo -e "         stdout: |\033[1;32m${STDOUT_RESULT//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[1;32m}\033[0m|"
             SUCCESS="$((SUCCESS+1))"
             is_equal "$SAVE_RESULTS" "yes" || rm -f "$STDOUT"
         else
-            echo -e "        expect: |\033[0;33m${EXPECT//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[0;33m}\033[0m|"
-            echo -e "        stdout: |\033[1;31m${STDOUT_RESULT//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[1;31m}\033[0m|"
+            echo -e "         expect: |\033[0;33m${EXPECT//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[0;33m}\033[0m|"
+            echo -e "         stdout: |\033[1;31m${STDOUT_RESULT//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[1;31m}\033[0m|"
             FAIL+=( "$(sed 's/[[:blank:]]\+/ /g' <<< "${PREFIX//$NEW_STRING/}: stdout" )" )
             RETURN=1
         fi
@@ -150,12 +150,12 @@ cmp_results ()
         STDERR_RESULT="$(cat "$STDERR")"
         if is_equal "${STDERR_RESULT:-}" "$EXPECT_ERR"
         then
-            echo -e "        stderr: |\033[1;32m${STDERR_RESULT//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[1;32m}\033[0m|"
+            echo -e "         stderr: |\033[1;32m${STDERR_RESULT//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[1;32m}\033[0m|"
             SUCCESS="$((SUCCESS+1))"
             is_equal "$SAVE_RESULTS" "yes" || rm -f "$STDERR"
         else
-            echo -e " expect-stderr: |\033[0;33m${EXPECT_ERR//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[0;33m}\033[0m|"
-            echo -e "        stderr: |\033[1;31m${STDERR_RESULT//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[1;31m}\033[0m|"
+            echo -e "  expect-stderr: |\033[0;33m${EXPECT_ERR//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[0;33m}\033[0m|"
+            echo -e "         stderr: |\033[1;31m${STDERR_RESULT//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[1;31m}\033[0m|"
             FAIL+=( "$(sed 's/[[:blank:]]\+/ /g' <<< "${PREFIX//$NEW_STRING/}: stderr" )" )
             RETURN=1
         fi
@@ -227,15 +227,15 @@ run_test_file ()
                 ;;
             :run|:run:*)
                 is_equal "$LOAD_TEST" "yes" || continue
-                PREFIX="     test file: [$TESTED_FILE]$NEW_STRING    string num: [$STRING_NUM_TEST]$NEW_STRING     test name: [$TEST_NAME]$NEW_STRING      test num: [$TEST_NUMBER]"
-                is_diff "${#TESTED_FILES[@]}" 0 || PREFIX="$PREFIX${NEW_STRING}total test num: [$TOTAL_TEST_NUMBER]"
+                PREFIX="      test file: [$TESTED_FILE]$NEW_STRING     string num: [$STRING_NUM_TEST]$NEW_STRING      test name: [$TEST_NAME]$NEW_STRING       test num: [$TEST_NUMBER]"
+                is_diff "${#TESTED_FILES[@]}" 0 || PREFIX="$PREFIX${NEW_STRING} total test num: [$TOTAL_TEST_NUMBER]"
                 NAME_TESTED_FILE="${TESTED_FILE##*/}"
                 NAME_TESTED_FILE="${NAME_TESTED_FILE%.txt}"
                 STDOUT="$PKG_DIR/${NAME_TESTED_FILE}_$STRING_NUM_TEST.out"
                 STDERR="$PKG_DIR/${NAME_TESTED_FILE}_$STRING_NUM_TEST.err"
                 is_diff "${#TESTED_ARGS[@]}" 0 || TESTED_ARGS=( "${GLOBAL_ARGS[@]}" )
                 ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_SCRIPT" "${TESTED_ARGS[@]}" <<< "$SAMPLE" > "$STDOUT" 2> "$STDERR"
-                echo "===============$NEW_STRING$PREFIX$NEW_STRING---------------$NEW_STRING        sample: |${SAMPLE//$NEW_STRING/|$NEW_STRING$INDENT}|$NEW_STRING---------------"
+                echo "================$NEW_STRING$PREFIX$NEW_STRING----------------$NEW_STRING         sample: |${SAMPLE//$NEW_STRING/|$NEW_STRING$INDENT}|$NEW_STRING----------------"
                 if cmp_results
                 then
                     is_equal "$SAVE_RESULTS" "no" || save_result "$TEST_OK"
@@ -267,21 +267,21 @@ run_test_file ()
 
 report ()
 {
-    echo "==============="
+    echo "================"
         for FAIL in "${FAIL[@]}"
         do
-            echo "    $FAIL"
+            echo "     $FAIL"
         done
-    echo "        failed: [${#FAIL[@]}]"
-    echo "    successful: [$SUCCESS]"
-    echo "==============="
+    echo "         failed: [${#FAIL[@]}]"
+    echo "     successful: [$SUCCESS]"
+    echo "================"
 }
 
 main ()
 {
     exec 3>&1
     get_pkg_vars
-    INDENT="                |"
+    INDENT="                 |"
     GLOBAL_ARGS=()
     CLEAR_RESULTS="no"
     SAVE_RESULTS="no"
