@@ -1,0 +1,9 @@
+# https://spec.commonmark.org/0.31.2/#backslash-escapes
+
+# https://spec.commonmark.org/0.31.2/#example-12
+:test: 2.4 Backslash escapes (Example 12)
+:sample: |
+\!\"\#\$\%\&\'\(\)\*\+\,\-\.\/\:\;\<\=\>\?\@\[\\\]\^\_\`\{\|\}\~
+:expect: |
+<p>!&quot;#$%&amp;'()*+,-./:;&lt;=&gt;?@[\]^_`{|}~</p>
+:run:
