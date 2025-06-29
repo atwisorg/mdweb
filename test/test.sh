@@ -87,21 +87,23 @@ save_result ()
 {
     STATUS=":test:$TEST_NAME$NEW_STRING"
     is_equal "${#TESTED_ARGS[@]}" 0 ||
-    STATUS="$STATUS:args:${TESTED_ARGS[@]}$NEW_STRING"
-    STATUS="$STATUS${EXPECT:+:expect$NEW_STRING$EXPECT$NEW_STRING}"
-    STATUS="$STATUS${EXPECT_ERR:+:expect-err$NEW_STRING$EXPECT_ERR$NEW_STRING}"
-    STATUS="$STATUS:sample$NEW_STRING$SAMPLE$NEW_STRING:run$NEW_STRING$NEW_STRING"
-    STATUS="$STATUS:stdout$NEW_STRING${STDOUT_RESULT:-}$NEW_STRING"
-    STATUS="$STATUS:stderr$NEW_STRING${STDERR_RESULT:-}$NEW_STRING-------"
+        STATUS="$STATUS:args:${TESTED_ARGS[@]}$NEW_STRING"
+    is_empty "${COMPARE_STDOUT:-}" ||
+        STATUS="$STATUS:expect: |$NEW_STRING${EXPECT:+"$EXPECT$NEW_STRING"}"
+    is_empty "${COMPARE_STDERR:-}" ||
+        STATUS="$STATUS:expect-err: |$NEW_STRING${EXPECT_ERR:+$EXPECT_ERR$NEW_STRING}"
+    STATUS="$STATUS:sample: |$NEW_STRING${SAMPLE:+$SAMPLE$NEW_STRING}:run:$NEW_STRING$NEW_STRING"
+    STATUS="$STATUS:stdout: |$NEW_STRING${STDOUT_RESULT:+$STDOUT_RESULT$NEW_STRING}"
+    STATUS="$STATUS:stderr: |$NEW_STRING${STDERR_RESULT:+$STDERR_RESULT$NEW_STRING}:end:"
     echo "$STATUS" > "$1/${NAME_TESTED_FILE}_$STRING_NUM_TEST.txt"
 }
 
 cmp_results ()
 {
     RETURN=0 STDOUT_RESULT= STDERR_RESULT=
-    is_empty "${EXPECT:-}" || {
+    is_empty "${COMPARE_STDOUT:-}" || {
         STDOUT_RESULT="$(cat "$STDOUT")"
-        if is_equal "${STDOUT_RESULT:-}" "$EXPECT"
+        if is_equal "${STDOUT_RESULT:-}" "${EXPECT:-}"
         then
             echo -e "       stdout: |\033[1;32m${STDOUT_RESULT//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[1;32m}\033[0m|"
             SUCCESS="$((SUCCESS+1))"
@@ -113,7 +115,7 @@ cmp_results ()
             RETURN=1
         fi
     }
-    is_empty "${EXPECT_ERR:-}" || {
+    is_empty "${COMPARE_STDERR:-}" || {
         STDERR_RESULT="$(cat "$STDERR")"
         if is_equal "${STDERR_RESULT:-}" "$EXPECT_ERR"
         then
@@ -133,6 +135,7 @@ cmp_results ()
 
 run_test_file ()
 {
+    STRING_NUM=0
     while IFS= read -r LINE || is_not_empty "${LINE:-}"
     do
         STRING_NUM="$((STRING_NUM + 1))"
@@ -156,9 +159,11 @@ run_test_file ()
                 ;;
             :expect|:expect-out|:expect-stdout|:expect:*|:expect-out:*|:expect-stdout:*)
                 NEXT_LINE="expect-stdout"
+                COMPARE_STDOUT="yes"
                 ;;
             :expect-err|:expect-stderr|:expect-err:*|:expect-stderr:*)
                 NEXT_LINE="expect-stderr"
+                COMPARE_STDERR="yes"
                 ;;
             :args)
                 ;;
@@ -173,7 +178,7 @@ run_test_file ()
                 ;;
             :run|:run:*)
                 is_equal "$LOAD_TEST" "yes" || continue
-                PREFIX="    test file: [$TESTED_FILE]$NEW_STRING         test: [$TEST_NAME] num: [$TEST_NUMBER]$NEW_STRING       string: [$STRING_NUM_TEST]"
+                PREFIX="    test file: [$TESTED_FILE]$NEW_STRING       string: [$STRING_NUM_TEST]$NEW_STRING         test: [$TEST_NAME] num: [$TEST_NUMBER]"
                 NAME_TESTED_FILE="${TESTED_FILE##*/}"
                 NAME_TESTED_FILE="${NAME_TESTED_FILE%.txt}"
                 STDOUT="$PKG_DIR/${NAME_TESTED_FILE}_$STRING_NUM_TEST.out"
@@ -187,7 +192,7 @@ run_test_file ()
                 else
                     save_result "$TEST_FAILURE"
                 fi
-                EXPECT= EXPECT_ERR= SAMPLE= LOAD_TEST="no" TESTED_ARGS=()
+                COMPARE_STDOUT= COMPARE_STDERR= EXPECT= EXPECT_ERR= SAMPLE= LOAD_TEST="no" TESTED_ARGS=()
                 ;;
             :break|:break:*)
                 break
