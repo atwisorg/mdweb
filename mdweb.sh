@@ -1088,17 +1088,17 @@ add_to_buffer ()
         is_empty  "${!MAP_CLOSING_TAG_INDENT[@]}" ||
         TAG_INDENT="${MAP_CLOSING_TAG_INDENT[-1]}"
         BUFFER_INDENT="${TAG_INDENT:-}"
-        STRING_BUFFER="${MD_INDENT:-}$STRING"
+        STRING_BUFFER="${STRING_INDENT:-}$STRING"
     } || {
-        STRING_BUFFER="$STRING_BUFFER$NEW_STRING${BUFFER_INDENT:-}${MD_INDENT:-}$STRING"
+        STRING_BUFFER="$STRING_BUFFER$NEW_STRING${BUFFER_INDENT:-}${STRING_INDENT:-}$STRING"
     }
     STRING=
 }
 
 get_string_indent ()
 {
-    MD_INDENT="${STRING%%[![:blank:]]*}"
-    STRING="${STRING#"${MD_INDENT:-}"}"
+    STRING_INDENT="${STRING%%[![:blank:]]*}"
+    STRING="${STRING#"${STRING_INDENT:-}"}"
 
     is_not_empty "${STRING:-}" || {
         # is_equal "$BLOCKQUOTE_IS_OPEN" "no" && {
@@ -1117,36 +1117,43 @@ get_string_indent ()
         # }
         return
     }
+
+    INDENT_LENGTH="${STRING_INDENT//$TAB/$SPACE$SPACE$SPACE$SPACE}"
+    test "${#INDENT_LENGTH}" -ge 4 && {
+        INDENTED_CODE_BLOCK="open"
+        add_code_block_tag
+    }
+
     # if is_equal "${INDENTED_CODE_BLOCK:-}" "open"
     # then
-    #     test "${#MD_INDENT}" -ge "$((MD_INDENT_WIDTH + 1))" &&
-    #     STRING="${MD_INDENT#????}$STRING" || {
+    #     test "${#STRING_INDENT}" -ge "$((STRING_INDENT_WIDTH + 1))" &&
+    #     STRING="${STRING_INDENT#????}$STRING" || {
     #         print_code_block
-    #         MD_EXCESS_INDENT="${MD_INDENT:-}"
+    #         MD_EXCESS_INDENT="${STRING_INDENT:-}"
     #     }
     # elif is_equal "${CODE_BLOCK:-}" "open"
     # then
-    #     STRING="${MD_INDENT:"${#MD_EXCESS_INDENT}"}$STRING"
-    # elif test "${#MD_INDENT}" -ge "$((MD_INDENT_WIDTH + 1))"
+    #     STRING="${STRING_INDENT:"${#MD_EXCESS_INDENT}"}$STRING"
+    # elif test "${#STRING_INDENT}" -ge 4
     # then
     #     is_empty "${STRING_BUFFER:-}" && {
     #         is_not_empty "${ROW_NESTING_DEPTH:-}" || print_buffer
     #         add_code_block_tag
     #         INDENTED_CODE_BLOCK="open"
-    #         STRING="${MD_INDENT#????}$STRING"
+    #         STRING="${STRING_INDENT#????}$STRING"
     #     } || {
     #         add_to_buffer
     #         return
     #     }
     # else
-    #     MD_EXCESS_INDENT="${MD_INDENT:-}"
+    #     MD_EXCESS_INDENT="${STRING_INDENT:-}"
     # fi
     return 1
 
-    # MD_INDENT="$(printf "%$((${#MD_INDENT} ))s" '')"
-    # # MD_INDENT="$(printf "%$((${#MD_INDENT} / MD_INDENT_WIDTH * MD_INDENT_WIDTH))s" '')"
-    # test "${#MD_SAVE_INDENT}" -ge "${#MD_INDENT}" ||
-    # MD_INDENT="$(printf "%$((${#MD_SAVE_INDENT} + MD_INDENT_WIDTH))s" '')"
+    # STRING_INDENT="$(printf "%$((${#STRING_INDENT} ))s" '')"
+    # # STRING_INDENT="$(printf "%$((${#STRING_INDENT} / STRING_INDENT_WIDTH * STRING_INDENT_WIDTH))s" '')"
+    # test "${#MD_SAVE_INDENT}" -ge "${#STRING_INDENT}" ||
+    # STRING_INDENT="$(printf "%$((${#MD_SAVE_INDENT} + STRING_INDENT_WIDTH))s" '')"
 }
 
 add_tag_to_the_buffer ()
@@ -1259,7 +1266,7 @@ convert_md2html ()
 
     MD_SAVE_INDENT=
     MD_EXCESS_INDENT=
-    MD_INDENT_WIDTH=3
+    STRING_INDENT_WIDTH=3
     TAG_INDENT_WIDTH=0
     MAIN_TAG_INDENT="    "
     MAIN_TAG_INDENT=""
@@ -1282,6 +1289,8 @@ convert_md2html ()
                 MARKER_TAG_BR="$(tr '\n' '\177' <<< "")" # ^? [\x7f]
              MARKER_ADD_TAG_P="$(tr '\n' '\032' <<< "")" # ^Z [\x1a]
                POSITION_TAG_P="$(tr '\n' '\033' <<< "")" # ^[ [\x1b]
+                        SPACE=" "                        #    [\x20]
+                          TAB=$'\t'                      # ^I [\x09]
                    NEW_STRING=$'\n'                      #  $ [\x0a]
     {
         while IFS= read -r STRING || is_not_empty "${STRING:-}"
@@ -1292,7 +1301,7 @@ convert_md2html ()
             while :
             do
                     get_string_indent ||
-                #     add_to_code_block ||
+                    add_to_code_block ||
                 #     add_to_blockquote ||
                         print_heading ||
                 print_horizontal_rule ||
