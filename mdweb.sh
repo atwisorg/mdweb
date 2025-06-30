@@ -843,7 +843,6 @@ convert_string ()
         t add_tag_strong-em_by_asterisk
 
         : unmask
-        s%\x01%\n%g
         s%\x02%\\%g
         s%\x03%\&amp;%g
         s%\x04%\&lt;%g
@@ -884,6 +883,11 @@ merge_strings ()
             t merge
         }
         : end'
+}
+
+split_strings ()
+{
+    sed 's%\x01%\n%g'
 }
 
 get_tag_indent ()
@@ -948,7 +952,7 @@ print_opening_tags ()
         TAG=
         for i in "${!MAP_OPENING_TAG[@]}"
         do
-            TAG="${TAG:-}${MAP_OPENING_TAG_INDENT[$i]:-}${MAP_OPENING_TAG[$i]}"
+            TAG="${TAG:+$TAG$NEW_STRING}${MAP_OPENING_TAG_INDENT[$i]:-}${MAP_OPENING_TAG[$i]}"
         done
         MAP_OPENING_TAG_INDENT=()
         MAP_OPENING_TAG=()
@@ -966,7 +970,7 @@ print_string ()
         then
             STRING="$MARKER_FORMAT_STRING$MARKER_ADD_TAG_P${BUFFER_INDENT:-}$POSITION_TAG_P$STRING"
         else
-            STRING="$MARKER_FORMAT_STRING${BUFFER_INDENT:-}$STRING"
+            STRING="${BUFFER_INDENT:-}$STRING"
         fi
         BUFFER_INDENT=
         echo "${STRING:-}"
@@ -985,7 +989,7 @@ print_closing_tags ()
         TAG=
         for i in $(seq 1 $SHIFT)
         do
-            TAG="${TAG:-}${MAP_CLOSING_TAG_INDENT[-1]:-}${MAP_CLOSING_TAG[-1]}"
+            TAG="${TAG:+$TAG$NEW_STRING}${MAP_CLOSING_TAG_INDENT[-1]:-}${MAP_CLOSING_TAG[-1]}"
             unset -v "MAP_CLOSING_TAG[-1]" "MAP_CLOSING_TAG_INDENT[-1]"
         done
         # ROW_NESTING_DEPTH="$((ROW_NESTING_DEPTH-SHIFT))"
@@ -994,7 +998,7 @@ print_closing_tags ()
         TAG=
         for i in "${!MAP_CLOSING_TAG[@]}"
         do
-            TAG="${MAP_CLOSING_TAG_INDENT[$i]:-}${MAP_CLOSING_TAG[$i]}${TAG:-}"
+            TAG="${MAP_CLOSING_TAG_INDENT[$i]:-}${MAP_CLOSING_TAG[$i]}${TAG:+$NEW_STRING$TAG}"
         done
         MAP_CLOSING_TAG_INDENT=()
         MAP_CLOSING_TAG=()
@@ -1017,7 +1021,13 @@ print_buffer ()
 
 print_code_block ()
 {
-    print_buffer 1
+    case "${1:-}" in
+        close_all)
+            print_buffer
+            ;;
+        *)
+            print_buffer 1
+    esac    
     CODE_BLOCK="closed"
     INDENTED_CODE_BLOCK="closed"
 }
@@ -1095,6 +1105,11 @@ add_to_buffer ()
     STRING=
 }
 
+tab2space ()
+{
+    WHITESPACE_INDENT="$(echo "$STRING_INDENT" | expand -t "${1:-4}")"
+}
+
 get_string_indent ()
 {
     STRING_INDENT="${STRING%%[![:blank:]]*}"
@@ -1118,19 +1133,17 @@ get_string_indent ()
         return
     }
 
-    INDENT_LENGTH="${STRING_INDENT//$TAB/$SPACE$SPACE$SPACE$SPACE}"
-    test "${#INDENT_LENGTH}" -ge 4 && {
-        INDENTED_CODE_BLOCK="open"
-        add_code_block_tag
-    }
+    if is_equal "${INDENTED_CODE_BLOCK:-}" "open"
+    then
+        tab2space
+        test  "${#WHITESPACE_INDENT}" -ge 4 &&
+        STRING="${WHITESPACE_INDENT#????}$STRING"
 
-    # if is_equal "${INDENTED_CODE_BLOCK:-}" "open"
-    # then
-    #     test "${#STRING_INDENT}" -ge "$((STRING_INDENT_WIDTH + 1))" &&
-    #     STRING="${STRING_INDENT#????}$STRING" || {
-    #         print_code_block
-    #         MD_EXCESS_INDENT="${STRING_INDENT:-}"
-    #     }
+        # test "${#STRING_INDENT}" -ge "$((STRING_INDENT_WIDTH + 1))" &&
+        # STRING="${STRING_INDENT#????}$STRING" || {
+        #     print_code_block
+        #     MD_EXCESS_INDENT="${STRING_INDENT:-}"
+        # }
     # elif is_equal "${CODE_BLOCK:-}" "open"
     # then
     #     STRING="${STRING_INDENT:"${#MD_EXCESS_INDENT}"}$STRING"
@@ -1145,9 +1158,24 @@ get_string_indent ()
     #         add_to_buffer
     #         return
     #     }
-    # else
+    elif is_diff "${#MAP_CLOSING_TAG[@]}" 0 &&
+         [[ "${MAP_CLOSING_TAG[-1]}" =~ ^\</blockquote\> ]]
+    then
+        tab2space 3
+        test "${#WHITESPACE_INDENT}" -ge 4 && {
+            STRING="${WHITESPACE_INDENT#????}$STRING"
+            INDENTED_CODE_BLOCK="open"
+            add_code_block_tag
+        }
+    else
+        tab2space
+        test "${#WHITESPACE_INDENT}" -ge 4 && {
+            STRING="${WHITESPACE_INDENT#????}$STRING"
+            INDENTED_CODE_BLOCK="open"
+            add_code_block_tag
+        }
     #     MD_EXCESS_INDENT="${STRING_INDENT:-}"
-    # fi
+    fi
     return 1
 
     # STRING_INDENT="$(printf "%$((${#STRING_INDENT} ))s" '')"
@@ -1164,9 +1192,8 @@ add_tag_to_the_buffer ()
 
 add_to_blockquote ()
 {
-    [[ "$STRING" =~ ^\>[[:blank:]]+ ]] && STRING="${STRING#??}" || {
-                [[ "$STRING" =~ ^\> ]] && STRING="${STRING#?}"  || return
-    }
+    [[ "$STRING" =~ ^\> ]] && STRING="${STRING#?}"  || return
+
     BLOCKQUOTE_IS_OPEN="yes"
 
     get_tag blockquote
@@ -1302,7 +1329,7 @@ convert_md2html ()
             do
                     get_string_indent ||
                     add_to_code_block ||
-                #     add_to_blockquote ||
+                    add_to_blockquote ||
                         print_heading ||
                 print_horizontal_rule ||
                         add_to_buffer && read_string_again || break
@@ -1310,11 +1337,11 @@ convert_md2html ()
         done < <(cat "${INPUT:--}")
         if is_equal "${CODE_BLOCK:-}" "open"
         then
-            print_code_block
+            print_code_block close_all
         else
             print_buffer
         fi
-    } | convert_string | merge_strings
+    } | convert_string | merge_strings | split_strings
 }
 
 open_html ()
