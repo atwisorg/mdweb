@@ -129,39 +129,71 @@ save_result ()
     echo "$STATUS" > "$1/${NAME_TESTED_FILE}_$STRING_NUM_TEST.txt"
 }
 
+expect_out ()
+{
+    echo -e "|\033[0;33m${1//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[0;33m}\033[0m|"
+}
+
+success_out ()
+{
+    echo -e "|\033[1;32m${1//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[1;32m}\033[0m|"
+}
+
+failed_out ()
+{
+    echo -e "|\033[1;31m${1//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[1;31m}\033[0m|"
+}
+
+info_out ()
+{
+    echo -e "|\033[0;36m${1//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[0;36m}\033[0m|"
+}
+
 cmp_results ()
 {
-    RETURN=0 STDOUT_RESULT= STDERR_RESULT=
+    RETURN=0
     STDOUT_RESULT="$(cat "$STDOUT")"
+    STDERR_RESULT="$(cat "$STDERR")"
+    rm -f "$STDOUT" "$STDERR"
+
     is_empty "${COMPARE_STDOUT:-}" || {
         if is_equal "${STDOUT_RESULT:-}" "${EXPECT:-}"
         then
-            echo -e "         stdout: |\033[1;32m${STDOUT_RESULT//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[1;32m}\033[0m|"
+            echo "         stdout: $(success_out "$STDOUT_RESULT")"
             SUCCESS="$((SUCCESS+1))"
             is_equal "$SAVE_RESULTS" "yes" || rm -f "$STDOUT"
         else
-            echo -e "         expect: |\033[0;33m${EXPECT//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[0;33m}\033[0m|"
-            echo -e "         stdout: |\033[1;31m${STDOUT_RESULT//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[1;31m}\033[0m|"
+            echo "  expect-stdout: $(expect_out "$EXPECT")"
+            echo "         stdout: $(failed_out "$STDOUT_RESULT")"
             FAIL+=( "$(sed 's/[[:blank:]]\+/ /g' <<< "${PREFIX//$NEW_STRING/}: stdout" )" )
             RETURN=1
         fi
     }
 
-    STDERR_RESULT="$(cat "$STDERR")"
-    is_empty "${COMPARE_STDERR:-}" || {
+    is_empty "${COMPARE_STDERR:-}" && {
+        if is_empty "${COMPARE_STDOUT:-}"
+        then
+            echo "         stdout: $(info_out "$STDOUT_RESULT")"
+            echo "         stderr: $(info_out "$STDERR_RESULT")"
+        else
+            is_equal "$RETURN" 0 ||
+            echo "         stderr: $(info_out "$STDERR_RESULT")"
+        fi
+    } || {
         if is_equal "${STDERR_RESULT:-}" "$EXPECT_ERR"
         then
-            echo -e "         stderr: |\033[1;32m${STDERR_RESULT//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[1;32m}\033[0m|"
+            echo "         stderr: $(success_out "$STDOUT_RESULT")"
             SUCCESS="$((SUCCESS+1))"
             is_equal "$SAVE_RESULTS" "yes" || rm -f "$STDERR"
         else
-            echo -e "  expect-stderr: |\033[0;33m${EXPECT_ERR//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[0;33m}\033[0m|"
-            echo -e "         stderr: |\033[1;31m${STDERR_RESULT//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[1;31m}\033[0m|"
+            is_not_empty "${COMPARE_STDOUT:-}" ||
+            echo "         stdout: $(info_out "$STDOUT_RESULT")"
+            echo "  expect-stderr: $(expect_out "$EXPECT_ERR")"
+            echo "         stderr: $(success_out "$STDERR_RESULT")"
             FAIL+=( "$(sed 's/[[:blank:]]\+/ /g' <<< "${PREFIX//$NEW_STRING/}: stderr" )" )
             RETURN=1
         fi
     }
-    rm -f "$STDOUT" "$STDERR"
     return "$RETURN"
 }
 
@@ -275,8 +307,9 @@ report ()
         done
     echo -e "
          \033[0;31mfailed\033[0m: [\033[1;31m${#FAIL[@]}\033[0m]
-     \033[0;32msuccessful\033[0m: [\033[1;32m$SUCCESS\033[0m]
-    \033[0;33mtotal tests\033[0m: [\033[1;33m$TOTAL_TEST_NUMBER\033[0m]
+     \033[0;32msuccessful\033[0m: [\033[1;32m$SUCCESS\033[0m]"
+    is_empty "${!TEST_NUM[@]}" || TOTAL_TEST_NUMBER="${#TEST_NUM[@]}"
+    echo -e "    \033[0;33mtotal tests\033[0m: [\033[1;33m$TOTAL_TEST_NUMBER\033[0m]
 ================"
 }
 
