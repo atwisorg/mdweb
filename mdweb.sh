@@ -843,7 +843,7 @@ convert_string ()
         t add_tag_strong-em_by_asterisk
 
         : unmask
-        s%\x01%<br>\n%g
+        s%\x01%\n%g
         s%\x02%\\%g
         s%\x03%\&amp;%g
         s%\x04%\&lt;%g
@@ -857,8 +857,10 @@ convert_string ()
         s%\x13%!%g
         s%\x14%(%g
         s%\x15%)%g
-        s%\x16%$%g
+        s%\x16%#%g
         s%\x17%|%g
+        s%\x7f%<br />\n%g
+        s%"%\&quot;%g
 
         # add tag p
         s%^\x1a\([^\x1b]*\)\x1b\(.*\)$%\1<p>\2</p>%
@@ -957,8 +959,8 @@ print_opening_tags ()
 print_string ()
 {
     is_empty "${STRING:-}" || {
-        STRING="${STRING//\\$NEW_STRING/$MARKER_NEW_STRING}"
-        STRING="${STRING//$NEW_STRING/ }"
+        STRING="${STRING//\\$NEW_STRING/$MARKER_TAG_BR}"
+        STRING="${STRING//$NEW_STRING/$MARKER_NEW_STRING}"
         if  is_equal "${#MAP_CLOSING_TAG[@]}" 0 ||
             [[ "${MAP_CLOSING_TAG[-1]}" =~ ^[[:blank:]]*\</blockquote\> ]]
         then
@@ -1232,7 +1234,7 @@ print_heading ()
 print_horizontal_rule ()
 {
     [[ "$(tr -d '[:blank:]' <<< "${STRING:-}")" =~ ^(-{3,}|_{3,}|\*{3,})$ ]] && {
-        STRING="${TAG_INDENT:-}<hr>$NEW_STRING"
+        STRING="${TAG_INDENT:-}<hr />$NEW_STRING"
         is_empty "${ROW_NESTING_DEPTH:-}" &&
         print_buffer ||
         print_buffer 0
@@ -1277,9 +1279,10 @@ convert_md2html ()
      MARKER_STOP_MERGE_STRING="$(tr '\n' '\031' <<< "")" # ^Y [\x19]
          MARKER_FORMAT_STRING="$(tr '\n' '\037' <<< "")" # ^_ [\x1f]
             MARKER_NEW_STRING="$(tr '\n' '\001' <<< "")" # ^A [\x01]
+                MARKER_TAG_BR="$(tr '\n' '\177' <<< "")" # ^? [\x7f]
              MARKER_ADD_TAG_P="$(tr '\n' '\032' <<< "")" # ^Z [\x1a]
                POSITION_TAG_P="$(tr '\n' '\033' <<< "")" # ^[ [\x1b]
-                   NEW_STRING=$'\n'                      # $  [\x0a]
+                   NEW_STRING=$'\n'                      #  $ [\x0a]
     {
         while IFS= read -r STRING || is_not_empty "${STRING:-}"
         do
@@ -1291,8 +1294,8 @@ convert_md2html ()
                     get_string_indent ||
                 #     add_to_code_block ||
                 #     add_to_blockquote ||
-                        # print_heading ||
-                # print_horizontal_rule ||
+                        print_heading ||
+                print_horizontal_rule ||
                         add_to_buffer && read_string_again || break
             done
         done < <(cat "${INPUT:--}")
