@@ -271,11 +271,13 @@ report ()
     echo "================"
         for FAIL in "${FAIL[@]}"
         do
-            echo "     $FAIL"
+            echo -e "     \033[0;31m$FAIL\033[0;30m"
         done
-    echo "         failed: [${#FAIL[@]}]"
-    echo "     successful: [$SUCCESS]"
-    echo "================"
+    echo -e "
+         \033[0;31mfailed\033[0m: [\033[1;31m${#FAIL[@]}\033[0m]
+     \033[0;32msuccessful\033[0m: [\033[1;32m$SUCCESS\033[0m]
+    \033[0;33mtotal tests\033[0m: [\033[1;33m$TOTAL_TEST_NUMBER\033[0m]
+================"
 }
 
 main ()
