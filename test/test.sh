@@ -132,8 +132,8 @@ save_result ()
 cmp_results ()
 {
     RETURN=0 STDOUT_RESULT= STDERR_RESULT=
+    STDOUT_RESULT="$(cat "$STDOUT")"
     is_empty "${COMPARE_STDOUT:-}" || {
-        STDOUT_RESULT="$(cat "$STDOUT")"
         if is_equal "${STDOUT_RESULT:-}" "${EXPECT:-}"
         then
             echo -e "         stdout: |\033[1;32m${STDOUT_RESULT//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[1;32m}\033[0m|"
@@ -146,8 +146,9 @@ cmp_results ()
             RETURN=1
         fi
     }
+
+    STDERR_RESULT="$(cat "$STDERR")"
     is_empty "${COMPARE_STDERR:-}" || {
-        STDERR_RESULT="$(cat "$STDERR")"
         if is_equal "${STDERR_RESULT:-}" "$EXPECT_ERR"
         then
             echo -e "         stderr: |\033[1;32m${STDERR_RESULT//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[1;32m}\033[0m|"
