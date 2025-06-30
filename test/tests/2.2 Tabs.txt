@@ -13,7 +13,7 @@
 :sample: |
   	foo	baz		bim
 :expect: |
-<pre><code>foo	baz		bim</code></pre>
+<pre><code class="indented-code-block">foo	baz		bim</code></pre>
 :run:
 
 # https://spec.commonmark.org/0.31.2/#example-3
@@ -22,7 +22,7 @@
     a	a
     ὐ	a
 :expect: |
-<pre><code>a	b
+<pre><code class="indented-code-block">a	a
 ὐ	a</code></pre>
 :run:
 
@@ -51,7 +51,7 @@
 <ul>
 <li>
 <p>foo</p>
-<pre><code>  bar</code></pre>
+<pre><code class="indented-code-block">  bar</code></pre>
 </li>
 </ul>
 :run:
@@ -62,7 +62,7 @@
 >		foo
 :expect: |
 <blockquote>
-<pre><code>  foo</code></pre>
+<pre><code class="indented-code-block">  foo</code></pre>
 </blockquote>
 :run:
 
@@ -73,7 +73,7 @@
 :expect: |
 <ul>
 <li>
-<pre><code>  foo</code></pre>
+<pre><code class="indented-code-block">  foo</code></pre>
 </li>
 </ul>
 :run:
@@ -84,7 +84,7 @@
     foo
 	bar
 :expect: |
-<pre><code>foo
+<pre><code class="indented-code-block">foo
 bar</code></pre>
 :run:
 
