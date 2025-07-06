@@ -59,6 +59,10 @@ Expected result received on `stdout` from the program under test
 
 Expected result received on `stderr` from the program under test
 
+***`:return`***
+
+Expected return code of the program under test
+
 ***`:run`***
 
 Run the test
