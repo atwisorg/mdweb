@@ -373,6 +373,29 @@ argparse ()
     done
 }
 
+run_test ()
+{
+    is_diff "${#TESTED_FILES[@]}" 0 &&
+    for TESTED_FILE in "${TESTED_FILES[@]}"
+    do
+        is_exists "$TESTED_FILE" || {
+            is_exists   "$PKG_DIR/$TESTED_FILE" &&
+            TESTED_FILE="$PKG_DIR/$TESTED_FILE"
+        } || {
+            is_exists   "$PKG_DIR/tests/$TESTED_FILE" &&
+            TESTED_FILE="$PKG_DIR/tests/$TESTED_FILE"
+        } || die 2 "no such file: -- '$TESTED_FILE'" 2>&3
+        run_test_file || break
+    done ||
+    for TESTED_FILE in "$PKG_DIR"/tests/*.txt
+    do
+        grep "^[[:blank:]]*${TESTED_FILE##*/}" "$PKG_DIR/tests/.testignor" &>/dev/null && continue
+        is_exists "$TESTED_FILE" || die 2 "no such file: -- '$TESTED_FILE'" 2>&3
+        run_test_file || break
+    done
+    report >&3
+}
+
 main ()
 {
     exec 3>&1
@@ -404,26 +427,7 @@ main ()
         rm -rf "$TEST_OK"/*.txt &&
         rm -rf "$TEST_FAILURE"/*.txt || die
     }
-
-    is_diff "${#TESTED_FILES[@]}" 0 &&
-    for TESTED_FILE in "${TESTED_FILES[@]}"
-    do
-        is_exists "$TESTED_FILE" || {
-            is_exists   "$PKG_DIR/$TESTED_FILE" &&
-            TESTED_FILE="$PKG_DIR/$TESTED_FILE"
-        } || {
-            is_exists   "$PKG_DIR/tests/$TESTED_FILE" &&
-            TESTED_FILE="$PKG_DIR/tests/$TESTED_FILE"
-        } || die 2 "no such file: -- '$TESTED_FILE'" 2>&3
-        run_test_file || break
-    done ||
-    for TESTED_FILE in "$PKG_DIR"/tests/*.txt
-    do
-        grep "^[[:blank:]]*${TESTED_FILE##*/}" "$PKG_DIR/tests/.testignor" &>/dev/null && continue
-        is_exists "$TESTED_FILE" || die 2 "no such file: -- '$TESTED_FILE'" 2>&3
-        run_test_file || break
-    done
-    report >&3
+    run_test
 }
 
 main "$@"
