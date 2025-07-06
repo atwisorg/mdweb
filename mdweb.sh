@@ -48,7 +48,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.1.0} - (C) 28.06.2025
+    echo "${0##*/} ${1:-0.2.0} - (C) 28.06.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -438,7 +438,56 @@ check_args ()
     }
 }
 
-convert_string ()
+combine_string ()
+{
+    #         example         | input | output  |
+    #-------------------------|-------|---------|
+    # - foo                   | foo   | <p>     |
+    #        < - empty string |       | \x1ffoo |
+    #   bar                   | bar   | </p>    |
+    #-------------------------|-------| <p>     |
+    #                                 | \x1fbar |
+    #                                 | </p>    |
+    #                                 |---------|
+
+    sed '
+        /^\x1f/!{
+            # skip the created html tag and code
+            b end_of_line
+        }
+
+        : combine_string
+        /\x1f$/ {
+            s%\x1f$%%g
+            b remove_empty_line
+        }
+        $!N
+        s%\n%\x01%
+        t combine_string
+
+        : remove_empty_line
+        s%\x01\{2,\}%\x02%g
+        s%\x01$%\x02%
+
+        # add a break tag marker
+        s%\( \{2,\}\|\\\)\x01%\x7f%g
+
+        # remove spaces at the end of the line
+        s% *\x01%\x01%g
+
+        # if the list (<li>) contains an empty string,
+        # add a paragraph tag
+        /\x02/ {
+            s%[[:blank:]]*\(\x02\)%\1%g
+            s%\x02$%%
+            s%^\(.*\)$%<p>\x18\n\1\n</p>\x19%
+            s%\x02%\n</p>\x19\n<p>\x18\n\x1f%g
+        }
+
+        : end_of_line'
+}
+
+format_string ()
 {
     # search for links
     # |   |   extra    |   need    |
@@ -453,7 +502,7 @@ convert_string ()
 
     sed '
         /^\x1f/!{
-            # skip a line that contains an html tag or is a code
+            # skip the created html tag and code
             b end_of_line
         }
 
@@ -861,28 +910,32 @@ convert_string ()
         s%\x7f%<br />\n%g
         s%"%\&quot;%g
 
-        # add tag p
+        # delete empty strings
+        s%\x01\x01\+%\x02%g
+
+        : add_tag_p
+        s%^\(\x1a[^\x1b]*\x1b[^\x02]*\)\x02%\1</p>\x01<p>%
+        t add_tag_p
         s%^\x1a\([^\x1b]*\)\x1b\(.*\)$%\1<p>\2</p>%
-        t end_of_line
 
         : end_of_line'
 }
 
-merge_strings ()
+combine_string_with_tag ()
 {
     sed '
-        /\x18/ {
-            s%\x18%%
-            : merge
+        /\x18$/ {
+            s%\x18$%%
+            : combine_string
             $!N
             s/\n//
-            /\x19/ {
-                s%\x19%%
-                b end
+            /\x19$/ {
+                s%\x19$%%
+                b end_of_line
             }
-            t merge
+            t combine_string
         }
-        : end'
+        : end_of_line'
 }
 
 split_strings ()
@@ -937,49 +990,37 @@ get_tag ()
                 is_empty "${ID_BASE["$ID"]:-}" || ID="$ID-$((ID_NUM+1))"
                 ID_BASE["$ID"]="$ID"
             }
-            OPENING_TAG="<$1 class=\"${TAG_CLASS:-atx}\" id=\"${ID:-}\">$MARKER_START_MERGE_STRING"
+            OPENING_TAG="<$1 class=\"${HEADER_CLASS:-atx}\" id=\"${ID:-}\">$MARKER_START_MERGE_STRING"
             CLOSING_TAG="</$1>$MARKER_STOP_MERGE_STRING"
-            TAG_CLASS=
             OPENING_TAG_INDENT="${TAG_INDENT:-}"
             CLOSING_TAG_INDENT=""
+            HEADER_CLASS=
             ;;
+        p)
+            OPENING_TAG="<$1>$MARKER_START_MERGE_STRING"
+            CLOSING_TAG="</$1>$MARKER_STOP_MERGE_STRING"
+            OPENING_TAG_INDENT="${TAG_INDENT:-}"
+            CLOSING_TAG_INDENT="${TAG_INDENT:-}"
     esac
 }
 
 print_opening_tags ()
 {
-    is_empty "${!MAP_OPENING_TAG[@]}" || {
+    is_empty "${!OPENING_TAG_BUFFER[@]}" || {
         TAG=
-        for i in "${!MAP_OPENING_TAG[@]}"
+        for i in "${!OPENING_TAG_BUFFER[@]}"
         do
-            TAG="${TAG:+$TAG$NEW_STRING}${MAP_OPENING_TAG_INDENT[$i]:-}${MAP_OPENING_TAG[$i]}"
+            TAG="${TAG:+$TAG$NEW_STRING}${OPENING_INDENT_BUFFER[$i]:-}${OPENING_TAG_BUFFER[$i]}"
         done
-        MAP_OPENING_TAG_INDENT=()
-        MAP_OPENING_TAG=()
+        OPENING_INDENT_BUFFER=()
+        OPENING_TAG_BUFFER=()
         echo "${TAG:-}"
-    }
-}
-
-print_string ()
-{
-    is_empty "${STRING:-}" || {
-        STRING="${STRING//\\$NEW_STRING/$MARKER_TAG_BR}"
-        STRING="${STRING//$NEW_STRING/$MARKER_NEW_STRING}"
-        if  is_equal "${#MAP_CLOSING_TAG[@]}" 0 ||
-            [[ "${MAP_CLOSING_TAG[-1]}" =~ ^[[:blank:]]*\</blockquote\> ]]
-        then
-            STRING="$MARKER_FORMAT_STRING$MARKER_ADD_TAG_P${BUFFER_INDENT:-}$POSITION_TAG_P$STRING"
-        else
-            STRING="${BUFFER_INDENT:-}$STRING"
-        fi
-        BUFFER_INDENT=
-        echo "${STRING:-}"
     }
 }
 
 print_closing_tags ()
 {
-    is_diff "${#MAP_CLOSING_TAG[@]}" 0 || return 0
+    is_not_empty "${!CLOSING_TAG_BUFFER[@]}" || return 0
 
     if is_not_empty "${1:-}"
     then
@@ -989,20 +1030,20 @@ print_closing_tags ()
         TAG=
         for i in $(seq 1 $SHIFT)
         do
-            TAG="${TAG:+$TAG$NEW_STRING}${MAP_CLOSING_TAG_INDENT[-1]:-}${MAP_CLOSING_TAG[-1]}"
-            unset -v "MAP_CLOSING_TAG[-1]" "MAP_CLOSING_TAG_INDENT[-1]"
+            TAG="${TAG:+$TAG$NEW_STRING}${CLOSING_INDENT_BUFFER[-1]:-}${CLOSING_TAG_BUFFER[-1]}"
+            unset -v "CLOSING_TAG_BUFFER[-1]" "CLOSING_INDENT_BUFFER[-1]"
         done
-        # ROW_NESTING_DEPTH="$((ROW_NESTING_DEPTH-SHIFT))"
+        # STRING_NESTING_DEPTH="$((STRING_NESTING_DEPTH-SHIFT))"
         # TAG_INDENT="${TAG_INDENT%"$(printf "%$((TAG_INDENT_WIDTH*SHIFT+2))s" '')"}"
     else
         TAG=
-        for i in "${!MAP_CLOSING_TAG[@]}"
+        for i in "${!CLOSING_TAG_BUFFER[@]}"
         do
-            TAG="${MAP_CLOSING_TAG_INDENT[$i]:-}${MAP_CLOSING_TAG[$i]}${TAG:+$NEW_STRING$TAG}"
+            TAG="${CLOSING_INDENT_BUFFER[$i]:-}${CLOSING_TAG_BUFFER[$i]}${TAG:+$NEW_STRING$TAG}"
         done
-        MAP_CLOSING_TAG_INDENT=()
-        MAP_CLOSING_TAG=()
-        # ROW_NESTING_DEPTH=
+        CLOSING_INDENT_BUFFER=()
+        CLOSING_TAG_BUFFER=()
+        # STRING_NESTING_DEPTH=
         TAG_INDENT="${MAIN_TAG_INDENT:-}"
     fi
     echo "${TAG:-}"
@@ -1010,13 +1051,38 @@ print_closing_tags ()
 
 print_buffer ()
 {
-    SAVE_STRING="${STRING:-}"   STRING=
-    STRING="${STRING_BUFFER:-}" STRING_BUFFER=
-    STRING="${STRING%"${STRING##*[!"$NEW_STRING"]}"}"
+    SAVE_STRING="${STRING:-}" STRING=
+    is_empty "${STRING_BUFFER:-}" || {
+        STRING="${STRING_BUFFER:-}" STRING_BUFFER=
+
+        if  is_equal "${INDENT_CODE_BLOCK:-}" "open" ||
+            is_equal        "${CODE_BLOCK:-}" "open"
+        then
+            STRING="${STRING//$NEW_STRING/$MARKER_NEW_STRING}"
+        else
+            if is_empty "${!OPENING_TAG_BUFFER[@]}"
+            then
+                STRING="$MARKER_FORMAT_STRING$MARKER_ADD_TAG_P${BUFFER_INDENT:-}$POSITION_TAG_P$STRING$MARKER_FORMAT_STRING"
+                BUFFER_INDENT=
+            else
+                is_diff "${CLOSING_TAG_BUFFER[-1]}" "</blockquote>" || {
+                    get_tag p
+                    put_tag_in_buffer
+                }
+                STRING="$MARKER_FORMAT_STRING${BUFFER_INDENT:-}$STRING$MARKER_FORMAT_STRING"
+                BUFFER_INDENT=
+            fi
+        fi
+
+        STRING="${STRING%"${STRING##*[!$NEW_STRING[:blank:]]}"}"
+
+    }
     print_opening_tags
-    print_string
+    is_empty "${STRING:-}" || echo "${STRING:-}"
     print_closing_tags "${1:-}"
-    STRING="${SAVE_STRING:-}"   SAVE_STRING=
+    LIST_ITEM=
+    BLOCKQUOTE=
+    STRING="${SAVE_STRING:-}" SAVE_STRING=
 }
 
 print_code_block ()
@@ -1027,9 +1093,9 @@ print_code_block ()
             ;;
         *)
             print_buffer 1
-    esac    
-    CODE_BLOCK="closed"
+    esac
     INDENTED_CODE_BLOCK="closed"
+             CODE_BLOCK="closed"
 }
 
 is_code_block ()
@@ -1047,22 +1113,22 @@ close_code_block ()
     is_code_block && print_code_block
 }
 
-add_tag_to_a_tag_map ()
+put_tag_in_buffer ()
 {
-    MAP_OPENING_TAG_INDENT=( "${MAP_OPENING_TAG_INDENT[@]}" "${OPENING_TAG_INDENT:-}" )
-    MAP_CLOSING_TAG_INDENT=( "${MAP_CLOSING_TAG_INDENT[@]}" "${CLOSING_TAG_INDENT:-}" )
+    OPENING_INDENT_BUFFER=( "${OPENING_INDENT_BUFFER[@]}" "${OPENING_TAG_INDENT:-}" )
+    CLOSING_INDENT_BUFFER=( "${CLOSING_INDENT_BUFFER[@]}" "${CLOSING_TAG_INDENT:-}" )
 
-    MAP_OPENING_TAG=( "${MAP_OPENING_TAG[@]}" "${OPENING_TAG_BUFFER[@]:-"$OPENING_TAG"}" )
-    MAP_CLOSING_TAG=( "${MAP_CLOSING_TAG[@]}" "${CLOSING_TAG_BUFFER[@]:-"$CLOSING_TAG"}" )
+    OPENING_TAG_BUFFER=( "${OPENING_TAG_BUFFER[@]}" "$OPENING_TAG" )
+    CLOSING_TAG_BUFFER=( "${CLOSING_TAG_BUFFER[@]}" "$CLOSING_TAG" )
 
-    OPENING_TAG_BUFFER=() OPENING_TAG=
-    CLOSING_TAG_BUFFER=() CLOSING_TAG=
+    OPENING_TAG=
+    CLOSING_TAG=
 }
 
 add_code_block_tag ()
 {
     get_tag code-block
-    add_tag_to_a_tag_map
+    put_tag_in_buffer
     CODE_BLOCK="open"
 }
 
@@ -1095,134 +1161,248 @@ add_to_code_block ()
 add_to_buffer ()
 {
     is_empty "${STRING_BUFFER:-}" && {
-        is_empty  "${!MAP_CLOSING_TAG_INDENT[@]}" ||
-        TAG_INDENT="${MAP_CLOSING_TAG_INDENT[-1]}"
+        is_empty "${!CLOSING_INDENT_BUFFER[@]}" || TAG_INDENT="${CLOSING_INDENT_BUFFER[-1]}"
         BUFFER_INDENT="${TAG_INDENT:-}"
-        STRING_BUFFER="${STRING_INDENT:-}$STRING"
+        STRING_BUFFER="$STRING"
     } || {
-        STRING_BUFFER="$STRING_BUFFER$NEW_STRING${BUFFER_INDENT:-}${STRING_INDENT:-}$STRING"
+        STRING_BUFFER="$STRING_BUFFER$NEW_STRING${BUFFER_INDENT:-}${STRING:-}"
     }
     STRING=
 }
 
-tab2space ()
+put_string_in_buffer ()
 {
-    WHITESPACE_INDENT="$(echo "$STRING_INDENT" | expand -t "${1:-4}")"
+    STRING_BUFFER="${STRING_BUFFER:+$STRING_BUFFER$NEW_STRING}${STRING:-}"
 }
 
-get_string_indent ()
+string_is_empty ()
 {
-    STRING_INDENT="${STRING%%[![:blank:]]*}"
-    STRING="${STRING#"${STRING_INDENT:-}"}"
+    case "${1:-}" in
+        *[![:blank:]]*)
+            return 1
+    esac
+}
 
-    is_not_empty "${STRING:-}" || {
-        # is_equal "$BLOCKQUOTE_IS_OPEN" "no" && {
-        #     add_to_code_block || print_buffer
-        # } || {
-        #     is_not_empty "${ROW_NESTING_DEPTH:-}" || {
-        #         print_buffer
-        #         BLOCKQUOTE_IS_OPEN="no"
-        #     }
-        # }
-        # add_to_code_block || {
-        #     is_not_empty "${ROW_NESTING_DEPTH:-}" || {
-        #         print_buffer
-        #         BLOCKQUOTE_IS_OPEN="no"
-        #     }
-        # }
-        return
-    }
+string_is_not_empty ()
+{
+    string_is_empty "${1:-}" && return 1 || return 0
+}
 
-    if is_equal "${INDENTED_CODE_BLOCK:-}" "open"
+trim_string ()
+{
+    STRING="$(sed 's%^\(\x09\|\x20\{4\}\|\x20\{1,3\}\x09\)%%' <<< "$STRING")"
+}
+
+read_an_empty_string ()
+{
+    string_is_empty "${STRING:-}" || return 0
+    is_not_empty "${!CLOSING_TAG_BUFFER[@]}" || return
+
+    if is_not_empty "${BLOCKQUOTE:-}"
     then
-        tab2space
-        test  "${#WHITESPACE_INDENT}" -ge 4 &&
-        STRING="${WHITESPACE_INDENT#????}$STRING"
-
-        # test "${#STRING_INDENT}" -ge "$((STRING_INDENT_WIDTH + 1))" &&
-        # STRING="${STRING_INDENT#????}$STRING" || {
-        #     print_code_block
-        #     MD_EXCESS_INDENT="${STRING_INDENT:-}"
-        # }
-    # elif is_equal "${CODE_BLOCK:-}" "open"
-    # then
-    #     STRING="${STRING_INDENT:"${#MD_EXCESS_INDENT}"}$STRING"
-    # elif test "${#STRING_INDENT}" -ge 4
-    # then
-    #     is_empty "${STRING_BUFFER:-}" && {
-    #         is_not_empty "${ROW_NESTING_DEPTH:-}" || print_buffer
-    #         add_code_block_tag
-    #         INDENTED_CODE_BLOCK="open"
-    #         STRING="${STRING_INDENT#????}$STRING"
-    #     } || {
-    #         add_to_buffer
-    #         return
-    #     }
-    elif is_diff "${#MAP_CLOSING_TAG[@]}" 0 &&
-         [[ "${MAP_CLOSING_TAG[-1]}" =~ ^\</blockquote\> ]]
+        print_buffer "$BLOCKQUOTE"
+    elif is_not_empty "${LIST_ITEM:-}"
     then
-        tab2space 3
-        test "${#WHITESPACE_INDENT}" -ge 4 && {
-            STRING="${WHITESPACE_INDENT#????}$STRING"
-            INDENTED_CODE_BLOCK="open"
-            add_code_block_tag
-        }
+        STRING=""
+        put_string_in_buffer
+        return 1
+    elif is_not_empty "${CODE_BLOCK:-}"
+    then
+        trim_string
+        put_string_in_buffer
+        return 1
     else
-        tab2space
-        test "${#WHITESPACE_INDENT}" -ge 4 && {
-            STRING="${WHITESPACE_INDENT#????}$STRING"
-            INDENTED_CODE_BLOCK="open"
-            add_code_block_tag
-        }
-    #     MD_EXCESS_INDENT="${STRING_INDENT:-}"
+        return 1
     fi
-    return 1
-
-    # STRING_INDENT="$(printf "%$((${#STRING_INDENT} ))s" '')"
-    # # STRING_INDENT="$(printf "%$((${#STRING_INDENT} / STRING_INDENT_WIDTH * STRING_INDENT_WIDTH))s" '')"
-    # test "${#MD_SAVE_INDENT}" -ge "${#STRING_INDENT}" ||
-    # STRING_INDENT="$(printf "%$((${#MD_SAVE_INDENT} + STRING_INDENT_WIDTH))s" '')"
 }
 
-add_tag_to_the_buffer ()
+trim_indent ()
 {
-    OPENING_TAG_BUFFER=( "${OPENING_TAG_BUFFER[@]}" "$OPENING_TAG" )
-    CLOSING_TAG_BUFFER=( "${CLOSING_TAG_BUFFER[@]}" "$CLOSING_TAG" )
+    is_not_empty "${1:-}" && is_diff "$1" 0 || return 0
+    DEL_SPACE="$1"
+    while is_not_empty "${STRING:-}"
+    do
+        is_diff $CHAR_NUM 4 && CHAR_NUM=$((CHAR_NUM + 1)) || CHAR_NUM=1
+        case "$STRING" in
+            $SPACE*)
+                STRING="${STRING:1}"
+                DEL_SPACE=$((DEL_SPACE - 1))
+                ;;
+            $TAB*)
+                is_equal "$DEL_SPACE" 4 && {
+                    STRING="${STRING:1}"
+                    break
+                } || {
+                    test "$DEL_SPACE" -lt 4 && {
+                        STRING="$(printf "%$((4 - DEL_SPACE))s")${STRING:1}"
+                        break
+                    }
+                    test "$1" -gt 4 && {
+                        STRING="${STRING:1}"
+                        DEL_SPACE=$((DEL_SPACE - 4))
+                    }
+                }
+                ;;
+            *)
+                break
+        esac
+        is_diff "$DEL_SPACE" 0 || break
+    done
+    EXCESS_INDENT=
 }
 
-add_to_blockquote ()
+read_block_structure ()
 {
-    [[ "$STRING" =~ ^\> ]] && STRING="${STRING#?}"  || return
+    CHAR_NUM=0
+    INDENT_LENGTH=0
+    INDENT_LENGTH="$((INDENT_LENGTH - ${EXCESS_INDENT:-0}))"
+    STRING_NESTING_DEPTH=-1
+    # trim_indent "${EXCESS_INDENT:-}"
+    while is_not_empty "${STRING:-}"
+    do
+        is_diff $CHAR_NUM 4 && CHAR_NUM=$((CHAR_NUM + 1)) || CHAR_NUM=1
+        case "$STRING" in
+            $SPACE*)
+                INDENT_LENGTH=$((INDENT_LENGTH + 1))
+                ;;
+            $TAB*)
+                TAB_LENGTH=$((4 - $((CHAR_NUM - 1))))
+                INDENT_LENGTH=$((INDENT_LENGTH + TAB_LENGTH))
+                CHAR_NUM=0
+                # STRING=" $(printf "%$((4 - TAB_LENGTH))s")${STRING:1}"
+                ;;
+            \>*)
+                INDENT_LENGTH=-1
+                open_blockquote
+                ;;
+            [#]*)
+                print_heading_atx || put_string_in_buffer
+                return 1
+                ;;
+            [=]*)
+                is_not_empty "${STRING_BUFFER:-}" &&
+                    print_heading_setext_h1 || put_string_in_buffer
+                return 1
+                ;;
+            [-]*)
+                is_not_empty "${STRING_BUFFER:-}" &&
+                    print_heading_setext_h2 && return 1 ||
+                if [[ "$(tr -d '[:blank:]' <<< "${STRING:-}")" =~ ^\-{3,}$ ]]
+                then
+                    print_horizontal_rule
+                    return 1
+                else
+                    [[ "${STRING:1}" =~ ^([[:blank:]]|$) ]] && {
+                        EXCESS_INDENT=$((CHAR_NUM + 1))
+                        BULLET_CHAR=-
+                        INDENT_LENGTH=-1
+                        open_list
+                    } || {
+                        put_string_in_buffer
+                        return 1
+                    }
+                fi
+                ;;
+            [*]*)
+                if [[ "$(tr -d '[:blank:]' <<< "${STRING:-}")" =~ ^\*{3,}$ ]]
+                then
+                    print_horizontal_rule
+                    return 1
+                else
+                    [[ "${STRING:1}" =~ ^([[:blank:]]|$) ]] && {
+                        string_is_not_empty "${STRING:1}" ||
+                        is_empty "${STRING_BUFFER:-}" && {
+                            BULLET_CHAR="*"
+                            INDENT_LENGTH=-1
+                            open_list
+                        }
+                    } || {
+                        put_string_in_buffer
+                        return 1
+                    }
+                fi
+                ;;
+            [+]*)
+                [[ "${STRING:1}" =~ ^([[:blank:]]|$) ]] && {
+                    string_is_not_empty "${STRING:1}" ||
+                    is_empty "${STRING_BUFFER:-}" && {
+                        BULLET_CHAR=+
+                        INDENT_LENGTH=-1
+                        open_list
+                    }
+                } || {
+                    put_string_in_buffer
+                    return 1
+                }
+                ;;
+            *)
+                return
+        esac
+        STRING="${STRING:1}"
+        test "$INDENT_LENGTH" -lt 4 || {
+            is_equal "$INDENT_LENGTH" 4 ||
+                STRING="$(printf "%$((INDENT_LENGTH - 4))s")$STRING"
+            open_indent_code_block
+            return 1
+        }
+    done
+}
 
-    BLOCKQUOTE_IS_OPEN="yes"
+open_blockquote ()
+{
+    STRING_NESTING_DEPTH="$((STRING_NESTING_DEPTH + 1))"
+    BLOCKQUOTE="${BLOCKQUOTE:-$STRING_NESTING_DEPTH}"
 
     get_tag blockquote
-    add_tag_to_the_buffer
-    ROW_NESTING_DEPTH="$((${ROW_NESTING_DEPTH:--1} + 1))"
-    is_equal "${#MAP_CLOSING_TAG[@]}" 0 || is_empty  "${MAP_CLOSING_TAG[$ROW_NESTING_DEPTH]:-}" && {
-        is_empty "${STRING_BUFFER:-}"   || {
-            print_buffer 0
-            # exit
-        }
+    is_empty "${!CLOSING_TAG_BUFFER[@]}" || is_empty "${CLOSING_TAG_BUFFER[$STRING_NESTING_DEPTH]:-}" && {
+        is_empty   "${STRING_BUFFER:-}"  || print_buffer 0
     } || {
-        if is_equal "${MAP_CLOSING_TAG[$ROW_NESTING_DEPTH]}" "$CLOSING_TAG"
+        if is_equal "${CLOSING_TAG_BUFFER[$STRING_NESTING_DEPTH]}" "$CLOSING_TAG"
         then
-            # блок для переноса строки c нижнего на текущий уровень
-            [[ "$STRING" =~ ^\> ]] || {
-                if is_equal "${MAP_CLOSING_TAG[$((ROW_NESTING_DEPTH + 1))]:-}" "$CLOSING_TAG"
-                then
-                    print_buffer "$((${#MAP_CLOSING_TAG[@]} - $((ROW_NESTING_DEPTH + 1))))"
-                fi
-            }
-            READ_STRING_AGAIN="yes"
-            OPENING_TAG_BUFFER=()
-            CLOSING_TAG_BUFFER=()
-            return
+            return 0
+        else
+            print_buffer "$((${#CLOSING_TAG_BUFFER[@]} - STRING_NESTING_DEPTH))"
         fi
     }
+    put_tag_in_buffer
+}
 
-    add_tag_to_a_tag_map
-    READ_STRING_AGAIN="yes"
+open_list ()
+{
+    STRING_NESTING_DEPTH="$((STRING_NESTING_DEPTH + 1))"
+    LIST_ITEM="${LIST_ITEM:-$STRING_NESTING_DEPTH}"
+
+    get_tag ul
+    is_empty "${!CLOSING_TAG_BUFFER[@]}" && {
+        put_tag_in_buffer
+        get_tag li
+    } || is_empty "${CLOSING_TAG_BUFFER[$STRING_NESTING_DEPTH]:-}" || {
+        if is_equal "${CLOSING_TAG_BUFFER[$STRING_NESTING_DEPTH]:-}" "$CLOSING_TAG"
+        then
+            print_buffer 1
+            get_tag li
+        else
+            print_buffer "$((${#CLOSING_TAG_BUFFER[@]} - STRING_NESTING_DEPTH))"
+            put_tag_in_buffer
+            get_tag li
+        fi
+    }
+    put_tag_in_buffer
+
+    STRING_NESTING_DEPTH="$((STRING_NESTING_DEPTH + 1))"
+}
+
+open_indent_code_block ()
+{
+    is_empty "${INDENT_CODE_BLOCK:-}" && {
+        is_empty "${STRING_BUFFER:-}" || {
+            print_buffer 0
+        }
+        INDENT_CODE_BLOCK="open"
+        get_tag code-block
+        put_tag_in_buffer
+        put_string_in_buffer
+    } || put_string_in_buffer
 }
 
 trim_white_space ()
@@ -1233,78 +1413,74 @@ trim_white_space ()
 
 print_heading ()
 {
-    if [[ "${STRING:-}" =~ ^#{1,6}([[:blank:]].*|$) ]]
-    then
+    print_buffer 0
+    trim_white_space
+    get_tag "$TAG_HEADER"
+    put_tag_in_buffer
+    add_to_buffer
+    print_buffer 1
+}
+
+print_heading_atx ()
+{
+    [[ "${STRING:-}" =~ ^#{1,6}([[:blank:]].*|$) ]] && {
         HEADER="${STRING%%[[:blank:]]*}"
         STRING="${STRING#"$HEADER"}"
-        TAG="h${#HEADER}"
-        TAG_CLASS="atx"
-    elif [[ "${STRING:-}" =~ ^=+$ ]]
-    then
-        is_not_empty "${STRING_BUFFER:-}"   &&
-        is_equal "$BLOCKQUOTE_IS_OPEN" "no" || return
+        TAG_HEADER="h${#HEADER}"
+        HEADER_CLASS="atx"
+        print_heading
+    }    
+}
+
+print_heading_setext_h1 ()
+{
+    
+    [[ "${STRING:-}" =~ ^=+$ ]] && {
         STRING="$STRING_BUFFER" STRING_BUFFER=
-        TAG=h1
-        TAG_CLASS="setext"
-    elif [[ "${STRING:-}" =~ ^-+$ ]]
-    then
-        is_not_empty "${STRING_BUFFER:-}"   &&
-        is_equal "$BLOCKQUOTE_IS_OPEN" "no" || return
+        TAG_HEADER="h1"
+        HEADER_CLASS="setext"
+        print_heading
+    }
+}
+
+print_heading_setext_h2 ()
+{
+    [[ "${STRING:-}" =~ ^-+$ ]] && {
         STRING="$STRING_BUFFER" STRING_BUFFER=
-        TAG=h2
-        TAG_CLASS="setext"
-    else
-        false
-    fi && {
-        print_buffer 0
-        trim_white_space
-        get_tag "$TAG"
-        add_tag_to_a_tag_map
-        add_to_buffer
-        print_buffer 1
+        TAG_HEADER="h2"
+        HEADER_CLASS="setext"
+        print_heading
     }
 }
 
 print_horizontal_rule ()
 {
-    [[ "$(tr -d '[:blank:]' <<< "${STRING:-}")" =~ ^(-{3,}|_{3,}|\*{3,})$ ]] && {
-        STRING="${TAG_INDENT:-}<hr />$NEW_STRING"
-        is_empty "${ROW_NESTING_DEPTH:-}" &&
-        print_buffer ||
-        print_buffer 0
-        echo -n "$STRING"
-    }
-}
-
-read_string_again ()
-{
-    is_empty "${ROW_NESTING_DEPTH:-}" || {
-        TOTAL_NESTING_DEPTH="$ROW_NESTING_DEPTH"
-        # ROW_NESTING_DEPTH=
-    }
-    is_equal "${READ_STRING_AGAIN:="no"}" "yes" && READ_STRING_AGAIN="no"
+    STRING="${TAG_INDENT:-}<hr />$NEW_STRING"
+    is_empty "${STRING_NESTING_DEPTH:-}" &&
+    print_buffer ||
+    print_buffer 0
+    echo -n "$STRING"
 }
 
 convert_md2html ()
 {
-    STRING_NUM=0
     SAVE_STRING=
     STRING_BUFFER=
 
-    MD_SAVE_INDENT=
-    MD_EXCESS_INDENT=
+    EXCESS_INDENT=
     STRING_INDENT_WIDTH=3
     TAG_INDENT_WIDTH=0
-    MAIN_TAG_INDENT="    "
     MAIN_TAG_INDENT=""
 
-    MAP_OPENING_TAG=()
-    MAP_CLOSING_TAG=()
     OPENING_TAG_BUFFER=()
     CLOSING_TAG_BUFFER=()
+    OPENING_INDENT_BUFFER=()
+    CLOSING_INDENT_BUFFER=()
 
-    BLOCKQUOTE_IS_OPEN="no"
+    INDENT_CODE_BLOCK=
     CODE_BLOCK=
+    BLOCKQUOTE=
+    LIST_ITEM=
 
     ID_NUM=0
     declare -A ID_BASE
@@ -1322,18 +1498,11 @@ convert_md2html ()
     {
         while IFS= read -r STRING || is_not_empty "${STRING:-}"
         do
-            is_diff "$STRING" '@@@' || break
-            ROW_NESTING_DEPTH=
             TAG_INDENT="${MAIN_TAG_INDENT:-}"
-            while :
-            do
-                    get_string_indent ||
-                    add_to_code_block ||
-                    add_to_blockquote ||
-                        print_heading ||
-                print_horizontal_rule ||
-                        add_to_buffer && read_string_again || break
-            done
+            read_an_empty_string  &&
+            read_block_structure  || continue
+            add_to_code_block     ||
+            add_to_buffer
         done < <(cat "${INPUT:--}")
         if is_equal "${CODE_BLOCK:-}" "open"
         then
@@ -1341,7 +1510,11 @@ convert_md2html ()
         else
             print_buffer
         fi
-    } | convert_string | merge_strings | split_strings
+    # } | cat -A
+    # } | combine_string | cat -A
+    # } | combine_string | combine_string_with_tag | cat -A
+    # } | combine_string | format_string | combine_string_with_tag | split_strings | cat -A
+    } | combine_string | format_string | combine_string_with_tag | split_strings
 }
 
 open_html ()
