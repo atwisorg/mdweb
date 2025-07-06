@@ -313,21 +313,8 @@ report ()
 ================"
 }
 
-main ()
+argparse ()
 {
-    exec 3>&1
-    get_pkg_vars
-    INDENT="                 |"
-    GLOBAL_ARGS=()
-    CLEAR_RESULTS="no"
-    SAVE_RESULTS="no"
-    TEST_NUM=()
-    TEST_OK="$PKG_DIR/test_ok"
-    TEST_FAILURE="$PKG_DIR/test_failure"
-    TESTED_FILES=()
-    TESTED_SHELL="/bin/bash"
-    TESTED_SCRIPT="$PKG_DIR/../mdweb.sh"
-    is_exists "$TESTED_SCRIPT" || die 2 "no such file: -- '$TESTED_SCRIPT'" 2>&3
     while is_diff $# 0
     do
         case "${1:-}" in
@@ -384,9 +371,22 @@ main ()
         esac
         shift
     done
+}
 
-    is_equal "${#TEST_NUM[@]}" 0 || get_test_nums
-
+main ()
+{
+    exec 3>&1
+    get_pkg_vars
+    INDENT="                 |"
+    GLOBAL_ARGS=()
+    CLEAR_RESULTS="no"
+    SAVE_RESULTS="no"
+    TEST_NUM=()
+    TEST_OK="$PKG_DIR/test_ok"
+    TEST_FAILURE="$PKG_DIR/test_failure"
+    TESTED_FILES=()
+    TESTED_SHELL="/bin/bash"
+    TESTED_SCRIPT="$PKG_DIR/../mdweb.sh"
     FUNC_NAME="[${TESTED_SCRIPT##*/}]"
     SUCCESS=0
     FAIL=()
@@ -394,8 +394,12 @@ main ()
     LOAD_TEST="no"
     TEST_NUMBER=0
     STRING_NUM=0
-    NEW_STRING='
-'
+    NEW_STRING=$'\n'
+
+    is_exists "$TESTED_SCRIPT" || die 2 "no such file: -- '$TESTED_SCRIPT'" 2>&3
+    argparse "$@"
+    is_equal "${#TEST_NUM[@]}" 0 || get_test_nums
+
     is_equal "$CLEAR_RESULTS" "no" || {
         rm -rf "$TEST_OK"/*.txt &&
         rm -rf "$TEST_FAILURE"/*.txt || die
