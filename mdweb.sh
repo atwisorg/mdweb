@@ -1158,7 +1158,7 @@ add_to_code_block ()
     fi
 }
 
-add_to_buffer ()
+put_string_in_buffer ()
 {
     is_empty "${STRING_BUFFER:-}" && {
         is_empty "${!CLOSING_INDENT_BUFFER[@]}" || TAG_INDENT="${CLOSING_INDENT_BUFFER[-1]}"
@@ -1168,11 +1168,6 @@ add_to_buffer ()
         STRING_BUFFER="$STRING_BUFFER$NEW_STRING${BUFFER_INDENT:-}${STRING:-}"
     }
     STRING=
-}
-
-put_string_in_buffer ()
-{
-    STRING_BUFFER="${STRING_BUFFER:+$STRING_BUFFER$NEW_STRING}${STRING:-}"
 }
 
 string_is_empty ()
@@ -1380,7 +1375,7 @@ print_heading ()
     trim_white_space
     get_tag "$TAG_HEADER"
     put_tag_in_buffer
-    add_to_buffer
+    put_string_in_buffer
     print_buffer 1
 }
 
@@ -1465,7 +1460,7 @@ convert_md2html ()
             read_an_empty_string  &&
             read_block_structure  || continue
             add_to_code_block     ||
-            add_to_buffer
+            put_string_in_buffer
         done < <(cat "${INPUT:--}")
         if is_equal "${CODE_BLOCK:-}" "open"
         then
