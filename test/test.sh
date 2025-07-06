@@ -123,9 +123,12 @@ save_result ()
         STATUS="$STATUS:expect: |$NEW_STRING${EXPECT:+"$EXPECT$NEW_STRING"}"
     is_empty "${COMPARE_STDERR:-}" ||
         STATUS="$STATUS:expect-err: |$NEW_STRING${EXPECT_ERR:+$EXPECT_ERR$NEW_STRING}"
+    is_empty "${EXPECT_RETURN_CODE:-}" ||
+        STATUS="$STATUS:return: $EXPECT_RETURN_CODE$NEW_STRING"
     STATUS="$STATUS:sample: |$NEW_STRING${SAMPLE:+$SAMPLE$NEW_STRING}:run:$NEW_STRING$NEW_STRING"
     STATUS="$STATUS:stdout: |$NEW_STRING${STDOUT_RESULT:+$STDOUT_RESULT$NEW_STRING}"
-    STATUS="$STATUS:stderr: |$NEW_STRING${STDERR_RESULT:+$STDERR_RESULT$NEW_STRING}:end:"
+    STATUS="$STATUS:stderr: |$NEW_STRING${STDERR_RESULT:+$STDERR_RESULT$NEW_STRING}"
+    STATUS="$STATUS:return: $RETURN_CODE$NEW_STRING:end:"
     echo "$STATUS" > "$1/${NAME_TESTED_FILE}_$STRING_NUM_TEST.txt"
 }
 
@@ -159,41 +162,87 @@ cmp_results ()
     is_empty "${COMPARE_STDOUT:-}" || {
         if is_equal "${STDOUT_RESULT:-}" "${EXPECT:-}"
         then
-            echo "         stdout: $(success_out "$STDOUT_RESULT")"
-            SUCCESS="$((SUCCESS+1))"
+            REPORT_STDOUT=(
+                "$H2" ""
+                "stdout:" "$(success_out "$STDOUT_RESULT")"
+            )
             is_equal "$SAVE_RESULTS" "yes" || rm -f "$STDOUT"
         else
-            echo "  expect-stdout: $(expect_out "$EXPECT")"
-            echo "         stdout: $(failed_out "$STDOUT_RESULT")"
-            FAIL+=( "$(sed 's/[[:blank:]]\+/ /g' <<< "${PREFIX//$NEW_STRING/}: stdout" )" )
+            REPORT_STDOUT=(
+                "$H2" ""
+                "expect-stdout:" "$(expect_out "$EXPECT")"
+                "$H2" ""
+                "stdout:" "$(failed_out "$STDOUT_RESULT")"
+            )
+            FAIL+=( "${PREFIX[0]%:}" "${PREFIX[*]:1}: stdout" )
             RETURN=1
         fi
     }
 
-    is_empty "${COMPARE_STDERR:-}" && {
-        if is_empty "${COMPARE_STDOUT:-}"
-        then
-            echo "         stdout: $(info_out "$STDOUT_RESULT")"
-            echo "         stderr: $(info_out "$STDERR_RESULT")"
-        else
-            is_equal "$RETURN" 0 ||
-            echo "         stderr: $(info_out "$STDERR_RESULT")"
-        fi
-    } || {
+    is_empty "${COMPARE_STDERR:-}" || {
         if is_equal "${STDERR_RESULT:-}" "$EXPECT_ERR"
         then
-            echo "         stderr: $(success_out "$STDOUT_RESULT")"
-            SUCCESS="$((SUCCESS+1))"
+            REPORT_STDERR=(
+                "$H2" ""
+                "stderr:" "$(success_out "$STDERR_RESULT")"
+            )
             is_equal "$SAVE_RESULTS" "yes" || rm -f "$STDERR"
         else
-            is_not_empty "${COMPARE_STDOUT:-}" ||
-            echo "         stdout: $(info_out "$STDOUT_RESULT")"
-            echo "  expect-stderr: $(expect_out "$EXPECT_ERR")"
-            echo "         stderr: $(success_out "$STDERR_RESULT")"
-            FAIL+=( "$(sed 's/[[:blank:]]\+/ /g' <<< "${PREFIX//$NEW_STRING/}: stderr" )" )
+            REPORT_STDERR=(
+                "$H2" ""
+                "expect-stderr:" "$(expect_out "$EXPECT_ERR")"
+                "$H2" ""
+                "stderr:" "$(success_out "$STDERR_RESULT")"
+            )
+            FAIL+=( "${PREFIX[0]%:}" "${PREFIX[*]:1}: stderr" )
             RETURN=1
         fi
     }
+
+    is_empty "${EXPECT_RETURN_CODE:-}" || {
+        if is_equal "${RETURN_CODE:-}" "${EXPECT_RETURN_CODE:-}"
+        then
+            REPORT_RETURN=(
+                "$H2" ""
+                "return:" "$(success_out "${RETURN_CODE:-}")"
+            )
+        else
+            REPORT_RETURN=(
+                "$H2" ""
+                "expect-return:" "$(expect_out "$EXPECT_RETURN_CODE")"
+                "$H2" ""
+                "return:" "$(failed_out "$RETURN_CODE")"
+            )
+            FAIL+=( "${PREFIX[0]%:}" "${PREFIX[*]:1}: return" )
+            RETURN=1
+        fi
+    }
+
+    is_equal "$RETURN" 0 && SUCCESS="$((SUCCESS+1))" || {
+                             FAILED="$((FAILED+1))"
+
+        is_not_empty "${COMPARE_STDOUT:-}" || {
+            REPORT_STDOUT=(
+                "$H2" ""
+                "stdout:" "$(info_out "${RETURN_CODE:-}")"
+            )
+        }
+        is_not_empty "${COMPARE_STDERR:-}" || {
+            REPORT_STDERR=(
+                "$H2" ""
+                "stderr:" "$(info_out "${STDERR_RESULT:-}")"
+            )
+        }
+        is_not_empty "${EXPECT_RETURN_CODE:-}" || {
+            REPORT_RETURN=(
+                "$H2" ""
+                "return:" "$(info_out "${RETURN_CODE:-}")"
+            )
+        }
+    }
+
+    printf '%16s %s\n' "${REPORT_STDOUT[@]}" "${REPORT_STDERR[@]}" "${REPORT_RETURN[@]}"
+
     return "$RETURN"
 }
 
@@ -258,24 +307,44 @@ run_test_file ()
                 is_equal "$LOAD_TEST" "yes" || continue
                 NEXT_LINE="sample"
                 ;;
+            :return|:return-code)
+                ;;
+            :return:*)
+                is_equal "$LOAD_TEST" "yes" || continue
+                set -- ${LINE#:return:}
+                EXPECT_RETURN_CODE="${1:-}"
+                ;;
+            :return-code:*)
+                is_equal "$LOAD_TEST" "yes" || continue
+                set -- ${LINE#:return-code:}
+                EXPECT_RETURN_CODE="${1:-}"
+                ;;
             :run|:run:*)
                 is_equal "$LOAD_TEST" "yes" || continue
-                PREFIX="      test file: [$TESTED_FILE]$NEW_STRING     string num: [$STRING_NUM_TEST]$NEW_STRING      test name: [$TEST_NAME]$NEW_STRING       test num: [$TEST_NUMBER]"
-                is_diff "${#TESTED_FILES[@]}" 0 || PREFIX="$PREFIX${NEW_STRING} total test num: [$TOTAL_TEST_NUMBER]"
+                PREFIX=(
+                    "test file:" "[$TESTED_FILE]"
+                    "string num:" "[$STRING_NUM_TEST]"
+                    "test name:" "[$TEST_NAME]"
+                    "test num:" "[$TEST_NUMBER]"
+                )
+                is_diff "${#TESTED_FILES[@]}" 0 || PREFIX=( "${PREFIX[@]}" "total test num:" "[$TOTAL_TEST_NUMBER]" )
                 NAME_TESTED_FILE="${TESTED_FILE##*/}"
                 NAME_TESTED_FILE="${NAME_TESTED_FILE%.txt}"
                 STDOUT="$PKG_DIR/${NAME_TESTED_FILE}_$STRING_NUM_TEST.out"
                 STDERR="$PKG_DIR/${NAME_TESTED_FILE}_$STRING_NUM_TEST.err"
                 is_diff "${#TESTED_ARGS[@]}" 0 || TESTED_ARGS=( "${GLOBAL_ARGS[@]}" )
-                ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_SCRIPT" "${TESTED_ARGS[@]}" <<< "$SAMPLE" > "$STDOUT" 2> "$STDERR"
-                echo "================$NEW_STRING$PREFIX$NEW_STRING----------------$NEW_STRING         sample: |${SAMPLE//$NEW_STRING/|$NEW_STRING$INDENT}|$NEW_STRING----------------"
+
+                RETURN_CODE=0
+                ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_SCRIPT" "${TESTED_ARGS[@]}" <<< "$SAMPLE" > "$STDOUT" 2> "$STDERR" || RETURN_CODE=$?
+
+                printf '%16s %s\n' "$H1" "" "${PREFIX[@]}" "$H2" "" "sample:" "|${SAMPLE//$NEW_STRING/|$NEW_STRING$INDENT}|"
                 if cmp_results
                 then
                     is_equal "$SAVE_RESULTS" "no" || save_result "$TEST_OK"
                 else
                     save_result "$TEST_FAILURE"
                 fi
-                COMPARE_STDOUT= COMPARE_STDERR= EXPECT= EXPECT_ERR= SAMPLE= LOAD_TEST="no" TESTED_ARGS=()
+                EXPECT_RETURN_CODE= COMPARE_STDOUT= COMPARE_STDERR= EXPECT= EXPECT_ERR= SAMPLE= LOAD_TEST="no" TESTED_ARGS=()
                 ;;
             :break|:break:*)
                 break
@@ -300,17 +369,37 @@ run_test_file ()
 
 report ()
 {
-    echo "================"
-        for FAIL in "${FAIL[@]}"
-        do
-            echo -e "     \033[0;31m$FAIL\033[0;30m"
-        done
-    echo -e "
-         \033[0;31mfailed\033[0m: [\033[1;31m${#FAIL[@]}\033[0m]
-     \033[0;32msuccessful\033[0m: [\033[1;32m$SUCCESS\033[0m]"
+    echo "$H1"
+    is_empty ${!FAIL[@]} ||
+    printf '\033[0;31m%15s\033[0m: \033[1;31m%s\033[0m\n' "${FAIL[@]}"
+    printf '\033[0;31m%15s\033[0m: [\033[1;31m%s\033[0m]\n' "failed"     "$FAILED"
+    printf '\033[0;32m%15s\033[0m: [\033[1;32m%s\033[0m]\n' "successful" "$SUCCESS"
     is_empty "${!TEST_NUM[@]}" || TOTAL_TEST_NUMBER="${#TEST_NUM[@]}"
-    echo -e "    \033[0;33mtotal tests\033[0m: [\033[1;33m$TOTAL_TEST_NUMBER\033[0m]
-================"
+    printf '\033[0;33m%15s\033[0m: [\033[1;33m%s\033[0m]\n' "total tests" "$TOTAL_TEST_NUMBER"
+    echo "$H1"
+}
+
+run_test ()
+{
+    is_diff "${#TESTED_FILES[@]}" 0 &&
+    for TESTED_FILE in "${TESTED_FILES[@]}"
+    do
+        is_exists "$TESTED_FILE" || {
+            is_exists   "$PKG_DIR/$TESTED_FILE" &&
+            TESTED_FILE="$PKG_DIR/$TESTED_FILE"
+        } || {
+            is_exists   "$PKG_DIR/tests/$TESTED_FILE" &&
+            TESTED_FILE="$PKG_DIR/tests/$TESTED_FILE"
+        } || die 2 "no such file: -- '$TESTED_FILE'" 2>&3
+        run_test_file || break
+    done ||
+    for TESTED_FILE in "$PKG_DIR"/tests/*.txt
+    do
+        grep "^[[:blank:]]*${TESTED_FILE##*/}" "$PKG_DIR/tests/.testignor" &>/dev/null && continue
+        is_exists "$TESTED_FILE" || die 2 "no such file: -- '$TESTED_FILE'" 2>&3
+        run_test_file || break
+    done
+    report >&3
 }
 
 argparse ()
@@ -373,34 +462,13 @@ argparse ()
     done
 }
 
-run_test ()
-{
-    is_diff "${#TESTED_FILES[@]}" 0 &&
-    for TESTED_FILE in "${TESTED_FILES[@]}"
-    do
-        is_exists "$TESTED_FILE" || {
-            is_exists   "$PKG_DIR/$TESTED_FILE" &&
-            TESTED_FILE="$PKG_DIR/$TESTED_FILE"
-        } || {
-            is_exists   "$PKG_DIR/tests/$TESTED_FILE" &&
-            TESTED_FILE="$PKG_DIR/tests/$TESTED_FILE"
-        } || die 2 "no such file: -- '$TESTED_FILE'" 2>&3
-        run_test_file || break
-    done ||
-    for TESTED_FILE in "$PKG_DIR"/tests/*.txt
-    do
-        grep "^[[:blank:]]*${TESTED_FILE##*/}" "$PKG_DIR/tests/.testignor" &>/dev/null && continue
-        is_exists "$TESTED_FILE" || die 2 "no such file: -- '$TESTED_FILE'" 2>&3
-        run_test_file || break
-    done
-    report >&3
-}
-
 main ()
 {
     exec 3>&1
     get_pkg_vars
     INDENT="                 |"
+    H1="================"
+    H2="----------------"
     GLOBAL_ARGS=()
     CLEAR_RESULTS="no"
     SAVE_RESULTS="no"
@@ -412,6 +480,7 @@ main ()
     TESTED_SCRIPT="$PKG_DIR/../mdweb.sh"
     FUNC_NAME="[${TESTED_SCRIPT##*/}]"
     SUCCESS=0
+    FAILED=0
     FAIL=()
     TOTAL_TEST_NUMBER=0
     LOAD_TEST="no"
