@@ -1216,60 +1216,23 @@ read_an_empty_string ()
     fi
 }
 
-trim_indent ()
-{
-    is_not_empty "${1:-}" && is_diff "$1" 0 || return 0
-    DEL_SPACE="$1"
-    while is_not_empty "${STRING:-}"
-    do
-        is_diff $CHAR_NUM 4 && CHAR_NUM=$((CHAR_NUM + 1)) || CHAR_NUM=1
-        case "$STRING" in
-            $SPACE*)
-                STRING="${STRING:1}"
-                DEL_SPACE=$((DEL_SPACE - 1))
-                ;;
-            $TAB*)
-                is_equal "$DEL_SPACE" 4 && {
-                    STRING="${STRING:1}"
-                    break
-                } || {
-                    test "$DEL_SPACE" -lt 4 && {
-                        STRING="$(printf "%$((4 - DEL_SPACE))s")${STRING:1}"
-                        break
-                    }
-                    test "$1" -gt 4 && {
-                        STRING="${STRING:1}"
-                        DEL_SPACE=$((DEL_SPACE - 4))
-                    }
-                }
-                ;;
-            *)
-                break
-        esac
-        is_diff "$DEL_SPACE" 0 || break
-    done
-    EXCESS_INDENT=
-}
-
 read_block_structure ()
 {
     CHAR_NUM=0
     INDENT_LENGTH=0
-    INDENT_LENGTH="$((INDENT_LENGTH - ${EXCESS_INDENT:-0}))"
+    INDENT_LENGTH="$((INDENT_LENGTH - ${EXCESS_INDENT:=0}))"
     STRING_NESTING_DEPTH=-1
-    # trim_indent "${EXCESS_INDENT:-}"
     while is_not_empty "${STRING:-}"
     do
-        is_diff $CHAR_NUM 4 && CHAR_NUM=$((CHAR_NUM + 1)) || CHAR_NUM=1
+        CHAR_NUM=$((CHAR_NUM + 1))
         case "$STRING" in
             $SPACE*)
                 INDENT_LENGTH=$((INDENT_LENGTH + 1))
                 ;;
             $TAB*)
-                TAB_LENGTH=$((4 - $((CHAR_NUM - 1))))
+                TAB_LENGTH=$(( 4 - $(( $((CHAR_NUM - 1)) - $(( $(( $((CHAR_NUM - 1)) / 4 )) * 4 )) )) ))
                 INDENT_LENGTH=$((INDENT_LENGTH + TAB_LENGTH))
-                CHAR_NUM=0
-                # STRING=" $(printf "%$((4 - TAB_LENGTH))s")${STRING:1}"
+                CHAR_NUM=$((CHAR_NUM - 1 + TAB_LENGTH))
                 ;;
             \>*)
                 INDENT_LENGTH=-1
