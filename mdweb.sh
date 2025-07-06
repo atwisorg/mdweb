@@ -1074,7 +1074,7 @@ print_buffer ()
             fi
         fi
 
-        STRING="${STRING%"${STRING##*[!$NEW_STRING[:blank:]]}"}"
+        STRING="${STRING%"${STRING##*[![:space:]]}"}"
 
     }
     print_opening_tags
