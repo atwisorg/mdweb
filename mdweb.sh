@@ -1211,6 +1211,15 @@ read_an_empty_string ()
     fi
 }
 
+check_indent ()
+{
+    test "$INDENT_LENGTH" -lt 4 || {
+        is_equal "$INDENT_LENGTH" 4 || STRING="$(printf "%$((INDENT_LENGTH - 4))s")$STRING"
+        open_indent_code_block
+        return 1
+    }
+}
+
 read_block_structure ()
 {
     CHAR_NUM=0
@@ -1304,12 +1313,7 @@ read_block_structure ()
         esac
         STRING="${STRING:1}"
         CHAR_NUM=$((CHAR_NUM + 1))
-        test "$INDENT_LENGTH" -lt 4 || {
-            is_equal "$INDENT_LENGTH" 4 ||
-                STRING="$(printf "%$((INDENT_LENGTH - 4))s")$STRING"
-            open_indent_code_block
-            return 1
-        }
+        check_indent
     done
 }
 
