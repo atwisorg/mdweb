@@ -1219,15 +1219,20 @@ read_block_structure ()
     STRING_NESTING_DEPTH=-1
     while is_not_empty "${STRING:-}"
     do
-        CHAR_NUM=$((CHAR_NUM + 1))
+        # CHAR_NUM=$((CHAR_NUM + 1))
         case "$STRING" in
             $SPACE*)
                 INDENT_LENGTH=$((INDENT_LENGTH + 1))
                 ;;
             $TAB*)
-                TAB_LENGTH=$(( 4 - $(( $((CHAR_NUM - 1)) - $(( $(( $((CHAR_NUM - 1)) / 4 )) * 4 )) )) ))
-                INDENT_LENGTH=$((INDENT_LENGTH + TAB_LENGTH))
+                # TAB_LENGTH=$(( 4 - $(( $((CHAR_NUM - 1)) - $(( $(( $((CHAR_NUM - 1)) / 4 )) * 4 )) )) ))
+                # CHAR_NUM=$((CHAR_NUM - 1 + TAB_LENGTH))
+                # TAB_LENGTH=$(( 4 - $(( CHAR_NUM - $(( $(( CHAR_NUM / 4 )) * 4 )) )) ))
+                # CHAR_NUM=$((CHAR_NUM + TAB_LENGTH))
+                TAB_LENGTH=$(( 4 - $(( CHAR_NUM - $(( $(( CHAR_NUM / 4 )) * 4 )) )) ))
                 CHAR_NUM=$((CHAR_NUM - 1 + TAB_LENGTH))
+                INDENT_LENGTH=$((INDENT_LENGTH + TAB_LENGTH))
+                echo "CN:$CHAR_NUM:TL:$TAB_LENGTH:IL:$INDENT_LENGTH" >&2
                 ;;
             \>*)
                 INDENT_LENGTH=-1
@@ -1251,7 +1256,8 @@ read_block_structure ()
                     return 1
                 else
                     [[ "${STRING:1}" =~ ^([[:blank:]]|$) ]] && {
-                        EXCESS_INDENT=$((CHAR_NUM + 1))
+                        # EXCESS_INDENT=$((CHAR_NUM + 1))
+                        EXCESS_INDENT=$((CHAR_NUM + 2))
                         BULLET_CHAR=-
                         INDENT_LENGTH=-1
                         open_list
@@ -1297,6 +1303,7 @@ read_block_structure ()
                 return
         esac
         STRING="${STRING:1}"
+        CHAR_NUM=$((CHAR_NUM + 1))
         test "$INDENT_LENGTH" -lt 4 || {
             is_equal "$INDENT_LENGTH" 4 ||
                 STRING="$(printf "%$((INDENT_LENGTH - 4))s")$STRING"
