@@ -224,7 +224,7 @@ cmp_results ()
         is_not_empty "${COMPARE_STDOUT:-}" || {
             REPORT_STDOUT=(
                 "$H2" ""
-                "stdout:" "$(info_out "${RETURN_CODE:-}")"
+                "stdout:" "$(info_out "${STDOUT_RESULT:-}")"
             )
         }
         is_not_empty "${COMPARE_STDERR:-}" || {
@@ -255,6 +255,21 @@ trim_white_space ()
 {
     STRING="${1#"${1%%[![:blank:]]*}"}"
     STRING="${STRING%"${STRING##*[![:blank:]]}"}"
+}
+
+unset_vars ()
+{
+    COMPARE_STDOUT=
+    COMPARE_STDERR=
+    EXPECT=
+    EXPECT_ERR=
+    EXPECT_RETURN_CODE=
+    LOAD_TEST="no"
+    SAMPLE=
+    TESTED_ARGS=()
+    REPORT_STDOUT=()
+    REPORT_STDERR=()
+    REPORT_RETURN=()
 }
 
 run_test_file ()
@@ -344,7 +359,7 @@ run_test_file ()
                 else
                     save_result "$TEST_FAILURE"
                 fi
-                EXPECT_RETURN_CODE= COMPARE_STDOUT= COMPARE_STDERR= EXPECT= EXPECT_ERR= SAMPLE= LOAD_TEST="no" TESTED_ARGS=()
+                unset_vars
                 ;;
             :break|:break:*)
                 break
