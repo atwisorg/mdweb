@@ -542,8 +542,10 @@ format_string ()
         s%\\\([\x27"$%+,./:;=?@^{}-]\)%\1%g
 
         : add_tag_code
-        /^[^[`]*`\+[^`]*`$/! {
+        /^[^[`]*`\+[^`]*`/! {
+            # string: [word ` word [ word]
             /^[^[`]*`[^[]*\[/ {
+                # match : (word )`(word [)
                 : mask_first_acute
                 s%^\([^[`]*\)`\([^[]*\[\)%\1\06\2%
                 t mask_first_acute
@@ -588,7 +590,9 @@ format_string ()
             t mask_characters_nested_in_code
         }
 
-        s%^\([^`]*\)\(`\{1,\}\)\([^`]\+\)\2\([^`]\|$\)%\1<code>\3</code>\4%
+        # string: [word `` code 0 `` word]
+        # match : (word )`` (code 0) ``( word)
+        s%^\([^`]*\)\(`\{1,\}\)\( \?\)\([^`]\+\)\3\2\([^`]\|$\)%\1<code>\4</code>\5%
         t add_tag_code
 
         # string: [word`cat file0; `` `` word`cat file0`; ``` word]
