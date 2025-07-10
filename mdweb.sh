@@ -1072,43 +1072,39 @@ print_closing_tags ()
     echo "${TAG:-}"
 }
 
-print_buffer ()
+get_string_buffer ()
 {
-    SAVE_STRING="${STRING:-}" STRING=
     is_empty "${STRING_BUFFER:-}" || {
-        STRING="${STRING_BUFFER:-}" STRING_BUFFER=
-
-        if  is_equal "${INDENT_CODE_BLOCK:-}" "open" ||
-            is_equal        "${CODE_BLOCK:-}" "open"
+        if is_equal "${CODE_BLOCK:-"${INDENT_CODE_BLOCK:-}"}" "open"
         then
-            STRING="${STRING//$NEW_STRING/$MARKER_NEW_STRING}"
+            STRING_BUFFER="${STRING_BUFFER//"$NEW_STRING"/"$MARKER_NEW_STRING"}"
         else
-            if is_empty "${!OPENING_TAG_BUFFER[@]}"
+            if is_empty "${!CURRENT_BLOCK[@]}"
             then
-                STRING="$MARKER_FORMAT_STRING$MARKER_ADD_TAG_P${BUFFER_INDENT:-}$POSITION_TAG_P$STRING$MARKER_FORMAT_STRING"
+                STRING_BUFFER="$MARKER_FORMAT_STRING$MARKER_ADD_TAG_P${BUFFER_INDENT:-}$POSITION_TAG_P$STRING_BUFFER$MARKER_FORMAT_STRING"
                 BUFFER_INDENT=
             else
-                is_diff "${CLOSING_TAG_BUFFER[-1]}" "</blockquote>" || {
+                is_diff "${CURRENT_BLOCK[-1]}" "block_quote" || {
                     get_tag p
                     put_tag_in_buffer
                 }
-                STRING="$MARKER_FORMAT_STRING${BUFFER_INDENT:-}$STRING$MARKER_FORMAT_STRING"
-                BUFFER_INDENT=
+                STRING_BUFFER="$MARKER_FORMAT_STRING${BUFFER_INDENT:-}$STRING_BUFFER$MARKER_FORMAT_STRING"
             fi
         fi
-
-        STRING="${STRING%"${STRING##*[![:space:]]}"}"
-
+        STRING_BUFFER="${STRING_BUFFER%"${STRING_BUFFER##*[![:space:]]}"}$NEW_STRING"
     }
-    print_opening_tags
-    is_empty "${STRING:-}" || echo "${STRING:-}"
-    print_closing_tags "${1:-}"
-    LIST_ITEM=
-    BLOCK_QUOTE=
-    STRING="${SAVE_STRING:-}" SAVE_STRING=
 }
 
-print_code_block ()
+print_buffer ()
+{
+    get_string_buffer
+    print_opening_tags
+    echo -n "${STRING_BUFFER:-}"
+    print_closing_tags "${1:-}"
+    reset_block_variables
+}
+
+close_code_block ()
 {
     case "${1:-}" in
         close_all)
@@ -1129,11 +1125,6 @@ is_code_block ()
 is_code_block_with_lang ()
 {
     [[ "${STRING:-}" =~ ^\`{3}([^\`]|[[:blank:]]+).+$ ]]
-}
-
-close_code_block ()
-{
-    is_code_block && print_code_block
 }
 
 put_tag_in_buffer ()
@@ -1160,7 +1151,7 @@ add_to_code_block ()
     if is_equal "${CODE_BLOCK:-}" "open"
     then
         is_equal "${INDENTED_CODE_BLOCK:-}" "closed" &&
-        close_code_block ||
+        is_code_block && close_code_block ||
         STRING_BUFFER="${STRING_BUFFER:+"$STRING_BUFFER$NEW_STRING"}${STRING:-}"
     else
         is_code_block || {
@@ -1224,13 +1215,13 @@ read_an_empty_string ()
 
     if is_not_empty "${BLOCK_QUOTE:-}"
     then
-        print_buffer "$BLOCK_QUOTE"
+        close_block_quote
     elif is_not_empty "${LIST_ITEM:-}"
     then
         STRING=""
         put_string_in_buffer
         return 1
-    elif is_not_empty "${CODE_BLOCK:-}"
+    elif is_equal "${CODE_BLOCK:-"${INDENT_CODE_BLOCK:-}"}" "open"
     then
         trim_string
         put_string_in_buffer
@@ -1411,7 +1402,6 @@ read_block_structure ()
         case "$STRING" in
             \>*)
                 open_block_quote
-                CURRENT_BLOCK="block_quote"
                 CHAR_NUM="$((CHAR_NUM + 1))"
                 ;;
             [#]*)
@@ -1435,7 +1425,6 @@ read_block_structure ()
 
                         if is_empty "${POSITION_LIST_ITEM:-}"
                         then
-                            CURRENT_BLOCK+=( "unordered_list" )
                             BULLET_CHAR="-"
                             POSITION_LIST_ITEM="$CHAR_NUM"
                             CHAR_NUM="$((CHAR_NUM + 1))"
@@ -1445,7 +1434,6 @@ read_block_structure ()
                             LIST_ITEM="${LIST_ITEM:-$STRING_NESTING_DEPTH}"
                         elif test "$CHAR_NUM" -le "$PREFIX_INDENT"
                         then
-                            CURRENT_BLOCK+=( "unordered_list" )
                             BULLET_CHAR="-"
                             POSITION_LIST_ITEM="$CHAR_NUM"
                             CHAR_NUM="$((CHAR_NUM + 1))"
@@ -1530,8 +1518,14 @@ open_block_quote ()
     put_tag_in_buffer
 }
 
+close_block_quote ()
+{
+    print_buffer "$BLOCK_QUOTE"
+}
+
 open_unordered_list ()
 {
+    CURRENT_BLOCK+=( "unordered_list" )
     get_tag ul
     put_tag_in_buffer
 }
@@ -1574,22 +1568,8 @@ open_list ()
 
 open_indent_code_block ()
 {
-    trim_indent 4
-    is_empty "${CURRENT_BLOCK:-}" && {
-        is_empty "${!CLOSING_TAG_BUFFER[@]}" || {
-            is_equal "${CLOSING_TAG_BUFFER[-1]}" "</li>" &&
-            print_buffer 0 || print_buffer
-        }
-        INDENT_CODE_BLOCK="open"
-        get_tag code-block
-        put_tag_in_buffer
-        put_string_in_buffer
-    } || put_string_in_buffer
-}
-
-open_indent_code_block ()
-{
     CURRENT_BLOCK+=( "indent_code_block" )
+    INDENT_CODE_BLOCK="open"
     trim_indent "${1:-4}"
     get_tag code-block
     put_tag_in_buffer
@@ -1614,6 +1594,7 @@ print_heading ()
     get_tag "$TAG_HEADER"
     put_tag_in_buffer
     put_string_in_buffer
+    CURRENT_BLOCK+=( "heading" )
     print_buffer 1
 }
 
@@ -1658,13 +1639,18 @@ print_horizontal_rule ()
     echo -n "$STRING"
 }
 
+reset_block_variables ()
+{
+    STRING_BUFFER=
+    INDENT_CODE_BLOCK=
+    CODE_BLOCK=
+    BLOCK_QUOTE=
+    LIST_ITEM=
+}
+
 convert_md2html ()
 {
-    SAVE_STRING=
-    STRING_BUFFER=
-
     PREFIX_INDENT=
-    STRING_INDENT_WIDTH=3
     TAG_INDENT_WIDTH=0
     MAIN_TAG_INDENT=""
 
@@ -1674,10 +1660,7 @@ convert_md2html ()
     CLOSING_INDENT_BUFFER=()
 
     CURRENT_BLOCK=()
-    INDENT_CODE_BLOCK=
-    CODE_BLOCK=
-    BLOCK_QUOTE=
-    LIST_ITEM=
+    reset_block_variables
 
     ID_NUM=0
     declare -A ID_BASE
@@ -1703,7 +1686,7 @@ convert_md2html ()
         done < <(cat "${INPUT:--}")
         if is_equal "${CODE_BLOCK:-}" "open"
         then
-            print_code_block close_all
+            close_code_block close_all
         else
             print_buffer
         fi
