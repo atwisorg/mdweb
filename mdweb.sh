@@ -1031,7 +1031,7 @@ print_closing_tags ()
         for i in $(seq 1 $SHIFT)
         do
             TAG="${TAG:+$TAG$NEW_STRING}${CLOSING_INDENT_BUFFER[-1]:-}${CLOSING_TAG_BUFFER[-1]}"
-            unset -v "CLOSING_TAG_BUFFER[-1]" "CLOSING_INDENT_BUFFER[-1]"
+            unset -v "CURRENT_BLOCK[-1]" "CLOSING_TAG_BUFFER[-1]" "CLOSING_INDENT_BUFFER[-1]"
         done
         # STRING_NESTING_DEPTH="$((STRING_NESTING_DEPTH-SHIFT))"
         # TAG_INDENT="${TAG_INDENT%"$(printf "%$((TAG_INDENT_WIDTH*SHIFT+2))s" '')"}"
@@ -1081,7 +1081,7 @@ print_buffer ()
     is_empty "${STRING:-}" || echo "${STRING:-}"
     print_closing_tags "${1:-}"
     LIST_ITEM=
-    BLOCKQUOTE=
+    BLOCK_QUOTE=
     STRING="${SAVE_STRING:-}" SAVE_STRING=
 }
 
@@ -1170,6 +1170,12 @@ put_string_in_buffer ()
     STRING=
 }
 
+put_string_in_buffer ()
+{
+    STRING_BUFFER="${STRING_BUFFER:+"$STRING_BUFFER$NEW_STRING"}${STRING:-}"
+    STRING=
+}
+
 string_is_empty ()
 {
     case "${1:-}" in
@@ -1191,11 +1197,11 @@ trim_string ()
 read_an_empty_string ()
 {
     string_is_empty "${STRING:-}" || return 0
-    is_not_empty "${!CLOSING_TAG_BUFFER[@]}" || return
+    is_not_empty "${!CURRENT_BLOCK[@]}" || return
 
-    if is_not_empty "${BLOCKQUOTE:-}"
+    if is_not_empty "${BLOCK_QUOTE:-}"
     then
-        print_buffer "$BLOCKQUOTE"
+        print_buffer "$BLOCK_QUOTE"
     elif is_not_empty "${LIST_ITEM:-}"
     then
         STRING=""
@@ -1211,41 +1217,179 @@ read_an_empty_string ()
     fi
 }
 
-check_indent ()
+trim_indent ()
 {
-    test "$INDENT_LENGTH" -lt 4 || {
-        is_equal "$INDENT_LENGTH" 4 || STRING="$(printf "%$((INDENT_LENGTH - 4))s")$STRING"
-        open_indent_code_block
-        return 1
+    TRIM_SPACE="${1:-4}"
+    CHARACTER_POSITION="${2:-"${CHAR_NUM:-0}"}"
+    while is_not_empty "${STRING:-}"
+    do
+        is_diff "$TRIM_SPACE" 0 || break
+        is_diff "$CHARACTER_POSITION" 4 &&
+            CHARACTER_POSITION="$((CHARACTER_POSITION + 1))" ||
+            CHARACTER_POSITION=1
+        case "$STRING" in
+            $SPACE*)
+                STRING="${STRING:1}"
+                TRIM_SPACE="$((TRIM_SPACE - 1))"
+                ;;
+            $TAB*)
+                TAB_LENGTH="$((4 -  $((CHARACTER_POSITION - 1))))"
+                CHARACTER_POSITION="$((CHARACTER_POSITION - 1 + TAB_LENGTH))"
+                if is_equal "$TRIM_SPACE" "$TAB_LENGTH"
+                then
+                    STRING="${STRING:1}"
+                    break
+                elif test "$TRIM_SPACE" -lt "$TAB_LENGTH"
+                then
+                    STRING="$(printf "%$((TAB_LENGTH - TRIM_SPACE))s")${STRING:1}"
+                    break
+                else
+                    STRING="${STRING:1}"
+                    TRIM_SPACE="$((TRIM_SPACE - TAB_LENGTH))"
+                fi
+                ;;
+            *)
+                break
+        esac
+    done
+}
+
+expand_indent ()
+{
+    CHARACTER_POSITION="${1:-0}"
+    INDENT=""
+    while is_not_empty "${STRING:-}"
+    do
+        is_diff "$CHARACTER_POSITION" 4 &&
+            CHARACTER_POSITION="$((CHARACTER_POSITION + 1))" ||
+            CHARACTER_POSITION=1
+        case "$STRING" in
+            $SPACE*)
+                INDENT="${INDENT:-} "
+                STRING="${STRING:1}"
+                ;;
+            $TAB*)
+                TAB_LENGTH="$((4 -  $((CHARACTER_POSITION - 1))))"
+                CHARACTER_POSITION="$((CHARACTER_POSITION - 1 + TAB_LENGTH))"
+                INDENT="${INDENT:-}$(printf "%${TAB_LENGTH}s")"
+                STRING="${STRING:1}"
+                ;;
+            *)
+                break
+        esac
+    done
+    echo "${INDENT:-}${STRING:-}"
+}
+
+get_indent ()
+{
+    string_is_empty "${STRING:-}" || {
+        INDENT="${STRING%%[![:blank:]]*}"
+        INDENT_LENGTH="$(expand_indent "$CHAR_NUM")"
+        INDENT_LENGTH="${INDENT_LENGTH%%[![:blank:]]*}"
+        INDENT_LENGTH="${#INDENT_LENGTH}"
+        return
     }
+    return 1
+}
+
+is_beginning_of_string ()
+{
+    is_equal "$CHAR_NUM" 0
+}
+
+parse_indent ()
+{
+    get_indent || return
+    if test "$INDENT_LENGTH" -lt 4
+    then
+        if is_beginning_of_string
+        then
+            close_indent_code_block
+        else
+            is_equal "${PREFIX_INDENT:-0}" 0 || PREFIX_INDENT="$((PREFIX_INDENT + INDENT_LENGTH))"
+        fi
+    else
+        is_empty "${!CURRENT_BLOCK[@]}" && {
+            if is_empty "${STRING_BUFFER:-}"
+            then
+                open_indent_code_block
+            else
+                put_string_in_buffer
+            fi
+            return 1
+        } ||
+        case "${CURRENT_BLOCK[-1]}" in
+            block_quote)
+                is_beginning_of_string || {
+                    open_indent_code_block
+                    return 1
+                }
+                ;;
+            indent_code_block)
+                trim_indent 4
+                put_string_in_buffer
+                return 1
+                ;;
+            unordered_list)
+                if is_beginning_of_string
+                then
+                    if is_empty "${STRING_BUFFER:-}"
+                    then
+                        if test "$INDENT_LENGTH" -ge "$PREFIX_INDENT"
+                        then
+                            test "$((INDENT_LENGTH - PREFIX_INDENT))" -lt 4 || {
+                                open_indent_code_block "$((INDENT_LENGTH + PREFIX_INDENT))"
+                                return 1
+                            }
+                        else
+                            print_buffer
+                            open_indent_code_block
+                            return 1
+                        fi
+                    else
+                        if test "$INDENT_LENGTH" -ge "$PREFIX_INDENT"
+                        then
+                            test "$INDENT_LENGTH" -le "$((PREFIX_INDENT + 3))" || {
+                                print_buffer 0
+                                open_indent_code_block "$((INDENT_LENGTH - PREFIX_INDENT))"
+                                return 1
+                            }
+                        else
+                            put_string_in_buffer
+                            return 1
+                        fi
+                    fi
+                else
+                    open_indent_code_block
+                    return 1
+                fi
+                ;;
+        esac
+    fi
+    сut_indent
+}
+
+сut_indent ()
+{
+    STRING="${STRING#"${INDENT:-}"}"
 }
 
 read_block_structure ()
 {
     CHAR_NUM=0
-    INDENT_LENGTH=0
-    INDENT_LENGTH="$((INDENT_LENGTH - ${EXCESS_INDENT:=0}))"
     STRING_NESTING_DEPTH=-1
+    PREFIX_INDENT="${PREFIX_INDENT:-0}"
+
     while is_not_empty "${STRING:-}"
     do
-        # CHAR_NUM=$((CHAR_NUM + 1))
+        parse_indent || return
+        CHAR_NUM="$((CHAR_NUM + INDENT_LENGTH + 1))"
         case "$STRING" in
-            $SPACE*)
-                INDENT_LENGTH=$((INDENT_LENGTH + 1))
-                ;;
-            $TAB*)
-                # TAB_LENGTH=$(( 4 - $(( $((CHAR_NUM - 1)) - $(( $(( $((CHAR_NUM - 1)) / 4 )) * 4 )) )) ))
-                # CHAR_NUM=$((CHAR_NUM - 1 + TAB_LENGTH))
-                # TAB_LENGTH=$(( 4 - $(( CHAR_NUM - $(( $(( CHAR_NUM / 4 )) * 4 )) )) ))
-                # CHAR_NUM=$((CHAR_NUM + TAB_LENGTH))
-                TAB_LENGTH=$(( 4 - $(( CHAR_NUM - $(( $(( CHAR_NUM / 4 )) * 4 )) )) ))
-                CHAR_NUM=$((CHAR_NUM - 1 + TAB_LENGTH))
-                INDENT_LENGTH=$((INDENT_LENGTH + TAB_LENGTH))
-                echo "CN:$CHAR_NUM:TL:$TAB_LENGTH:IL:$INDENT_LENGTH" >&2
-                ;;
             \>*)
-                INDENT_LENGTH=-1
-                open_blockquote
+                open_block_quote
+                CURRENT_BLOCK="block_quote"
+                CHAR_NUM="$((CHAR_NUM + 1))"
                 ;;
             [#]*)
                 print_heading_atx || put_string_in_buffer
@@ -1265,11 +1409,38 @@ read_block_structure ()
                     return 1
                 else
                     [[ "${STRING:1}" =~ ^([[:blank:]]|$) ]] && {
-                        # EXCESS_INDENT=$((CHAR_NUM + 1))
-                        EXCESS_INDENT=$((CHAR_NUM + 2))
-                        BULLET_CHAR=-
-                        INDENT_LENGTH=-1
-                        open_list
+
+                        if is_empty "${POSITION_LIST_ITEM:-}"
+                        then
+                            CURRENT_BLOCK+=( "unordered_list" )
+                            BULLET_CHAR="-"
+                            POSITION_LIST_ITEM="$CHAR_NUM"
+                            CHAR_NUM="$((CHAR_NUM + 1))"
+                            open_unordered_list
+                            open_list_item
+                            PREFIX_INDENT="$((PREFIX_INDENT + CHAR_NUM))"
+                            LIST_ITEM="${LIST_ITEM:-$STRING_NESTING_DEPTH}"
+                        elif test "$CHAR_NUM" -le "$PREFIX_INDENT"
+                        then
+                            CURRENT_BLOCK+=( "unordered_list" )
+                            BULLET_CHAR="-"
+                            POSITION_LIST_ITEM="$CHAR_NUM"
+                            CHAR_NUM="$((CHAR_NUM + 1))"
+                            print_buffer 1
+                            open_list_item
+                            PREFIX_INDENT="$CHAR_NUM"
+                        else
+                            test "$CHAR_NUM" -le $((PREFIX_INDENT + 4 )) && {
+                                BULLET_CHAR="-"
+                                POSITION_LIST_ITEM="$CHAR_NUM"
+                                CHAR_NUM="$((CHAR_NUM + 1))"
+                                print_buffer 0
+                                open_unordered_list
+                                open_list_item
+                                PREFIX_INDENT="$CHAR_NUM"
+                            }
+                        fi
+
                     } || {
                         put_string_in_buffer
                         return 1
@@ -1312,15 +1483,15 @@ read_block_structure ()
                 return
         esac
         STRING="${STRING:1}"
-        CHAR_NUM=$((CHAR_NUM + 1))
-        check_indent
+        trim_indent 1 "$((CHAR_NUM - 1))"
     done
 }
 
-open_blockquote ()
+open_block_quote ()
 {
     STRING_NESTING_DEPTH="$((STRING_NESTING_DEPTH + 1))"
-    BLOCKQUOTE="${BLOCKQUOTE:-$STRING_NESTING_DEPTH}"
+    BLOCK_QUOTE="${BLOCK_QUOTE:-"$STRING_NESTING_DEPTH"}"
+    CURRENT_BLOCK+=( "block_quote" )
 
     get_tag blockquote
     is_empty "${!CLOSING_TAG_BUFFER[@]}" || is_empty "${CLOSING_TAG_BUFFER[$STRING_NESTING_DEPTH]:-}" && {
@@ -1336,42 +1507,75 @@ open_blockquote ()
     put_tag_in_buffer
 }
 
+open_unordered_list ()
+{
+    get_tag ul
+    put_tag_in_buffer
+}
+
+open_list_item ()
+{
+    get_tag li
+    put_tag_in_buffer
+}
+
 open_list ()
 {
     STRING_NESTING_DEPTH="$((STRING_NESTING_DEPTH + 1))"
     LIST_ITEM="${LIST_ITEM:-$STRING_NESTING_DEPTH}"
 
-    get_tag ul
     is_empty "${!CLOSING_TAG_BUFFER[@]}" && {
-        put_tag_in_buffer
-        get_tag li
-    } || is_empty "${CLOSING_TAG_BUFFER[$STRING_NESTING_DEPTH]:-}" || {
+        open_unordered_list
+        open_list_item
+    } || {
+        is_empty "${CLOSING_TAG_BUFFER[$STRING_NESTING_DEPTH]:-}" && {
+            is_empty "${STRING_BUFFER:-}" || print_buffer 0
+            open_unordered_list
+            open_list_item
+        }
+    } || {
+        get_tag ul
         if is_equal "${CLOSING_TAG_BUFFER[$STRING_NESTING_DEPTH]:-}" "$CLOSING_TAG"
         then
             print_buffer 1
-            get_tag li
+            open_list_item
         else
             print_buffer "$((${#CLOSING_TAG_BUFFER[@]} - STRING_NESTING_DEPTH))"
             put_tag_in_buffer
-            get_tag li
+            open_list_item
         fi
     }
-    put_tag_in_buffer
 
     STRING_NESTING_DEPTH="$((STRING_NESTING_DEPTH + 1))"
 }
 
 open_indent_code_block ()
 {
-    is_empty "${INDENT_CODE_BLOCK:-}" && {
-        is_empty "${STRING_BUFFER:-}" || {
-            print_buffer 0
+    trim_indent 4
+    is_empty "${CURRENT_BLOCK:-}" && {
+        is_empty "${!CLOSING_TAG_BUFFER[@]}" || {
+            is_equal "${CLOSING_TAG_BUFFER[-1]}" "</li>" &&
+            print_buffer 0 || print_buffer
         }
         INDENT_CODE_BLOCK="open"
         get_tag code-block
         put_tag_in_buffer
         put_string_in_buffer
     } || put_string_in_buffer
+}
+
+open_indent_code_block ()
+{
+    CURRENT_BLOCK+=( "indent_code_block" )
+    trim_indent "${1:-4}"
+    get_tag code-block
+    put_tag_in_buffer
+    put_string_in_buffer
+}
+
+close_indent_code_block ()
+{
+    is_empty "${INDENT_CODE_BLOCK:-}" || print_buffer 1
 }
 
 trim_white_space ()
@@ -1436,7 +1640,7 @@ convert_md2html ()
     SAVE_STRING=
     STRING_BUFFER=
 
-    EXCESS_INDENT=
+    PREFIX_INDENT=
     STRING_INDENT_WIDTH=3
     TAG_INDENT_WIDTH=0
     MAIN_TAG_INDENT=""
@@ -1446,9 +1650,10 @@ convert_md2html ()
     OPENING_INDENT_BUFFER=()
     CLOSING_INDENT_BUFFER=()
 
+    CURRENT_BLOCK=()
     INDENT_CODE_BLOCK=
     CODE_BLOCK=
-    BLOCKQUOTE=
+    BLOCK_QUOTE=
     LIST_ITEM=
 
     ID_NUM=0
