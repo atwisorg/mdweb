@@ -489,16 +489,21 @@ combine_string ()
 
 format_string ()
 {
-    # search for links
-    # |   |   extra    |   need    |
-    # |---|------------|-----------|
-    # | ` | \x07  [^G] | \x1d [^]] |
-    # | [ | \x11  [^Q] | \x1e [^^] |
-    # | ] | \x12  [^R] | \x0e [^N] |
-    # | ( | \x14  [^T] | \x1c [^\] |
-    # | ) | \x15  [^U] | \x0c [^L] |
-    # |---|------------|-----------|
-    # [[^][)(]*]([[:blank:]]*[^][)([:blank:]]*[[:blank:]]*)
+    # 1. search for single-line code
+    #    1. masking escaped control characters before single-line code
+    #    2. mask backslashes and control characters in code
+    #    3. recognize single-line code and insert tags
+    # 2. search for links
+    #    1. control character masking map
+    #       |   |   extra    |   need    |
+    #       |---|------------|-----------|
+    #       | ` | \x07  [^G] | \x1d [^]] |
+    #       | [ | \x11  [^Q] | \x1e [^^] |
+    #       | ] | \x12  [^R] | \x0e [^N] |
+    #       | ( | \x14  [^T] | \x1c [^\] |
+    #       | ) | \x15  [^U] | \x0c [^L] |
+    #       |---|------------|-----------|
+    #       [[^][)(]*]([[:blank:]]*[^][)([:blank:]]*[[:blank:]]*)
 
     sed '
         /^\x1f/!{
@@ -508,8 +513,9 @@ format_string ()
 
         # delete MARKER_FORMAT_STRING
         s%^\x1f%%
+        b add_tag_code
 
-        # mask escaped characters
+        : mask_escaped_characters
         s%\\\\%\x02%g
         s%\\&%\x03%g
         /[<>]/ {
@@ -541,9 +547,21 @@ format_string ()
         s%\\|%\x17%g
         s%\\\([\x27"$%+,./:;=?@^{}-]\)%\1%g
 
+        b mask_acute
+
+        # preliminary check to see if there are any
+        # hints of a single-line code;
+        # string: [word ` code ` word]
         : add_tag_code
         /^[^[`]*`\+[^`]*`/! {
+            # since no single-line code was found,
+            # it is safe to mask out all escaped control characters;
+            t mask_escaped_characters
+
+            # if no one-line code is found,
+            # mask acute before possible links;
             # string: [word ` word [ word]
+            : mask_acute
             /^[^[`]*`[^[]*\[/ {
                 # match : (word )`(word [)
                 : mask_first_acute
