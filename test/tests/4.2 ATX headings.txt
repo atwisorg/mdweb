@@ -1,7 +1,7 @@
 # https://spec.commonmark.org/0.31.2/#atx-headings
 
 # https://spec.commonmark.org/0.31.2/#example-62
-:test: 4.1 Thematic breaks (Example 62)
+:test: 4.2 ATX headings (Example 62)
 :sample: |
 # foo
 ## foo
@@ -19,7 +19,7 @@
 :run:
 
 # https://spec.commonmark.org/0.31.2/#example-63
-:test: 4.1 Thematic breaks (Example 63)
+:test: 4.2 ATX headings (Example 63)
 :sample: |
 ####### foo
 :expect: |
@@ -27,7 +27,7 @@
 :run:
 
 # https://spec.commonmark.org/0.31.2/#example-64
-:test: 4.1 Thematic breaks (Example 64)
+:test: 4.2 ATX headings (Example 64)
 :sample: |
 #5 bolt
 
@@ -38,7 +38,7 @@
 :run:
 
 # https://spec.commonmark.org/0.31.2/#example-65
-:test: 4.1 Thematic breaks (Example 65)
+:test: 4.2 ATX headings (Example 65)
 :sample: |
 \## foo
 :expect: |
@@ -46,7 +46,7 @@
 :run:
 
 # https://spec.commonmark.org/0.31.2/#example-66
-:test: 4.1 Thematic breaks (Example 66)
+:test: 4.2 ATX headings (Example 66)
 :sample: |
 # foo *bar* \*baz\*
 :expect: |
@@ -54,7 +54,7 @@
 :run:
 
 # https://spec.commonmark.org/0.31.2/#example-67
-:test: 4.1 Thematic breaks (Example 67)
+:test: 4.2 ATX headings (Example 67)
 :sample: |
 #                  foo                     
 :expect: |
@@ -62,7 +62,7 @@
 :run:
 
 # https://spec.commonmark.org/0.31.2/#example-68
-:test: 4.1 Thematic breaks (Example 68)
+:test: 4.2 ATX headings (Example 68)
 :sample: |
  ### foo
   ## foo
@@ -74,7 +74,7 @@
 :run:
 
 # https://spec.commonmark.org/0.31.2/#example-69
-:test: 4.1 Thematic breaks (Example 69)
+:test: 4.2 ATX headings (Example 69)
 :sample: |
     # foo
 :expect: |
@@ -83,7 +83,7 @@
 :run:
 
 # https://spec.commonmark.org/0.31.2/#example-70
-:test: 4.1 Thematic breaks (Example 70)
+:test: 4.2 ATX headings (Example 70)
 :sample: |
 foo
     # bar
@@ -93,7 +93,7 @@ foo
 :run:
 
 # https://spec.commonmark.org/0.31.2/#example-71
-:test: 4.1 Thematic breaks (Example 71)
+:test: 4.2 ATX headings (Example 71)
 :sample: |
 ## foo ##
   ###   bar    ###
@@ -103,7 +103,7 @@ foo
 :run:
 
 # https://spec.commonmark.org/0.31.2/#example-72
-:test: 4.1 Thematic breaks (Example 72)
+:test: 4.2 ATX headings (Example 72)
 :sample: |
 # foo ##################################
 ##### foo ##
@@ -113,7 +113,7 @@ foo
 :run:
 
 # https://spec.commonmark.org/0.31.2/#example-73
-:test: 4.1 Thematic breaks (Example 73)
+:test: 4.2 ATX headings (Example 73)
 :sample: |
 ### foo ###     
 :expect: |
@@ -121,7 +121,7 @@ foo
 :run:
 
 # https://spec.commonmark.org/0.31.2/#example-74
-:test: 4.1 Thematic breaks (Example 74)
+:test: 4.2 ATX headings (Example 74)
 :sample: |
 ### foo ### b
 :expect: |
@@ -129,7 +129,7 @@ foo
 :run:
 
 # https://spec.commonmark.org/0.31.2/#example-75
-:test: 4.1 Thematic breaks (Example 75)
+:test: 4.2 ATX headings (Example 75)
 :sample: |
 # foo#
 :expect: |
@@ -137,7 +137,7 @@ foo
 :run:
 
 # https://spec.commonmark.org/0.31.2/#example-76
-:test: 4.1 Thematic breaks (Example 76)
+:test: 4.2 ATX headings (Example 76)
 :sample: |
 ### foo \###
 ## foo #\##
@@ -149,7 +149,7 @@ foo
 :run:
 
 # https://spec.commonmark.org/0.31.2/#example-77
-:test: 4.1 Thematic breaks (Example 77)
+:test: 4.2 ATX headings (Example 77)
 :sample: |
 ****
 ## foo
@@ -161,7 +161,7 @@ foo
 :run:
 
 # https://spec.commonmark.org/0.31.2/#example-78
-:test: 4.1 Thematic breaks (Example 78)
+:test: 4.2 ATX headings (Example 78)
 :sample: |
 Foo bar
 # baz
@@ -173,7 +173,7 @@ Bar foo
 :run:
 
 # https://spec.commonmark.org/0.31.2/#example-79
-:test: 4.1 Thematic breaks (Example 79)
+:test: 4.2 ATX headings (Example 79)
 :sample: |
 ## 
 #
