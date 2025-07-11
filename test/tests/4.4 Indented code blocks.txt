@@ -1,0 +1,165 @@
+# https://spec.commonmark.org/0.31.2/#indented-code-blocks
+
+# https://spec.commonmark.org/0.31.2/#example-107
+:test: 4.4 Indented code blocks (Example 107)
+:sample: |
+    a simple
+      indented code block
+:expect: |
+<pre><code>a simple
+  indented code block
+</code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-108
+:test: 4.4 Indented code blocks (Example 108)
+:sample: |
+  - foo
+
+    bar
+:expect: |
+<ul>
+<li>
+<p>foo</p>
+<p>bar</p>
+</li>
+</ul>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-109
+:test: 4.4 Indented code blocks (Example 109)
+:sample: |
+1.  foo
+
+    - bar
+:expect: |
+<ol>
+<li>
+<p>foo</p>
+<ul>
+<li>bar</li>
+</ul>
+</li>
+</ol>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-110
+:test: 4.4 Indented code blocks (Example 110)
+:sample: |
+    <a/>
+    *hi*
+
+    - one
+:expect: |
+<pre><code>&lt;a/&gt;
+*hi*
+
+- one
+</code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-111
+:test: 4.4 Indented code blocks (Example 111)
+:sample: |
+    chunk1
+
+    chunk2
+  
+ 
+ 
+    chunk3
+:expect: |
+<pre><code>chunk1
+
+chunk2
+
+
+
+chunk3
+</code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-112
+:test: 4.4 Indented code blocks (Example 112)
+:sample: |
+    chunk1
+      
+      chunk2
+:expect: |
+<pre><code>chunk1
+  
+  chunk2
+</code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-113
+:test: 4.4 Indented code blocks (Example 113)
+:sample: |
+Foo
+    bar
+:expect: |
+<p>Foo
+bar</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-114
+:test: 4.4 Indented code blocks (Example 114)
+:sample: |
+    foo
+bar
+:expect: |
+<pre><code>foo
+</code></pre>
+<p>bar</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-115
+:test: 4.4 Indented code blocks (Example 115)
+:sample: |
+# Heading
+    foo
+Heading
+------
+    foo
+----
+:expect: |
+<h1>Heading</h1>
+<pre><code>foo
+</code></pre>
+<h2>Heading</h2>
+<pre><code>foo
+</code></pre>
+<hr />
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-116
+:test: 4.4 Indented code blocks (Example 116)
+:sample: |
+        foo
+    bar
+:expect: |
+<pre><code>    foo
+bar
+</code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-117
+:test: 4.4 Indented code blocks (Example 117)
+:sample: |
+
+    
+    foo
+
+:expect: |
+<pre><code>foo
+</code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-118
+:test: 4.4 Indented code blocks (Example 118)
+:sample: |
+    foo  
+:expect: |
+<pre><code>foo  
+</code></pre>
+:run:
