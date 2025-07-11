@@ -167,7 +167,7 @@ aaa
 aaa
   aaa
 aaa
-  ``
+  ```
 :expect: |
 <pre><code>aaa
 aaa
