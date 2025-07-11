@@ -71,7 +71,8 @@ bar</p>
 :sample: |
     \[\]
 :expect: |
-<pre><code>\[\]</code></pre>
+<pre><code>\[\]
+</code></pre>
 :run:
 
 # https://spec.commonmark.org/0.31.2/#example-19
@@ -81,7 +82,8 @@ bar</p>
 \[\]
 ~~~
 :expect: |
-<pre><code>\[\]</code></pre>
+<pre><code>\[\]
+</code></pre>
 :run:
 
 # https://spec.commonmark.org/0.31.2/#example-20
@@ -128,5 +130,6 @@ bar</p>
 foo
 ```
 :expect: |
-<pre><code class="language-foo+bar">foo</code></pre>
+<pre><code class="language-foo+bar">foo
+</code></pre>
 :run:

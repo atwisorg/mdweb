@@ -8,9 +8,7 @@
 - The name of the file with test results is created based on the name of the test file with the addition of the line number in which the completed test is located.
 - By default, the `test_ok` directory is cleared automatically, but the `test_failure` directory is not.
 
-## Run test
-
-**Run all tests**
+## Synopsis
 
 ```
 ./test.sh [OPTIONS]
@@ -28,6 +26,32 @@
                             file `.testignor` is not used
   --test-num NUM ...        specify test numbers separated by commas/spaces
                             and/or ranges of test numbers to run
+```
+
+## Run test
+
+**Run all tests**
+
+```
+./test.sh --args -c -p --clear
+```
+
+**Run the test by number**
+
+```
+./test.sh --args -c -p --clear --test-num 1
+```
+
+**Run the specified test file**
+
+```
+./test.sh --args -c -p --clear --test-file 2.2\ Tabs.txt
+```
+
+**Run the test by number from the specified test file**
+
+```
+./test.sh --args -c -p --clear --test-file '2.2 Tabs.txt' --test-num 1
 ```
 
 ## Test file syntax

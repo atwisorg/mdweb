@@ -32,6 +32,7 @@ Options:
   -f, --force               do not prompt before overwriting
   -i, --input=FILE          specify the path to the file for tagging the code
   -o, --output=<path>       specify the path to save
+  -p, --canonical-pre-code  move the tag '</code></pre>' to a new line
   -s, --style=<style>       specify the style of the HTML page
   -t, --title=<title>       specify the HTML page title
   -v, --version             display version information and exit
@@ -325,6 +326,15 @@ argparse ()
             -o*)
                 OUTPUT="${1#??}"
                 ;;
+            -p|--canonical-pre-code)
+                CANONICAL_PRE_CODE="$1"
+                ;;
+            -p*)
+                CANONICAL_PRE_CODE="${1%"${1#??}"}"
+                ARG="-${1#??}"
+                shift
+                set -- '' "$ARG" "$@"
+                ;;
             -s|--style)
                 arg_is_not_empty "$1" "${2:-}"
                 PAGE_STYLE="$2"
@@ -388,11 +398,12 @@ argparse ()
 
 check_args ()
 {
-    is_empty "${PAGE_STYLE:-}" || {
+    is_empty "${PAGE_STYLE:-}" && GET_CODE_BLOCK_TAG="get_code_block_tag" || {
         is_file "$PAGE_STYLE" || {
             is_file "$PKG_DIR/style/${PAGE_STYLE%.css}.css" &&
             PAGE_STYLE="$PKG_DIR/style/${PAGE_STYLE%.css}.css"
         } || die 2 "no such file: -- '$PAGE_STYLE'"
+        GET_CODE_BLOCK_TAG="get_code_block_tag_with_class"
     }
 
     is_equal "$STDIN" "pipeline"  && INPUT= || {
@@ -974,12 +985,22 @@ get_tag_indent ()
     esac
 }
 
+get_code_block_tag_with_class ()
+{
+    OPENING_TAG="<pre><code class=\"${CURRENT_CODE_LANG:+fenced-code-block language-}${CURRENT_CODE_LANG:-indented-$1}\">$MARKER_START_MERGE_STRING"
+}
+
+get_code_block_tag ()
+{
+    OPENING_TAG="<pre><code${CURRENT_CODE_LANG:+ class=\"language-$CURRENT_CODE_LANG\"}>$MARKER_START_MERGE_STRING"
+}
+
 get_tag ()
 {
     case "$1" in
         code-block)
-            OPENING_TAG="<pre><code class=\"${CURRENT_CODE_LANG:+fenced-code-block language-}${CURRENT_CODE_LANG:-indented-$1}\">$MARKER_START_MERGE_STRING"
-            CLOSING_TAG="</code></pre>$MARKER_STOP_MERGE_STRING"
+            $GET_CODE_BLOCK_TAG
+            CLOSING_TAG="${CANONICAL_PRE_CODE:-}</code></pre>$MARKER_STOP_MERGE_STRING"
             CURRENT_CODE_LANG=
             OPENING_TAG_INDENT="${TAG_INDENT:-}"
             CLOSING_TAG_INDENT=""
@@ -1675,6 +1696,8 @@ convert_md2html ()
                         SPACE=" "                        #    [\x20]
                           TAB=$'\t'                      # ^I [\x09]
                    NEW_STRING=$'\n'                      #  $ [\x0a]
+
+    is_empty "${CANONICAL_PRE_CODE:-}" || CANONICAL_PRE_CODE="$MARKER_NEW_STRING"
     {
         while IFS= read -r STRING || is_not_empty "${STRING:-}"
         do
