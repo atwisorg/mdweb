@@ -987,12 +987,12 @@ get_tag_indent ()
 
 get_code_block_tag_with_class ()
 {
-    OPENING_TAG="<pre><code class=\"${CURRENT_CODE_LANG:+fenced-code-block language-}${CURRENT_CODE_LANG:-indented-$1}\">$MARKER_START_MERGE_STRING"
+    OPENING_TAG="<pre><code class=\"${CLASS:+fenced-code-block language-}${CLASS:-indented-$1}\">$MARKER_START_MERGE_STRING"
 }
 
 get_code_block_tag ()
 {
-    OPENING_TAG="<pre><code${CURRENT_CODE_LANG:+ class=\"language-$CURRENT_CODE_LANG\"}>$MARKER_START_MERGE_STRING"
+    OPENING_TAG="<pre><code${CLASS:+ class=\"language-$CLASS\"}>$MARKER_START_MERGE_STRING"
 }
 
 get_tag ()
@@ -1001,7 +1001,6 @@ get_tag ()
         code-block)
             $GET_CODE_BLOCK_TAG
             CLOSING_TAG="${CANONICAL_PRE_CODE:-}</code></pre>$MARKER_STOP_MERGE_STRING"
-            CURRENT_CODE_LANG=
             OPENING_TAG_INDENT="${TAG_INDENT:-}"
             CLOSING_TAG_INDENT=""
             get_tag_indent +
@@ -1034,11 +1033,10 @@ get_tag ()
                 is_empty "${ID_BASE["$ID"]:-}" || ID="$ID-$((ID_NUM+1))"
                 ID_BASE["$ID"]="$ID"
             }
-            OPENING_TAG="<$1 class=\"${HEADER_CLASS:-atx}\" id=\"${ID:-}\">$MARKER_START_MERGE_STRING"
+            OPENING_TAG="<$1 class=\"${CLASS:-atx}\" id=\"${ID:-}\">$MARKER_START_MERGE_STRING"
             CLOSING_TAG="</$1>$MARKER_STOP_MERGE_STRING"
             OPENING_TAG_INDENT="${TAG_INDENT:-}"
             CLOSING_TAG_INDENT=""
-            HEADER_CLASS=
             ;;
         p)
             OPENING_TAG="<$1>$MARKER_START_MERGE_STRING"
@@ -1046,6 +1044,7 @@ get_tag ()
             OPENING_TAG_INDENT="${TAG_INDENT:-}"
             CLOSING_TAG_INDENT="${TAG_INDENT:-}"
     esac
+    CLASS=
 }
 
 print_opening_tags ()
@@ -1093,6 +1092,18 @@ print_closing_tags ()
     echo "${TAG:-}"
 }
 
+put_tag_in_buffer ()
+{
+    OPENING_INDENT_BUFFER=( "${OPENING_INDENT_BUFFER[@]}" "${OPENING_TAG_INDENT:-}" )
+    CLOSING_INDENT_BUFFER=( "${CLOSING_INDENT_BUFFER[@]}" "${CLOSING_TAG_INDENT:-}" )
+
+    OPENING_TAG_BUFFER=( "${OPENING_TAG_BUFFER[@]}" "$OPENING_TAG" )
+    CLOSING_TAG_BUFFER=( "${CLOSING_TAG_BUFFER[@]}" "$CLOSING_TAG" )
+
+    OPENING_TAG=
+    CLOSING_TAG=
+}
+
 get_string_buffer ()
 {
     is_empty "${STRING_BUFFER:-}" || {
@@ -1123,74 +1134,6 @@ print_buffer ()
     echo -n "${STRING_BUFFER:-}"
     print_closing_tags "${1:-}"
     reset_block_variables
-}
-
-close_code_block ()
-{
-    case "${1:-}" in
-        close_all)
-            print_buffer
-            ;;
-        *)
-            print_buffer 1
-    esac
-    INDENTED_CODE_BLOCK="closed"
-             CODE_BLOCK="closed"
-}
-
-is_code_block ()
-{
-    [[ "${STRING:-}" =~ ^([[:blank:]]{3})*\`{3}([[:blank:]]+)*$ ]]
-}
-
-is_code_block_with_lang ()
-{
-    [[ "${STRING:-}" =~ ^\`{3}([^\`]|[[:blank:]]+).+$ ]]
-}
-
-put_tag_in_buffer ()
-{
-    OPENING_INDENT_BUFFER=( "${OPENING_INDENT_BUFFER[@]}" "${OPENING_TAG_INDENT:-}" )
-    CLOSING_INDENT_BUFFER=( "${CLOSING_INDENT_BUFFER[@]}" "${CLOSING_TAG_INDENT:-}" )
-
-    OPENING_TAG_BUFFER=( "${OPENING_TAG_BUFFER[@]}" "$OPENING_TAG" )
-    CLOSING_TAG_BUFFER=( "${CLOSING_TAG_BUFFER[@]}" "$CLOSING_TAG" )
-
-    OPENING_TAG=
-    CLOSING_TAG=
-}
-
-add_code_block_tag ()
-{
-    get_tag code-block
-    put_tag_in_buffer
-    CODE_BLOCK="open"
-}
-
-add_to_code_block ()
-{
-    if is_equal "${CODE_BLOCK:-}" "open"
-    then
-        is_empty "${INDENTED_CODE_BLOCK:-}" &&
-        is_code_block  &&  close_code_block ||
-        STRING_BUFFER="${STRING_BUFFER:+"$STRING_BUFFER$NEW_STRING"}${STRING:-}"
-    else
-        is_code_block || {
-            is_code_block_with_lang && {
-                CURRENT_CODE_LANG="$(
-                    sed 's/^[`[:blank:]]\+\(.\+\)$/\1/g
-                         s/[[:blank:]]\+$//g
-                         s/[[:blank:]]/-/g
-                         s/[^a-zA-Z0-9_-]//g
-                         s/-\+/-/g' <<< "$STRING"
-                )"
-                CURRENT_CODE_LANG="${CURRENT_CODE_LANG,,}"
-            }
-        } && {
-            is_empty "${STRING_BUFFER:-}" || print_buffer
-            add_code_block_tag
-        }
-    fi
 }
 
 put_string_in_buffer ()
@@ -1587,6 +1530,61 @@ open_list ()
     STRING_NESTING_DEPTH="$((STRING_NESTING_DEPTH + 1))"
 }
 
+is_code_block ()
+{
+    if is_empty "${FENCE_CHAR:-}"
+    then
+        [[ "${STRING:-}" =~ ^\`{3,}[^\`]*$ ]] ||
+        [[ "${STRING:-}" =~  ^~{3,}        ]] && {
+            FENCE_CHAR="${STRING%%[!~\`]*}"
+            FENCE_LENGTH="${#FENCE_CHAR}"
+            CLASS="${STRING#"$FENCE_CHAR"}"
+            CLASS="${CLASS#"${CLASS%%[![:blank:]]*}"}"
+            CLASS="${CLASS%%[[:blank:]]*}"
+            CLASS="${CLASS,,}"
+            FENCE_CHAR="${FENCE_CHAR:0:1}"
+        }
+    else
+        [[ "${STRING:-}" =~ ^$FENCE_CHAR{$FENCE_LENGTH,}[[:blank:]]*$ ]]
+    fi
+}
+
+open_code_block ()
+{
+    get_tag code-block
+    put_tag_in_buffer
+    CODE_BLOCK="open"
+}
+
+close_code_block ()
+{
+    case "${1:-}" in
+        close_all)
+            print_buffer
+            ;;
+        *)
+            print_buffer 1
+    esac
+    FENCE_CHAR=
+    INDENTED_CODE_BLOCK="closed"
+             CODE_BLOCK="closed"
+}
+
+add_to_code_block ()
+{
+    if is_equal "${CODE_BLOCK:-}" "open"
+    then
+        is_empty "${INDENTED_CODE_BLOCK:-}" &&
+        is_code_block  &&  close_code_block ||
+        STRING_BUFFER="${STRING_BUFFER:+"$STRING_BUFFER$NEW_STRING"}${STRING:-}"
+    else
+        is_code_block && {
+            is_empty "${STRING_BUFFER:-}" || print_buffer
+            open_code_block
+        }
+    fi
+}
+
 open_indent_code_block ()
 {
     CURRENT_BLOCK+=( "indent_code_block" )
@@ -1625,7 +1623,7 @@ print_heading_atx ()
         HEADER="${STRING%%[[:blank:]]*}"
         STRING="${STRING#"$HEADER"}"
         TAG_HEADER="h${#HEADER}"
-        HEADER_CLASS="atx"
+        CLASS="atx"
         print_heading
     }    
 }
@@ -1636,7 +1634,7 @@ print_heading_setext_h1 ()
     [[ "${STRING:-}" =~ ^=+$ ]] && {
         STRING="$STRING_BUFFER" STRING_BUFFER=
         TAG_HEADER="h1"
-        HEADER_CLASS="setext"
+        CLASS="setext"
         print_heading
     }
 }
@@ -1646,7 +1644,7 @@ print_heading_setext_h2 ()
     [[ "${STRING:-}" =~ ^-+$ ]] && {
         STRING="$STRING_BUFFER" STRING_BUFFER=
         TAG_HEADER="h2"
-        HEADER_CLASS="setext"
+        CLASS="setext"
         print_heading
     }
 }
