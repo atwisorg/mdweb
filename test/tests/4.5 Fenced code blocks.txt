@@ -1,0 +1,362 @@
+# https://spec.commonmark.org/0.31.2/#fenced-code-blocks
+
+# https://spec.commonmark.org/0.31.2/#example-119
+:test: 4.5 Fenced code blocks (Example 119)
+:sample: |
+```
+<
+ >
+```
+:expect: |
+<pre><code>&lt;
+ &gt;
+</code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-120
+:test: 4.5 Fenced code blocks (Example 120)
+:sample: |
+~~~
+<
+ >
+~~~
+:expect: |
+<pre><code>&lt;
+ &gt;
+</code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-121
+:test: 4.5 Fenced code blocks (Example 121)
+:sample: |
+``
+foo
+``
+:expect: |
+<p><code>foo</code></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-122
+:test: 4.5 Fenced code blocks (Example 122)
+:sample: |
+```
+aaa
+~~~
+```
+:expect: |
+<pre><code>aaa
+~~~
+</code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-123
+:test: 4.5 Fenced code blocks (Example 123)
+:sample: |
+~~~
+aaa
+```
+~~~
+:expect: |
+<pre><code>aaa
+```
+</code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-124
+:test: 4.5 Fenced code blocks (Example 124)
+:sample: |
+````
+aaa
+```
+``````
+:expect: |
+<pre><code>aaa
+```
+</code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-125
+:test: 4.5 Fenced code blocks (Example 125)
+:sample: |
+~~~~
+aaa
+~~~
+~~~~
+:expect: |
+<pre><code>aaa
+~~~
+</code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-126
+:test: 4.5 Fenced code blocks (Example 126)
+:sample: |
+```
+:expect: |
+<pre><code></code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-127
+:test: 4.5 Fenced code blocks (Example 127)
+:sample: |
+`````
+
+```
+aaa
+:expect: |
+<pre><code>
+```
+aaa
+</code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-128
+:test: 4.5 Fenced code blocks (Example 128)
+:sample: |
+> ```
+> aaa
+
+bbb
+:expect: |
+<blockquote>
+<pre><code>aaa
+</code></pre>
+</blockquote>
+<p>bbb</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-129
+:test: 4.5 Fenced code blocks (Example 129)
+:sample: |
+```
+
+  
+```
+:expect: |
+<pre><code>
+  
+</code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-130
+:test: 4.5 Fenced code blocks (Example 130)
+:sample: |
+```
+```
+:expect: |
+<pre><code></code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-131
+:test: 4.5 Fenced code blocks (Example 131)
+:sample: |
+ ```
+ aaa
+aaa
+```
+:expect: |
+<pre><code>aaa
+aaa
+</code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-132
+:test: 4.5 Fenced code blocks (Example 132)
+:sample: |
+  ```
+aaa
+  aaa
+aaa
+  ``
+:expect: |
+<pre><code>aaa
+aaa
+aaa
+</code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-133
+:test: 4.5 Fenced code blocks (Example 133)
+:sample: |
+   ```
+   aaa
+    aaa
+  aaa
+   ```
+:expect: |
+<pre><code>aaa
+ aaa
+aaa
+</code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-134
+:test: 4.5 Fenced code blocks (Example 134)
+:sample: |
+    ```
+    aaa
+    ```
+:expect: |
+<pre><code>```
+aaa
+```
+</code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-135
+:test: 4.5 Fenced code blocks (Example 135)
+:sample: |
+```
+aaa
+  ```
+:expect: |
+<pre><code>aaa
+</code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-136
+:test: 4.5 Fenced code blocks (Example 136)
+:sample: |
+   ```
+aaa
+  ```
+:expect: |
+<pre><code>aaa
+</code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-137
+:test: 4.5 Fenced code blocks (Example 137)
+:sample: |
+```
+aaa
+    ```
+:expect: |
+<pre><code>aaa
+    ```
+</code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-138
+:test: 4.5 Fenced code blocks (Example 138)
+:sample: |
+``` ```
+aaa
+:expect: |
+<p><code> </code>
+aaa</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-139
+:test: 4.5 Fenced code blocks (Example 139)
+:sample: |
+~~~~~~
+aaa
+~~~ ~~
+:expect: |
+<pre><code>aaa
+~~~ ~~
+</code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-140
+:test: 4.5 Fenced code blocks (Example 140)
+:sample: |
+foo
+```
+bar
+```
+baz
+:expect: |
+<p>foo</p>
+<pre><code>bar
+</code></pre>
+<p>baz</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-141
+:test: 4.5 Fenced code blocks (Example 141)
+:sample: |
+foo
+---
+~~~
+bar
+~~~
+# baz
+:expect: |
+<h2>foo</h2>
+<pre><code>bar
+</code></pre>
+<h1>baz</h1>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-142
+:test: 4.5 Fenced code blocks (Example 142)
+:sample: |
+```ruby
+def foo(x)
+  return 3
+end
+```
+:expect: |
+<pre><code class="language-ruby">def foo(x)
+  return 3
+end
+</code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-143
+:test: 4.5 Fenced code blocks (Example 143)
+:sample: |
+~~~~    ruby startline=3 $%@#$
+def foo(x)
+  return 3
+end
+~~~~~~~
+:expect: |
+<pre><code class="language-ruby">def foo(x)
+  return 3
+end
+</code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-144
+:test: 4.5 Fenced code blocks (Example 144)
+:sample: |
+````;
+````
+:expect: |
+<pre><code class="language-;"></code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-145
+:test: 4.5 Fenced code blocks (Example 145)
+:sample: |
+``` aa ```
+foo
+:expect: |
+<p><code>aa</code>
+foo</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-146
+:test: 4.5 Fenced code blocks (Example 146)
+:sample: |
+~~~ aa ``` ~~~
+foo
+~~~
+:expect: |
+<pre><code class="language-aa">foo
+</code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-147
+:test: 4.5 Fenced code blocks (Example 147)
+:sample: |
+```
+``` aaa
+```
+:expect: |
+<pre><code>``` aaa
+</code></pre>
+:run:
