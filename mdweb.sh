@@ -1171,8 +1171,8 @@ add_to_code_block ()
 {
     if is_equal "${CODE_BLOCK:-}" "open"
     then
-        is_equal "${INDENTED_CODE_BLOCK:-}" "closed" &&
-        is_code_block && close_code_block ||
+        is_empty "${INDENTED_CODE_BLOCK:-}" &&
+        is_code_block  &&  close_code_block ||
         STRING_BUFFER="${STRING_BUFFER:+"$STRING_BUFFER$NEW_STRING"}${STRING:-}"
     else
         is_code_block || {
