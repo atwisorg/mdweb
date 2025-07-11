@@ -220,7 +220,7 @@ cmp_results ()
 
     is_equal "$RETURN" 0 && SUCCESS="$((SUCCESS+1))" || {
                              FAILED="$((FAILED+1))"
-
+        FAILED_TEST_NUMBERS+=( "$TOTAL_TEST_NUMBER" )
         is_not_empty "${COMPARE_STDOUT:-}" || {
             REPORT_STDOUT=(
                 "$H2" ""
@@ -382,11 +382,50 @@ run_test_file ()
     done < "$TESTED_FILE"
 }
 
+get_range_nums ()
+{
+    END_RANGE=
+    START_RANGE=
+    RANGE_NUMS=
+    for NUM in "${FAILED_TEST_NUMBERS[@]}"
+    do
+        if is_empty "${START_RANGE:-}"
+        then
+            START_RANGE="$NUM"
+        else
+            if is_equal "$((NUM - ${END_RANGE:-"$START_RANGE"}))" 1
+            then
+                END_RANGE="$NUM"
+            else
+                RANGE_NUMS="${RANGE_NUMS:+"$RANGE_NUMS",}$START_RANGE"
+                is_empty "${END_RANGE:-}" || {
+                    is_equal $((END_RANGE - START_RANGE)) 1 &&
+                    RANGE_NUMS="$RANGE_NUMS,$END_RANGE" ||
+                    RANGE_NUMS="$RANGE_NUMS-$END_RANGE"
+                }
+                START_RANGE="$NUM"
+                END_RANGE=
+            fi
+        fi
+    done
+    is_empty "${END_RANGE:-"${START_RANGE:-}"}" || {
+        RANGE_NUMS="${RANGE_NUMS:+"$RANGE_NUMS",}$START_RANGE"
+        is_empty "${END_RANGE:-}" || {
+            is_equal $((END_RANGE - START_RANGE)) 1 &&
+            RANGE_NUMS="$RANGE_NUMS,$END_RANGE" ||
+            RANGE_NUMS="$RANGE_NUMS-$END_RANGE"
+        }
+    }
+}
+
 report ()
 {
     echo "$H1"
-    is_empty ${!FAIL[@]} ||
-    printf '\033[0;31m%15s\033[0m: \033[1;31m%s\033[0m\n' "${FAIL[@]}"
+    is_empty ${!FAIL[@]} || {
+        printf '\033[0;31m%15s\033[0m: \033[1;31m%s\033[0m\n' "${FAIL[@]}"
+        get_range_nums
+        printf '\033[0;31m%15s\033[0m: [\033[1;31m%s\033[0m]\n' "failed tests" "$RANGE_NUMS"
+    }
     printf '\033[0;31m%15s\033[0m: [\033[1;31m%s\033[0m]\n' "failed"     "$FAILED"
     printf '\033[0;32m%15s\033[0m: [\033[1;32m%s\033[0m]\n' "successful" "$SUCCESS"
     is_empty "${!TEST_NUM[@]}" || TOTAL_TEST_NUMBER="${#TEST_NUM[@]}"
