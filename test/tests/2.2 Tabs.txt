@@ -124,7 +124,7 @@ baz
 :sample: |
 #	Foo
 :expect: |
-<h1 class="atx" id="foo">Foo</h1>
+<h1>Foo</h1>
 :run:
 
 # https://spec.commonmark.org/0.31.2/#example-11
