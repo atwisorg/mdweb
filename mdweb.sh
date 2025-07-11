@@ -487,8 +487,9 @@ combine_string ()
         # add a break tag marker
         s%\( \{2,\}\|\\\)\x01%\x7f%g
 
-        # remove spaces at the end of the line
+        # trim white space
         s% *\x01%\x01%g
+        s%\x01 *%\x01%g
 
         # if the list (<li>) contains an empty string,
         # add a paragraph tag
