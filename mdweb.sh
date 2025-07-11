@@ -1368,6 +1368,15 @@ read_block_structure ()
                 open_block_quote
                 CHAR_NUM="$((CHAR_NUM + 1))"
                 ;;
+            [_]*)
+                if [[ "$(tr -d '[:blank:]' <<< "${STRING:-}")" =~ ^_{3,}$ ]]
+                then
+                    print_horizontal_rule
+                else
+                    put_string_in_buffer
+                fi
+                return 1
+                ;;
             [#]*)
                 print_heading_atx || put_string_in_buffer
                 return 1
