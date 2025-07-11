@@ -398,12 +398,16 @@ argparse ()
 
 check_args ()
 {
-    is_empty "${PAGE_STYLE:-}" && GET_CODE_BLOCK_TAG="get_code_block_tag" || {
+    is_empty "${PAGE_STYLE:-}" && {
+        GET_CODE_BLOCK_TAG="get_code_block_tag"
+        GET_HEADING_TAG="get_heading_tag"
+    } || {
         is_file "$PAGE_STYLE" || {
             is_file "$PKG_DIR/style/${PAGE_STYLE%.css}.css" &&
             PAGE_STYLE="$PKG_DIR/style/${PAGE_STYLE%.css}.css"
         } || die 2 "no such file: -- '$PAGE_STYLE'"
         GET_CODE_BLOCK_TAG="get_code_block_tag_with_class"
+        GET_HEADING_TAG="get_heading_tag_with_class"
     }
 
     is_equal "$STDIN" "pipeline"  && INPUT= || {
@@ -995,6 +999,37 @@ get_code_block_tag ()
     OPENING_TAG="<pre><code${CLASS:+ class=\"language-$CLASS\"}>$MARKER_START_MERGE_STRING"
 }
 
+get_heading_id ()
+{
+    sed '
+        : merge
+        $!N
+        s%[\]*\n%-%
+        t merge
+        s/[[:blank:]]/-/g
+        s/[^a-zA-Z0-9_-]//g
+        s/-\+/-/g
+        s/\(^-\+\|-\+$\)//g
+
+        # all in lowercase
+        s%.*%\L&%g'
+}
+
+get_heading_tag_with_class ()
+{
+    ID="$(get_heading_id <<< "${STRING:-}")"
+    is_empty "${ID:-}" || {
+        is_empty "${ID_BASE["$ID"]:-}" || ID="$ID-$((ID_NUM+1))"
+        ID_BASE["$ID"]="$ID"
+    }
+    OPENING_TAG="<$1 class=\"${CLASS:-atx}\" id=\"${ID:-}\">$MARKER_START_MERGE_STRING"
+}
+
+get_heading_tag ()
+{
+    OPENING_TAG="<$1>$MARKER_START_MERGE_STRING"
+}
+
 get_tag ()
 {
     case "$1" in
@@ -1020,20 +1055,7 @@ get_tag ()
             get_tag_indent +
             ;;
         h[1-6])
-            ID="${STRING,,}"
-            ID="$(sed  ': merge
-                        $!N
-                        s%[\]*\n%-%
-                        t merge
-                        s/[[:blank:]]/-/g
-                        s/[^a-zA-Z0-9_-]//g
-                        s/-\+/-/g
-                        s/\(^-\+\|-\+$\)//g' <<< "${ID:-}")"
-            is_empty "${ID:-}" || {
-                is_empty "${ID_BASE["$ID"]:-}" || ID="$ID-$((ID_NUM+1))"
-                ID_BASE["$ID"]="$ID"
-            }
-            OPENING_TAG="<$1 class=\"${CLASS:-atx}\" id=\"${ID:-}\">$MARKER_START_MERGE_STRING"
+            $GET_HEADING_TAG "$1"
             CLOSING_TAG="</$1>$MARKER_STOP_MERGE_STRING"
             OPENING_TAG_INDENT="${TAG_INDENT:-}"
             CLOSING_TAG_INDENT=""
@@ -1653,7 +1675,7 @@ print_heading_atx ()
 {
     [[ "${STRING:-}" =~ ^#{1,6}([[:blank:]].*|$) ]] && {
         HEADER="${STRING%%[[:blank:]]*}"
-        STRING="${STRING#"$HEADER"}"
+        STRING="$(sed 's%\(^#\+\|[[:blank:]]\+#*[[:blank:]]*$\)%%g' <<< "$STRING")"
         TAG_HEADER="h${#HEADER}"
         CLASS="atx"
         print_heading
@@ -1662,7 +1684,6 @@ print_heading_atx ()
 
 print_heading_setext_h1 ()
 {
-    
     [[ "${STRING:-}" =~ ^=+$ ]] && {
         STRING="$STRING_BUFFER" STRING_BUFFER=
         TAG_HEADER="h1"
