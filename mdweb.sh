@@ -1197,23 +1197,28 @@ trim_string ()
 read_an_empty_string ()
 {
     string_is_empty "${STRING:-}" || return 0
-    is_not_empty "${!CURRENT_BLOCK[@]}" || return
 
-    if is_not_empty "${BLOCK_QUOTE:-}"
+    if is_not_empty "${!CURRENT_BLOCK[@]}"
     then
-        close_block_quote
-    elif is_not_empty "${LIST_ITEM:-}"
-    then
-        STRING=""
-        put_string_in_buffer
-        return 1
-    elif is_equal "${CODE_BLOCK:-"${INDENT_CODE_BLOCK:-}"}" "open"
-    then
-        trim_string
-        put_string_in_buffer
-        return 1
+        if is_not_empty "${BLOCK_QUOTE:-}"
+        then
+            close_block_quote
+        elif is_not_empty "${LIST_ITEM:-}"
+        then
+            STRING=""
+            put_string_in_buffer
+            return 1
+        elif is_equal "${CODE_BLOCK:-"${INDENT_CODE_BLOCK:-}"}" "open"
+        then
+            trim_string
+            put_string_in_buffer
+            return 1
+        else
+            return 1
+        fi
     else
-        return 1
+        is_not_empty "${STRING_BUFFER:-}" || return
+        print_buffer
     fi
 }
 
