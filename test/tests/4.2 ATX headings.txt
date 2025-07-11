@@ -1,0 +1,185 @@
+# https://spec.commonmark.org/0.31.2/#atx-headings
+
+# https://spec.commonmark.org/0.31.2/#example-62
+:test: 4.1 Thematic breaks (Example 62)
+:sample: |
+# foo
+## foo
+### foo
+#### foo
+##### foo
+###### foo
+:expect: |
+<h1>foo</h1>
+<h2>foo</h2>
+<h3>foo</h3>
+<h4>foo</h4>
+<h5>foo</h5>
+<h6>foo</h6>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-63
+:test: 4.1 Thematic breaks (Example 63)
+:sample: |
+####### foo
+:expect: |
+<p>####### foo</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-64
+:test: 4.1 Thematic breaks (Example 64)
+:sample: |
+#5 bolt
+
+#hashtag
+:expect: |
+<p>#5 bolt</p>
+<p>#hashtag</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-65
+:test: 4.1 Thematic breaks (Example 65)
+:sample: |
+\## foo
+:expect: |
+<p>## foo</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-66
+:test: 4.1 Thematic breaks (Example 66)
+:sample: |
+# foo *bar* \*baz\*
+:expect: |
+<h1>foo <em>bar</em> *baz*</h1>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-67
+:test: 4.1 Thematic breaks (Example 67)
+:sample: |
+#                  foo                     
+:expect: |
+<h1>foo</h1>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-68
+:test: 4.1 Thematic breaks (Example 68)
+:sample: |
+ ### foo
+  ## foo
+   # foo
+:expect: |
+<h3>foo</h3>
+<h2>foo</h2>
+<h1>foo</h1>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-69
+:test: 4.1 Thematic breaks (Example 69)
+:sample: |
+    # foo
+:expect: |
+<pre><code># foo
+</code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-70
+:test: 4.1 Thematic breaks (Example 70)
+:sample: |
+foo
+    # bar
+:expect: |
+<p>foo
+# bar</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-71
+:test: 4.1 Thematic breaks (Example 71)
+:sample: |
+## foo ##
+  ###   bar    ###
+:expect: |
+<h2>foo</h2>
+<h3>bar</h3>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-72
+:test: 4.1 Thematic breaks (Example 72)
+:sample: |
+# foo ##################################
+##### foo ##
+:expect: |
+<h1>foo</h1>
+<h5>foo</h5>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-73
+:test: 4.1 Thematic breaks (Example 73)
+:sample: |
+### foo ###     
+:expect: |
+<h3>foo</h3>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-74
+:test: 4.1 Thematic breaks (Example 74)
+:sample: |
+### foo ### b
+:expect: |
+<h3>foo ### b</h3>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-75
+:test: 4.1 Thematic breaks (Example 75)
+:sample: |
+# foo#
+:expect: |
+<h1>foo#</h1>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-76
+:test: 4.1 Thematic breaks (Example 76)
+:sample: |
+### foo \###
+## foo #\##
+# foo \#
+:expect: |
+<h3>foo ###</h3>
+<h2>foo ###</h2>
+<h1>foo #</h1>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-77
+:test: 4.1 Thematic breaks (Example 77)
+:sample: |
+****
+## foo
+****
+:expect: |
+<hr />
+<h2>foo</h2>
+<hr />
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-78
+:test: 4.1 Thematic breaks (Example 78)
+:sample: |
+Foo bar
+# baz
+Bar foo
+:expect: |
+<p>Foo bar</p>
+<h1>baz</h1>
+<p>Bar foo</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-79
+:test: 4.1 Thematic breaks (Example 79)
+:sample: |
+## 
+#
+### ###
+:expect: |
+<h2></h2>
+<h1></h1>
+<h3></h3>
+:run:
