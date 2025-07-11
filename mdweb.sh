@@ -1690,7 +1690,7 @@ print_heading_atx ()
 
 print_heading_setext_h1 ()
 {
-    [[ "${STRING:-}" =~ ^=+$ ]] && {
+    [[ "${STRING:-}" =~ ^=+[[:blank:]]*$ ]] && {
         STRING="$STRING_BUFFER" STRING_BUFFER=
         TAG_HEADER="h1"
         CLASS="setext"
@@ -1700,7 +1700,7 @@ print_heading_setext_h1 ()
 
 print_heading_setext_h2 ()
 {
-    [[ "${STRING:-}" =~ ^-+$ ]] && {
+    [[ "${STRING:-}" =~ ^-+[[:blank:]]*$ ]] && {
         STRING="$STRING_BUFFER" STRING_BUFFER=
         TAG_HEADER="h2"
         CLASS="setext"
