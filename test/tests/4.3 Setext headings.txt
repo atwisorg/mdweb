@@ -1,0 +1,338 @@
+# https://spec.commonmark.org/0.31.2/#setext-headings
+
+# https://spec.commonmark.org/0.31.2/#example-80
+:test: 4.3 Setext headings (Example 80)
+:sample: |
+Foo *bar*
+=========
+
+Foo *bar*
+---------
+:expect: |
+<h1>Foo <em>bar</em></h1>
+<h2>Foo <em>bar</em></h2>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-81
+:test: 4.3 Setext headings (Example 81)
+:sample: |
+Foo *bar
+baz*
+====
+:expect: |
+<h1>Foo <em>bar
+baz</em></h1>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-82
+:test: 4.3 Setext headings (Example 82)
+:sample: |
+  Foo *bar
+baz*	
+====
+:expect: |
+<h1>Foo <em>bar
+baz</em></h1>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-83
+:test: 4.3 Setext headings (Example 83)
+:sample: |
+Foo
+-------------------------
+
+Foo
+=
+:expect: |
+<h2>Foo</h2>
+<h1>Foo</h1>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-84
+:test: 4.3 Setext headings (Example 84)
+:sample: |
+   Foo
+---
+
+  Foo
+-----
+
+  Foo
+  ===
+:expect: |
+<h2>Foo</h2>
+<h2>Foo</h2>
+<h1>Foo</h1>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-85
+:test: 4.3 Setext headings (Example 85)
+:sample: |
+    Foo
+    ---
+
+    Foo
+---
+:expect: |
+<pre><code>Foo
+---
+
+Foo
+</code></pre>
+<hr />
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-86
+:test: 4.3 Setext headings (Example 86)
+:sample: |
+Foo
+   ----      
+:expect: |
+<h2>Foo</h2>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-87
+:test: 4.3 Setext headings (Example 87)
+:sample: |
+Foo
+    ---
+:expect: |
+<p>Foo
+---</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-88
+:test: 4.3 Setext headings (Example 88)
+:sample: |
+Foo
+= =
+
+Foo
+--- -
+:expect: |
+<p>Foo
+= =</p>
+<p>Foo</p>
+<hr />
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-89
+:test: 4.3 Setext headings (Example 89)
+:sample: |
+Foo  
+-----
+:expect: |
+<h2>Foo</h2>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-90
+:test: 4.3 Setext headings (Example 90)
+:sample: |
+Foo\
+----
+:expect: |
+<h2>Foo\</h2>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-91
+:test: 4.3 Setext headings (Example 91)
+:sample: |
+`Foo
+----
+`
+
+<a title="a lot
+---
+of dashes"/>
+:expect: |
+<h2>`Foo</h2>
+<p>`</p>
+<h2>&lt;a title=&quot;a lot</h2>
+<p>of dashes&quot;/&gt;</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-92
+:test: 4.3 Setext headings (Example 92)
+:sample: |
+> Foo
+---
+:expect: |
+<blockquote>
+<p>Foo</p>
+</blockquote>
+<hr />
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-93
+:test: 4.3 Setext headings (Example 93)
+:sample: |
+> foo
+bar
+===
+:expect: |
+<blockquote>
+<p>foo
+bar
+===</p>
+</blockquote>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-94
+:test: 4.3 Setext headings (Example 94)
+:sample: |
+- Foo
+---
+:expect: |
+<ul>
+<li>Foo</li>
+</ul>
+<hr />
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-95
+:test: 4.3 Setext headings (Example 95)
+:sample: |
+Foo
+Bar
+---
+:expect: |
+<h2>Foo
+Bar</h2>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-96
+:test: 4.3 Setext headings (Example 96)
+:sample: |
+---
+Foo
+---
+Bar
+---
+Baz
+:expect: |
+<hr />
+<h2>Foo</h2>
+<h2>Bar</h2>
+<p>Baz</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-97
+:test: 4.3 Setext headings (Example 97)
+:sample: |
+
+====
+:expect: |
+<p>====</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-98
+:test: 4.3 Setext headings (Example 98)
+:sample: |
+---
+---
+:expect: |
+<hr />
+<hr />
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-99
+:test: 4.3 Setext headings (Example 99)
+:sample: |
+- foo
+-----
+:expect: |
+<ul>
+<li>foo</li>
+</ul>
+<hr />
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-100
+:test: 4.3 Setext headings (Example 100)
+:sample: |
+    foo
+---
+:expect: |
+<pre><code>foo
+</code></pre>
+<hr />
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-101
+:test: 4.3 Setext headings (Example 101)
+:sample: |
+> foo
+-----
+:expect: |
+<blockquote>
+<p>foo</p>
+</blockquote>
+<hr />
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-102
+:test: 4.3 Setext headings (Example 102)
+:sample: |
+\> foo
+------
+:expect: |
+<h2>&gt; foo</h2>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-103
+:test: 4.3 Setext headings (Example 103)
+:sample: |
+Foo
+
+bar
+---
+baz
+:expect: |
+<p>Foo</p>
+<h2>bar</h2>
+<p>baz</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-104
+:test: 4.3 Setext headings (Example 104)
+:sample: |
+Foo
+bar
+
+---
+
+baz
+:expect: |
+<p>Foo
+bar</p>
+<hr />
+<p>baz</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-105
+:test: 4.3 Setext headings (Example 105)
+:sample: |
+Foo
+bar
+* * *
+baz
+:expect: |
+<p>Foo
+bar</p>
+<hr />
+<p>baz</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-106
+:test: 4.3 Setext headings (Example 106)
+:sample: |
+Foo
+bar
+\---
+baz
+:expect: |
+<p>Foo
+bar
+---
+baz</p>
+:run:
