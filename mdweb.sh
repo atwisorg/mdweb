@@ -1530,6 +1530,30 @@ open_list ()
     STRING_NESTING_DEPTH="$((STRING_NESTING_DEPTH + 1))"
 }
 
+serialize_pre_code_language ()
+{
+    sed '
+        # get the first word
+        s%^[[:blank:]]*\([^[:blank:]]\+\).*$%\1%g
+
+        # all in lowercase
+        s%.*%\L&%g
+
+        # mask ampersand
+        s%\([^\\]\?\)&%\1\x03%g
+
+        # remove backslash-escaped
+        s%\\\([][!"#$%&\x27()*+,./:;<=>?@\\^_`{|}~-]\)%\1%g
+
+        s%&%\&amp;%g
+        s%"%\&quot;%g
+        s%<%\&lt;%g
+        s%>%\&gt;%g
+
+        # unmask ampersand
+        s%\x03%\&%g'
+}
+
 is_code_block ()
 {
     if is_empty "${FENCE_CHAR:-}"
@@ -1539,9 +1563,8 @@ is_code_block ()
             FENCE_CHAR="${STRING%%[!~\`]*}"
             FENCE_LENGTH="${#FENCE_CHAR}"
             CLASS="${STRING#"$FENCE_CHAR"}"
-            CLASS="${CLASS#"${CLASS%%[![:blank:]]*}"}"
-            CLASS="${CLASS%%[[:blank:]]*}"
-            CLASS="${CLASS,,}"
+            is_empty "${CLASS:-}" ||
+                CLASS="$(serialize_pre_code_language <<< "$CLASS")"
             FENCE_CHAR="${FENCE_CHAR:0:1}"
         }
     else
