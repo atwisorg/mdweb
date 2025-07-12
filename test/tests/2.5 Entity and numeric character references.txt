@@ -1,0 +1,162 @@
+# https://spec.commonmark.org/0.31.2/#entity-and-numeric-character-references
+
+# https://spec.commonmark.org/0.31.2/#example-25
+:test: 2.5 Entity and numeric character references (Example 25)
+:sample: |
+&nbsp; &amp; &copy; &AElig; &Dcaron;
+&frac34; &HilbertSpace; &DifferentialD;
+&ClockwiseContourIntegral; &ngE;
+:expect: |
+<p>  &amp; © Æ Ď
+¾ ℋ ⅆ
+∲ ≧̸</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-26
+:test: 2.5 Entity and numeric character references (Example 26)
+:sample: |
+&#35; &#1234; &#992; &#0;
+:expect: |
+<p># Ӓ Ϡ �</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-27
+:test: 2.5 Entity and numeric character references (Example 27)
+:sample: |
+&#X22; &#XD06; &#xcab;
+:expect: |
+<p>&quot; ആ ಫ</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-28
+:test: 2.5 Entity and numeric character references (Example 28)
+:sample: |
+&nbsp &x; &#; &#x;
+&#87654321;
+&#abcdef0;
+&ThisIsNotDefined; &hi?;
+:expect: |
+<p>&amp;nbsp &amp;x; &amp;#; &amp;#x;
+&amp;#87654321;
+&amp;#abcdef0;
+&amp;ThisIsNotDefined; &amp;hi?;</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-29
+:test: 2.5 Entity and numeric character references (Example 29)
+:sample: |
+&copy
+:expect: |
+<p>&amp;copy</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-30
+:test: 2.5 Entity and numeric character references (Example 30)
+:sample: |
+&MadeUpEntity;
+:expect: |
+<p>&amp;MadeUpEntity;</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-31
+:test: 2.5 Entity and numeric character references (Example 31)
+:sample: |
+<a href="&ouml;&ouml;.html">
+:expect: |
+<a href="&ouml;&ouml;.html">
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-32
+:test: 2.5 Entity and numeric character references (Example 32)
+:sample: |
+[foo](/f&ouml;&ouml; "f&ouml;&ouml;")
+:expect: |
+<p><a href="/f%C3%B6%C3%B6" title="föö">foo</a></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-33
+:test: 2.5 Entity and numeric character references (Example 33)
+:sample: |
+[foo]
+
+[foo]: /f&ouml;&ouml; "f&ouml;&ouml;"
+:expect: |
+<p><a href="/f%C3%B6%C3%B6" title="föö">foo</a></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-34
+:test: 2.5 Entity and numeric character references (Example 34)
+:sample: |
+``` f&ouml;&ouml;
+foo
+```
+:expect: |
+<pre><code class="language-föö">foo
+</code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-35
+:test: 2.5 Entity and numeric character references (Example 35)
+:sample: |
+`f&ouml;&ouml;`
+:expect: |
+<p><code>f&amp;ouml;&amp;ouml;</code></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-36
+:test: 2.5 Entity and numeric character references (Example 36)
+:sample: |
+    f&ouml;f&ouml;
+:expect: |
+<pre><code>f&amp;ouml;f&amp;ouml;
+</code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-37
+:test: 2.5 Entity and numeric character references (Example 37)
+:sample: |
+&#42;foo&#42;
+*foo*
+:expect: |
+<p>*foo*
+<em>foo</em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-38
+:test: 2.5 Entity and numeric character references (Example 38)
+:sample: |
+&#42; foo
+
+* foo
+:expect: |
+<p>* foo</p>
+<ul>
+<li>foo</li>
+</ul>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-39
+:test: 2.5 Entity and numeric character references (Example 39)
+:sample: |
+foo&#10;&#10;bar
+:expect: |
+<p>foo
+
+bar</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-40
+:test: 2.5 Entity and numeric character references (Example 40)
+:sample: |
+&#9;foo
+:expect: |
+<p>	foo</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-41
+:test: 2.5 Entity and numeric character references (Example 41)
+:sample: |
+[a](url &quot;tit&quot;)
+:expect: |
+<p>[a](url &quot;tit&quot;)</p>
+:run:
