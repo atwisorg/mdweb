@@ -248,7 +248,11 @@ cmp_results ()
 
 check_test_num ()
 {
-    grep "\<$TOTAL_TEST_NUMBER\>" <<< "${TEST_NUM[@]}" &>/dev/null
+    is_not_empty "${!TEST_NUM[@]}" || return 1
+    set -- "${TEST_NUM[@]}"
+    is_equal "$1" "$TOTAL_TEST_NUMBER" || return 2
+    shift
+    TEST_NUM=( "$@" )
 }
 
 trim_white_space ()
@@ -281,15 +285,20 @@ run_test_file ()
         STRING_NUM="$((STRING_NUM + 1))"
         case "${LINE:-}" in
             \#:test|\#:test:*)
-                LOAD_TEST="no"
                 TEST_NUMBER="$((TEST_NUMBER + 1))"
                 TOTAL_TEST_NUMBER="$((TOTAL_TEST_NUMBER + 1))"
+                LOAD_TEST="no"
                 continue
                 ;;
             :test:*)
                 TEST_NUMBER="$((TEST_NUMBER + 1))"
                 TOTAL_TEST_NUMBER="$((TOTAL_TEST_NUMBER + 1))"
-                is_equal "${#TEST_NUM[@]}" 0 || check_test_num || continue
+                is_empty "${SPECIFIC_TEST:-}" || check_test_num || {
+                    case $? in
+                        1 ) return 1 ;;
+                        2 ) continue
+                    esac
+                }
                 LOAD_TEST="yes"
                 STRING_NUM_TEST="$STRING_NUM"
                 TEST_NAME="${LINE#:test:}"
@@ -298,86 +307,96 @@ run_test_file ()
                 TEST_NAME="$STRING"
                 ;;
             :test)
-                LOAD_TEST="yes"
                 TEST_NUMBER="$((TEST_NUMBER + 1))"
+                TOTAL_TEST_NUMBER="$((TOTAL_TEST_NUMBER + 1))"
+                is_empty "${SPECIFIC_TEST:-}" || check_test_num || {
+                    case $? in
+                        1 ) return 1 ;;
+                        2 ) continue
+                    esac
+                }
+                LOAD_TEST="yes"
                 STRING_NUM_TEST="$STRING_NUM"
                 TEST_NAME="${TEST_NAME:-noname}"
                 ;;
-            :expect|:expect-out|:expect-stdout|:expect:*|:expect-out:*|:expect-stdout:*)
-                NEXT_LINE="expect-stdout"
-                COMPARE_STDOUT="yes"
-                ;;
-            :expect-err|:expect-stderr|:expect-err:*|:expect-stderr:*)
-                NEXT_LINE="expect-stderr"
-                COMPARE_STDERR="yes"
-                ;;
-            :args)
-                ;;
-            :args:*)
-                is_equal "$LOAD_TEST" "yes" || continue
-                set -- ${LINE#:args:} "${GLOBAL_ARGS[@]}"
-                TESTED_ARGS=( "$@" )
-                ;;
-            :sample|:sample:*)
-                is_equal "$LOAD_TEST" "yes" || continue
-                NEXT_LINE="sample"
-                ;;
-            :return|:return-code)
-                ;;
-            :return:*)
-                is_equal "$LOAD_TEST" "yes" || continue
-                set -- ${LINE#:return:}
-                EXPECT_RETURN_CODE="${1:-}"
-                ;;
-            :return-code:*)
-                is_equal "$LOAD_TEST" "yes" || continue
-                set -- ${LINE#:return-code:}
-                EXPECT_RETURN_CODE="${1:-}"
-                ;;
-            :run|:run:*)
-                is_equal "$LOAD_TEST" "yes" || continue
-                PREFIX=(
-                    "test file:" "[$TESTED_FILE]"
-                    "string num:" "[$STRING_NUM_TEST]"
-                    "test name:" "[$TEST_NAME]"
-                    "test num:" "[$TEST_NUMBER]"
-                )
-                is_diff "${#TESTED_FILES[@]}" 0 || PREFIX=( "${PREFIX[@]}" "total test num:" "[$TOTAL_TEST_NUMBER]" )
-                NAME_TESTED_FILE="${TESTED_FILE##*/}"
-                NAME_TESTED_FILE="${NAME_TESTED_FILE%.txt}"
-                STDOUT="$PKG_DIR/${NAME_TESTED_FILE}_$STRING_NUM_TEST.out"
-                STDERR="$PKG_DIR/${NAME_TESTED_FILE}_$STRING_NUM_TEST.err"
-                is_diff "${#TESTED_ARGS[@]}" 0 || TESTED_ARGS=( "${GLOBAL_ARGS[@]}" )
-
-                RETURN_CODE=0
-                ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_SCRIPT" "${TESTED_ARGS[@]}" <<< "$SAMPLE" > "$STDOUT" 2> "$STDERR" || RETURN_CODE=$?
-
-                printf '%16s %s\n' "$H1" "" "${PREFIX[@]}" "$H2" "" "sample:" "|${SAMPLE//$NEW_STRING/|$NEW_STRING$INDENT}|"
-                if cmp_results
-                then
-                    is_equal "$SAVE_RESULTS" "no" || save_result "$TEST_OK"
-                else
-                    save_result "$TEST_FAILURE"
-                fi
-                unset_vars
-                ;;
-            :break|:break:*)
-                break
-                ;;
-            :exit|:exit:*)
-                return 1
-                ;;
             *)
                 is_equal "$LOAD_TEST" "yes" || continue
-                if is_equal "$NEXT_LINE" "expect-stdout"
-                then
-                    EXPECT="${EXPECT:+"$EXPECT$NEW_STRING"}${LINE:-}"
-                elif is_equal "$NEXT_LINE" "expect-stderr"
-                then
-                    EXPECT_ERR="${EXPECT_ERR:+"$EXPECT_ERR$NEW_STRING"}${LINE:-}"
-                else
-                    SAMPLE="${SAMPLE:+"$SAMPLE$NEW_STRING"}${LINE:-}"
-                fi
+                case "${LINE:-}" in
+                    :expect|:expect-out|:expect-stdout|:expect:*|:expect-out:*|:expect-stdout:*)
+                        NEXT_LINE="expect-stdout"
+                        COMPARE_STDOUT="yes"
+                        ;;
+                    :expect-err|:expect-stderr|:expect-err:*|:expect-stderr:*)
+                        NEXT_LINE="expect-stderr"
+                        COMPARE_STDERR="yes"
+                        ;;
+                    :args)
+                        ;;
+                    :args:*)
+                        is_equal "$LOAD_TEST" "yes" || continue
+                        set -- ${LINE#:args:} "${GLOBAL_ARGS[@]}"
+                        TESTED_ARGS=( "$@" )
+                        ;;
+                    :sample|:sample:*)
+                        is_equal "$LOAD_TEST" "yes" || continue
+                        NEXT_LINE="sample"
+                        ;;
+                    :return|:return-code)
+                        ;;
+                    :return:*)
+                        is_equal "$LOAD_TEST" "yes" || continue
+                        set -- ${LINE#:return:}
+                        EXPECT_RETURN_CODE="${1:-}"
+                        ;;
+                    :return-code:*)
+                        is_equal "$LOAD_TEST" "yes" || continue
+                        set -- ${LINE#:return-code:}
+                        EXPECT_RETURN_CODE="${1:-}"
+                        ;;
+                    :run|:run:*)
+                        is_equal "$LOAD_TEST" "yes" || continue
+                        PREFIX=(
+                            "test file:" "[$TESTED_FILE]"
+                            "string num:" "[$STRING_NUM_TEST]"
+                            "test name:" "[$TEST_NAME]"
+                            "test num:" "[$TEST_NUMBER]"
+                        )
+                        is_diff "${#TESTED_FILES[@]}" 0 || PREFIX=( "${PREFIX[@]}" "total test num:" "[$TOTAL_TEST_NUMBER]" )
+                        NAME_TESTED_FILE="${TESTED_FILE##*/}"
+                        NAME_TESTED_FILE="${NAME_TESTED_FILE%.txt}"
+                        STDOUT="$PKG_DIR/${NAME_TESTED_FILE}_$STRING_NUM_TEST.out"
+                        STDERR="$PKG_DIR/${NAME_TESTED_FILE}_$STRING_NUM_TEST.err"
+                        is_diff "${#TESTED_ARGS[@]}" 0 || TESTED_ARGS=( "${GLOBAL_ARGS[@]}" )
+        
+                        RETURN_CODE=0
+                        ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_SCRIPT" "${TESTED_ARGS[@]}" <<< "$SAMPLE" > "$STDOUT" 2> "$STDERR" || RETURN_CODE=$?
+        
+                        printf '%16s %s\n' "$H1" "" "${PREFIX[@]}" "$H2" "" "sample:" "|${SAMPLE//$NEW_STRING/|$NEW_STRING$INDENT}|"
+                        if cmp_results
+                        then
+                            is_equal "$SAVE_RESULTS" "no" || save_result "$TEST_OK"
+                        else
+                            save_result "$TEST_FAILURE"
+                        fi
+                        unset_vars
+                        ;;
+                    :break|:break:*)
+                        break
+                        ;;
+                    :exit|:exit:*)
+                        return 1
+                        ;;
+                    *)
+                        if is_equal "$NEXT_LINE" "expect-stdout"
+                        then
+                            EXPECT="${EXPECT:+"$EXPECT$NEW_STRING"}${LINE:-}"
+                        elif is_equal "$NEXT_LINE" "expect-stderr"
+                        then
+                            EXPECT_ERR="${EXPECT_ERR:+"$EXPECT_ERR$NEW_STRING"}${LINE:-}"
+                        else
+                            SAMPLE="${SAMPLE:+"$SAMPLE$NEW_STRING"}${LINE:-}"
+                        fi
+                esac
         esac
     done < "$TESTED_FILE"
 }
@@ -428,14 +447,14 @@ report ()
     }
     printf '\033[0;31m%15s\033[0m: [\033[1;31m%s\033[0m]\n' "failed"     "$FAILED"
     printf '\033[0;32m%15s\033[0m: [\033[1;32m%s\033[0m]\n' "successful" "$SUCCESS"
-    is_empty "${!TEST_NUM[@]}" || TOTAL_TEST_NUMBER="${#TEST_NUM[@]}"
+    is_empty "${SPECIFIC_TEST:-}" || TOTAL_TEST_NUMBER="$SPECIFIC_TEST"
     printf '\033[0;33m%15s\033[0m: [\033[1;33m%s\033[0m]\n' "total tests" "$TOTAL_TEST_NUMBER"
     echo "$H1"
 }
 
 run_test ()
 {
-    is_diff "${#TESTED_FILES[@]}" 0 &&
+    is_diff "${!TESTED_FILES[@]}" &&
     for TESTED_FILE in "${TESTED_FILES[@]}"
     do
         is_exists "$TESTED_FILE" || {
@@ -544,7 +563,10 @@ main ()
 
     is_exists "$TESTED_SCRIPT" || die 2 "no such file: -- '$TESTED_SCRIPT'" 2>&3
     argparse "$@"
-    is_equal "${#TEST_NUM[@]}" 0 || get_test_nums
+    is_empty "${!TEST_NUM[@]}" || {
+        get_test_nums
+        SPECIFIC_TEST="${#TEST_NUM[@]}"
+    }
 
     is_equal "$CLEAR_RESULTS" "no" || {
         rm -rf "$TEST_OK"/*.txt &&
