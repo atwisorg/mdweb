@@ -1,0 +1,13 @@
+# https://spec.commonmark.org/0.31.2/#precedence
+
+# https://spec.commonmark.org/0.31.2/#example-42
+:test: 3.1 Precedence (Example 42)
+:sample: |
+- `one
+- two`
+:expect: |
+<ul>
+<li>`one</li>
+<li>two`</li>
+</ul>
+:run:
