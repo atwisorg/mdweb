@@ -1,0 +1,92 @@
+# https://spec.commonmark.org/0.31.2/#paragraphs
+
+# https://spec.commonmark.org/0.31.2/#example-219
+:test: 4.8 Paragraphs (Example 219)
+:sample: |
+aaa
+
+bbb
+:expect: |
+<p>aaa</p>
+<p>bbb</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-220
+:test: 4.8 Paragraphs (Example 220)
+:sample: |
+aaa
+bbb
+
+ccc
+ddd
+:expect: |
+<p>aaa
+bbb</p>
+<p>ccc
+ddd</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-221
+:test: 4.8 Paragraphs (Example 221)
+:sample: |
+aaa
+
+
+bbb
+:expect: |
+<p>aaa</p>
+<p>bbb</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-222
+:test: 4.8 Paragraphs (Example 222)
+:sample: |
+  aaa
+ bbb
+:expect: |
+<p>aaa
+bbb</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-223
+:test: 4.8 Paragraphs (Example 223)
+:sample: |
+aaa
+             bbb
+                                       ccc
+:expect: |
+<p>aaa
+bbb
+ccc</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-224
+:test: 4.8 Paragraphs (Example 224)
+:sample: |
+   aaa
+bbb
+:expect: |
+<p>aaa
+bbb</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-225
+:test: 4.8 Paragraphs (Example 225)
+:sample: |
+    aaa
+bbb
+:expect: |
+<pre><code>aaa
+</code></pre>
+<p>bbb</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-226
+:test: 4.8 Paragraphs (Example 226)
+:sample: |
+aaa     
+bbb     
+:expect: |
+<p>aaa<br />
+bbb</p>
+:run:
