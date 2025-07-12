@@ -1,0 +1,626 @@
+# https://spec.commonmark.org/0.31.2/#html-blocks
+
+# https://spec.commonmark.org/0.31.2/#example-148
+:test: 4.6 HTML blocks (Example 148)
+:sample: |
+<table><tr><td>
+<pre>
+**Hello**,
+
+_world_.
+</pre>
+</td></tr></table>
+:expect: |
+<table><tr><td>
+<pre>
+**Hello**,
+<p><em>world</em>.
+</pre></p>
+</td></tr></table>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-149
+:test: 4.6 HTML blocks (Example 149)
+:sample: |
+<table>
+  <tr>
+    <td>
+           hi
+    </td>
+  </tr>
+</table>
+
+okay.
+:expect: |
+<table>
+  <tr>
+    <td>
+           hi
+    </td>
+  </tr>
+</table>
+<p>okay.</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-150
+:test: 4.6 HTML blocks (Example 150)
+:sample: |
+ <div>
+  *hello*
+         <foo><a>
+:expect: |
+ <div>
+  *hello*
+         <foo><a>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-151
+:test: 4.6 HTML blocks (Example 151)
+:sample: |
+</div>
+*foo*
+:expect: |
+</div>
+*foo*
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-152
+:test: 4.6 HTML blocks (Example 152)
+:sample: |
+<DIV CLASS="foo">
+
+*Markdown*
+
+</DIV>
+:expect: |
+<DIV CLASS="foo">
+<p><em>Markdown</em></p>
+</DIV>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-153
+:test: 4.6 HTML blocks (Example 153)
+:sample: |
+<div id="foo"
+  class="bar">
+</div>
+:expect: |
+<div id="foo"
+  class="bar">
+</div>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-154
+:test: 4.6 HTML blocks (Example 154)
+:sample: |
+<div id="foo" class="bar
+  baz">
+</div>
+:expect: |
+<div id="foo" class="bar
+  baz">
+</div>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-155
+:test: 4.6 HTML blocks (Example 155)
+:sample: |
+<div>
+*foo*
+
+*bar*
+:expect: |
+<div>
+*foo*
+<p><em>bar</em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-156
+:test: 4.6 HTML blocks (Example 156)
+:sample: |
+<div id="foo"
+*hi*
+:expect: |
+<div id="foo"
+*hi*
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-157
+:test: 4.6 HTML blocks (Example 157)
+:sample: |
+<div class
+foo
+:expect: |
+<div class
+foo
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-158
+:test: 4.6 HTML blocks (Example 158)
+:sample: |
+<div *???-&&&-<---
+*foo*
+:expect: |
+<div *???-&&&-<---
+*foo*
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-159
+:test: 4.6 HTML blocks (Example 159)
+:sample: |
+<div><a href="bar">*foo*</a></div>
+:expect: |
+<div><a href="bar">*foo*</a></div>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-160
+:test: 4.6 HTML blocks (Example 160)
+:sample: |
+<table><tr><td>
+foo
+</td></tr></table>
+:expect: |
+<table><tr><td>
+foo
+</td></tr></table>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-161
+:test: 4.6 HTML blocks (Example 161)
+:sample: |
+<div></div>
+``` c
+int x = 33;
+```
+:expect: |
+<div></div>
+``` c
+int x = 33;
+```
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-162
+:test: 4.6 HTML blocks (Example 162)
+:sample: |
+<a href="foo">
+*bar*
+</a>
+:expect: |
+<a href="foo">
+*bar*
+</a>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-163
+:test: 4.6 HTML blocks (Example 163)
+:sample: |
+<Warning>
+*bar*
+</Warning>
+:expect: |
+<Warning>
+*bar*
+</Warning>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-164
+:test: 4.6 HTML blocks (Example 164)
+:sample: |
+<i class="foo">
+*bar*
+</i>
+:expect: |
+<i class="foo">
+*bar*
+</i>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-165
+:test: 4.6 HTML blocks (Example 165)
+:sample: |
+</ins>
+*bar*
+:expect: |
+</ins>
+*bar*
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-166
+:test: 4.6 HTML blocks (Example 166)
+:sample: |
+<del>
+*foo*
+</del>
+:expect: |
+<del>
+*foo*
+</del>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-167
+:test: 4.6 HTML blocks (Example 167)
+:sample: |
+<del>
+
+*foo*
+
+</del>
+:expect: |
+<del>
+<p><em>foo</em></p>
+</del>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-168
+:test: 4.6 HTML blocks (Example 168)
+:sample: |
+<del>*foo*</del>
+:expect: |
+<p><del><em>foo</em></del></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-169
+:test: 4.6 HTML blocks (Example 169)
+:sample: |
+<pre language="haskell"><code>
+import Text.HTML.TagSoup
+
+main :: IO ()
+main = print $ parseTags tags
+</code></pre>
+okay
+:expect: |
+<pre language="haskell"><code>
+import Text.HTML.TagSoup
+
+main :: IO ()
+main = print $ parseTags tags
+</code></pre>
+<p>okay</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-170
+:test: 4.6 HTML blocks (Example 170)
+:sample: |
+<script type="text/javascript">
+// JavaScript example
+
+document.getElementById("demo").innerHTML = "Hello JavaScript!";
+</script>
+okay
+:expect: |
+<script type="text/javascript">
+// JavaScript example
+
+document.getElementById("demo").innerHTML = "Hello JavaScript!";
+</script>
+<p>okay</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-171
+:test: 4.6 HTML blocks (Example 171)
+:sample: |
+<textarea>
+
+*foo*
+
+_bar_
+
+</textarea>
+:expect: |
+<textarea>
+
+*foo*
+
+_bar_
+
+</textarea>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-172
+:test: 4.6 HTML blocks (Example 172)
+:sample: |
+<style
+  type="text/css">
+h1 {color:red;}
+
+p {color:blue;}
+</style>
+okay
+:expect: |
+<style
+  type="text/css">
+h1 {color:red;}
+
+p {color:blue;}
+</style>
+<p>okay</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-173
+:test: 4.6 HTML blocks (Example 173)
+:sample: |
+<style
+  type="text/css">
+
+foo
+:expect: |
+<style
+  type="text/css">
+
+foo
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-174
+:test: 4.6 HTML blocks (Example 174)
+:sample: |
+> <div>
+> foo
+
+bar
+:expect: |
+<blockquote>
+<div>
+foo
+</blockquote>
+<p>bar</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-175
+:test: 4.6 HTML blocks (Example 175)
+:sample: |
+- <div>
+- foo
+:expect: |
+<ul>
+<li>
+<div>
+</li>
+<li>foo</li>
+</ul>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-176
+:test: 4.6 HTML blocks (Example 176)
+:sample: |
+<style>p{color:red;}</style>
+*foo*
+:expect: |
+<style>p{color:red;}</style>
+<p><em>foo</em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-177
+:test: 4.6 HTML blocks (Example 177)
+:sample: |
+<!-- foo -->*bar*
+*baz*
+:expect: |
+<!-- foo -->*bar*
+<p><em>baz</em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-178
+:test: 4.6 HTML blocks (Example 178)
+:sample: |
+<script>
+foo
+</script>1. *bar*
+:expect: |
+<script>
+foo
+</script>1. *bar*
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-179
+:test: 4.6 HTML blocks (Example 179)
+:sample: |
+<!-- Foo
+
+bar
+   baz -->
+okay
+:expect: |
+<!-- Foo
+
+bar
+   baz -->
+<p>okay</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-180
+:test: 4.6 HTML blocks (Example 180)
+:sample: |
+<?php
+
+  echo '>';
+
+?>
+okay
+:expect: |
+<?php
+
+  echo '>';
+
+?>
+<p>okay</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-181
+:test: 4.6 HTML blocks (Example 181)
+:sample: |
+<!DOCTYPE html>
+:expect: |
+<!DOCTYPE html>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-182
+:test: 4.6 HTML blocks (Example 182)
+:sample: |
+<![CDATA[
+function matchwo(a,b)
+{
+  if (a < b && a < 0) then {
+    return 1;
+
+  } else {
+
+    return 0;
+  }
+}
+]]>
+okay
+:expect: |
+<![CDATA[
+function matchwo(a,b)
+{
+  if (a < b && a < 0) then {
+    return 1;
+
+  } else {
+
+    return 0;
+  }
+}
+]]>
+<p>okay</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-183
+:test: 4.6 HTML blocks (Example 183)
+:sample: |
+  <!-- foo -->
+
+    <!-- foo -->
+:expect: |
+  <!-- foo -->
+<pre><code>&lt;!-- foo --&gt;
+</code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-184
+:test: 4.6 HTML blocks (Example 184)
+:sample: |
+  <div>
+
+    <div>
+:expect: |
+  <div>
+<pre><code>&lt;div&gt;
+</code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-185
+:test: 4.6 HTML blocks (Example 185)
+:sample: |
+Foo
+<div>
+bar
+</div>
+:expect: |
+<p>Foo</p>
+<div>
+bar
+</div>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-186
+:test: 4.6 HTML blocks (Example 186)
+:sample: |
+<div>
+bar
+</div>
+*foo*
+:expect: |
+<div>
+bar
+</div>
+*foo*
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-187
+:test: 4.6 HTML blocks (Example 187)
+:sample: |
+Foo
+<a href="bar">
+baz
+:expect: |
+<p>Foo
+<a href="bar">
+baz</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-188
+:test: 4.6 HTML blocks (Example 188)
+:sample: |
+<div>
+
+*Emphasized* text.
+
+</div>
+:expect: |
+<div>
+<p><em>Emphasized</em> text.</p>
+</div>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-189
+:test: 4.6 HTML blocks (Example 189)
+:sample: |
+<div>
+*Emphasized* text.
+</div>
+:expect: |
+<div>
+*Emphasized* text.
+</div>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-190
+:test: 4.6 HTML blocks (Example 190)
+:sample: |
+<table>
+
+<tr>
+
+<td>
+Hi
+</td>
+
+</tr>
+
+</table>
+:expect: |
+<table>
+<tr>
+<td>
+Hi
+</td>
+</tr>
+</table>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-191
+:test: 4.6 HTML blocks (Example 191)
+:sample: |
+<table>
+
+  <tr>
+
+    <td>
+      Hi
+    </td>
+
+  </tr>
+
+</table>
+:expect: |
+<table>
+  <tr>
+<pre><code>&lt;td&gt;
+  Hi
+&lt;/td&gt;
+</code></pre>
+  </tr>
+</table>
+:run:
