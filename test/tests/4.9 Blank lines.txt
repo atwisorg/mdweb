@@ -1,0 +1,17 @@
+# https://spec.commonmark.org/0.31.2/#blank-lines
+
+# https://spec.commonmark.org/0.31.2/#example-227
+:test: 4.9 Blank lines (Example 227)
+:sample: |
+  
+
+aaa
+  
+
+# aaa
+
+  
+:expect: |
+<p>aaa</p>
+<h1>aaa</h1>
+:run:
