@@ -1,0 +1,310 @@
+# https://spec.commonmark.org/0.31.2/#link-reference-definitions
+
+# https://spec.commonmark.org/0.31.2/#example-192
+:test: 4.7 Link reference definitions (Example 192)
+:sample: |
+[foo]: /url "title"
+
+[foo]
+:expect: |
+<p><a href="/url" title="title">foo</a></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-193
+:test: 4.7 Link reference definitions (Example 193)
+:sample: |
+   [foo]: 
+      /url  
+           'the title'  
+
+[foo]
+:expect: |
+<p><a href="/url" title="the title">foo</a></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-194
+:test: 4.7 Link reference definitions (Example 194)
+:sample: |
+[Foo*bar\]]:my_(url) 'title (with parens)'
+
+[Foo*bar\]]
+:expect: |
+<p><a href="my_(url)" title="title (with parens)">Foo*bar]</a></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-195
+:test: 4.7 Link reference definitions (Example 195)
+:sample: |
+[Foo bar]:
+<my url>
+'title'
+
+[Foo bar]
+:expect: |
+<p><a href="my%20url" title="title">Foo bar</a></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-196
+:test: 4.7 Link reference definitions (Example 196)
+:sample: |
+[foo]: /url '
+title
+line1
+line2
+'
+
+[foo]
+:expect: |
+<p><a href="/url" title="
+title
+line1
+line2
+">foo</a></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-197
+:test: 4.7 Link reference definitions (Example 197)
+:sample: |
+[foo]: /url 'title
+
+with blank line'
+
+[foo]
+:expect: |
+<p>[foo]: /url 'title</p>
+<p>with blank line'</p>
+<p>[foo]</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-198
+:test: 4.7 Link reference definitions (Example 198)
+:sample: |
+[foo]:
+/url
+
+[foo]
+:expect: |
+<p><a href="/url">foo</a></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-199
+:test: 4.7 Link reference definitions (Example 199)
+:sample: |
+[foo]:
+
+[foo]
+:expect: |
+<p>[foo]:</p>
+<p>[foo]</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-200
+:test: 4.7 Link reference definitions (Example 200)
+:sample: |
+[foo]: <>
+
+[foo]
+:expect: |
+<p><a href="">foo</a></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-201
+:test: 4.7 Link reference definitions (Example 201)
+:sample: |
+[foo]: <bar>(baz)
+
+[foo]
+:expect: |
+<p>[foo]: <bar>(baz)</p>
+<p>[foo]</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-202
+:test: 4.7 Link reference definitions (Example 202)
+:sample: |
+[foo]: /url\bar\*baz "foo\"bar\baz"
+
+[foo]
+:expect: |
+<p><a href="/url%5Cbar*baz" title="foo&quot;bar\baz">foo</a></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-203
+:test: 4.7 Link reference definitions (Example 203)
+:sample: |
+[foo]
+
+[foo]: url
+:expect: |
+<p><a href="url">foo</a></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-204
+:test: 4.7 Link reference definitions (Example 204)
+:sample: |
+[foo]
+
+[foo]: first
+[foo]: second
+:expect: |
+<p><a href="first">foo</a></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-205
+:test: 4.7 Link reference definitions (Example 205)
+:sample: |
+[FOO]: /url
+
+[Foo]
+:expect: |
+<p><a href="/url">Foo</a></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-206
+:test: 4.7 Link reference definitions (Example 206)
+:sample: |
+[ΑΓΩ]: /φου
+
+[αγω]
+:expect: |
+<p><a href="/%CF%86%CE%BF%CF%85">αγω</a></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-207
+:test: 4.7 Link reference definitions (Example 207)
+:sample: |
+[foo]: /url
+:expect: |
+
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-208
+:test: 4.7 Link reference definitions (Example 208)
+:sample: |
+[
+foo
+]: /url
+bar
+:expect: |
+<p>bar</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-209
+:test: 4.7 Link reference definitions (Example 209)
+:sample: |
+[foo]: /url "title" ok
+:expect: |
+<p>[foo]: /url &quot;title&quot; ok</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-210
+:test: 4.7 Link reference definitions (Example 210)
+:sample: |
+[foo]: /url
+"title" ok
+:expect: |
+<p>&quot;title&quot; ok</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-211
+:test: 4.7 Link reference definitions (Example 211)
+:sample: |
+    [foo]: /url "title"
+
+[foo]
+:expect: |
+<pre><code>[foo]: /url &quot;title&quot;
+</code></pre>
+<p>[foo]</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-212
+:test: 4.7 Link reference definitions (Example 212)
+:sample: |
+```
+[foo]: /url
+```
+
+[foo]
+:expect: |
+<pre><code>[foo]: /url
+</code></pre>
+<p>[foo]</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-213
+:test: 4.7 Link reference definitions (Example 213)
+:sample: |
+Foo
+[bar]: /baz
+
+[bar]
+:expect: |
+<p>Foo
+[bar]: /baz</p>
+<p>[bar]</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-214
+:test: 4.7 Link reference definitions (Example 214)
+:sample: |
+# [Foo]
+[foo]: /url
+> bar
+:expect: |
+<p>Foo
+[bar]: /baz</p>
+<p>[bar]</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-215
+:test: 4.7 Link reference definitions (Example 215)
+:sample: |
+[foo]: /url
+bar
+===
+[foo]
+:expect: |
+<h1>bar</h1>
+<p><a href="/url">foo</a></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-216
+:test: 4.7 Link reference definitions (Example 216)
+:sample: |
+[foo]: /url
+===
+[foo]
+:expect: |
+<p>===
+<a href="/url">foo</a></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-217
+:test: 4.7 Link reference definitions (Example 217)
+:sample: |
+[foo]: /foo-url "foo"
+[bar]: /bar-url
+  "bar"
+[baz]: /baz-url
+
+[foo],
+[bar],
+[baz]
+:expect: |
+<p><a href="/foo-url" title="foo">foo</a>,
+<a href="/bar-url" title="bar">bar</a>,
+<a href="/baz-url">baz</a></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-218
+:test: 4.7 Link reference definitions (Example 218)
+:sample: |
+[foo]
+
+> [foo]: /url
+:expect: |
+<p><a href="/url">foo</a></p>
+<blockquote>
+</blockquote>
+:run:
