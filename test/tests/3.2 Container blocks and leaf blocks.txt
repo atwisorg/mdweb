@@ -1,0 +1,3 @@
+# https://spec.commonmark.org/0.31.2/#container-blocks-and-leaf-blocks
+
+We can divide blocks into two types: container blocks, which can contain other blocks, and leaf blocks, which cannot.
