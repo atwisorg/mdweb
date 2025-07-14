@@ -103,15 +103,11 @@ bar
 	 - baz
 :expect: |
 <ul>
-<li>
-foo
+<li>foo
 <ul>
-<li>
-bar
+<li>bar
 <ul>
-<li>
-baz
-</li>
+<li>baz</li>
 </ul>
 </li>
 </ul>
