@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.4.2} - (C) 23.07.2025
+    echo "${0##*/} ${1:-0.4.3} - (C) 23.07.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -484,6 +484,7 @@ add_paragraph_to_list_item ()
 
         # trim the white space at the end of each paragraph string
         s%[[:blank:]]\+\x01%\x01%g
+        s%[[:blank:]]\+$%%
 
         # trim the white space at the beginning of each paragraph string
         s%\x01[[:blank:]]\+%\x01%g
