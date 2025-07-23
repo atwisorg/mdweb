@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.4.6} - (C) 23.07.2025
+    echo "${0##*/} ${1:-0.5.0} - (C) 23.07.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1266,7 +1266,7 @@ block_quote_is_closed ()
 
 list_is_open ()
 {
-    [[ "${OPEN_BLOCKS[@]}" =~ [*+-] ]]
+    [[ "${OPEN_BLOCKS[@]}" =~ [\)*+-.] ]]
 }
 
 code_block_is_closed ()
@@ -1644,9 +1644,20 @@ parse_block_structure ()
                 }
                 ;;
             *)
-                add_to_code_block ||
-                put_string_in_buffer
-                return
+                if [[ "$STRING" =~ ^[0-9]{1,9}\)([[:blank:]]|$) ]]
+                then
+                    open_ordered_list ")"
+                    STRING="${STRING:1}"
+                    CHAR_NUM="$((CHAR_NUM + 1))"
+                elif [[ "$STRING" =~ ^[0-9]{1,9}\.([[:blank:]]|$) ]]
+                then
+                    open_ordered_list "."
+                    STRING="${STRING:1}"
+                    CHAR_NUM="$((CHAR_NUM + 1))"
+                else
+                    add_to_code_block || put_string_in_buffer
+                    return
+                fi
         esac
         STRING="${STRING:1}"
         trim_indent 1 "$CHAR_NUM" && CHAR_NUM="$((CHAR_NUM + 1))" || true
@@ -1771,6 +1782,22 @@ open_unordered_list ()
         open_list_item
         NESTING_DEPTH["$DEPTH"]="$((CHAR_NUM - 1))"
     }
+}
+
+open_ordered_list ()
+{
+    DEPTH="$((DEPTH + 1))"
+    if is_equal "${OPEN_BLOCKS["$DEPTH"]:-}" "$1"
+    then
+        print_buffer "close tags to the current list item"
+    else
+        is_empty "${!STRING_BUFFER[@]}" || print_buffer
+        OPEN_BLOCKS["$DEPTH"]="$1"
+        get_tag "ol"
+        put_tag_in_buffer
+    fi
+    open_list_item
+    NESTING_DEPTH["$DEPTH"]="$((CHAR_NUM - 1))"
 }
 
 close_list ()
