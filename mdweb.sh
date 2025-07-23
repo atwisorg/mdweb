@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.4.3} - (C) 23.07.2025
+    echo "${0##*/} ${1:-0.4.4} - (C) 23.07.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -455,19 +455,16 @@ check_args ()
 
 add_paragraph_to_list_item ()
 {
-    #         example         | input          |  output   |
-    #-------------------------|----------------|-----------|
-    # - foo                   | <ul>      skip | <ul>      |
-    #        < - empty string | <li>\x18  skip | <li>\x18  |
-    #   bar                   | foo\x01\x01bar | <p>\x18   |
-    #-------------------------| </li>\x19 skip | \x1ffoo   |
-    #                         | </ul>     skip | </p>\x19  |
-    #                         |----------------| <p>\x18   |
-    #                                          | \x1fbar   |
-    #                                          | </p>\x19  |
-    #                                          | </li>\x19 |
-    #                                          | </ul>     |
-    #                                          |-----------|
+    #                                                                                         ┌─  1 ─> <ul>
+    #                                                                                         ├─  2 ─> <li>\x18
+    #                                                                                         ├─  3 ─> <p>\x18
+    #                            ┌─ 1 ─> <ul> ─────────── 1 ─┐                                ├─  4 ─> \x1ffoo
+    # -◦foo ─ 1 ┐                ├─ 2 ─> <li>\x18 ─────── 2 ─┤                                ├─  5 ─> \x19</p>
+    #       ─ 2 ┼─> open_block ─>┼─ 3 ─> foo\x01\x1abar ─ 3 ─┼─> add_paragraph_to_list_item ─>┼─  6 ─> <p>\x18
+    # ◦◦bar ─ 3 ┘                ├─ 4 ─> \x19</li> ────── 4 ─┤                                ├─  7 ─> \x1fbar
+    #                            └─ 5 ─> </ul> ────────── 5 ─┘                                ├─  8 ─> \x19</p>
+    #                                                                                         ├─  9 ─> </li>\x19
+    #                                                                                         └─ 10 ─> </ul>
 
     sed '
         # (^_|\x1f|\037) MARKER_FORMAT_STRING first in the buffer string
@@ -954,13 +951,13 @@ format_string ()
 
 combine_string_with_tag ()
 {
-    #                 ┌──> sequence of incoming strings <──┐
-    #                 │                                    │
-    # <ul> ────────── 1 ──┐                                │
-    # <li>\x18 ────── 2 ──┤                             ┌─ 1 ─> <ul>
-    # STRING_BUFFER ─ 3 ──┼─> combine_string_with_tag ─>┼─ 2 ─> <li>STRING_BUFFER</li>
-    # \x19</li> ───── 4 ──┤                             └─ 3 ─> </ul>
-    # </ul> ───────── 5 ──┘
+    #                 ┌─> sequence of incoming strings <──┐
+    #                 │                                   │
+    # <ul> ────────── 1 ─┐                                │
+    # <li>\x18 ────── 2 ─┤                             ┌─ 1 ─> <ul>
+    # STRING_BUFFER ─ 3 ─┼─> combine_string_with_tag ─>┼─ 2 ─> <li>STRING_BUFFER</li>
+    # \x19</li> ───── 4 ─┤                             └─ 3 ─> </ul>
+    # </ul> ───────── 5 ─┘
     sed '
         # (^X|\x18|\030) MARKER_START_MERGE_STRING at the end of the opening tag
         /\x18$/ {
