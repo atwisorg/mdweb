@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.5.1} - (C) 23.07.2025
+    echo "${0##*/} ${1:-0.5.2} - (C) 23.07.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1647,13 +1647,13 @@ parse_block_structure ()
                 if [[ "$STRING" =~ ^[0-9]{1,9}\)([[:blank:]]|$) ]]
                 then
                     open_ordered_list ")"
-                    STRING="${STRING:1}"
-                    CHAR_NUM="$((CHAR_NUM + 1))"
+                    STRING="${STRING:"$LENGTH_ORDERED_LIST_NUM"}"
+                    CHAR_NUM="$((CHAR_NUM + LENGTH_ORDERED_LIST_NUM))"
                 elif [[ "$STRING" =~ ^[0-9]{1,9}\.([[:blank:]]|$) ]]
                 then
                     open_ordered_list "."
-                    STRING="${STRING:1}"
-                    CHAR_NUM="$((CHAR_NUM + 1))"
+                    STRING="${STRING:"$LENGTH_ORDERED_LIST_NUM"}"
+                    CHAR_NUM="$((CHAR_NUM + LENGTH_ORDERED_LIST_NUM))"
                 else
                     add_to_code_block || put_string_in_buffer
                     return
@@ -1794,6 +1794,8 @@ open_ordered_list ()
         is_empty "${!STRING_BUFFER[@]}" || print_buffer
         OPEN_BLOCKS["$DEPTH"]="$1"
         OL_START="${STRING%%[!0-9]*}"
+        LENGTH_ORDERED_LIST_NUM="${#OL_START}"
+        OL_START="${OL_START#"${OL_START%%[!0]*}"}"
         is_diff "$OL_START" 1 || OL_START=
         get_tag "ol"
         put_tag_in_buffer
