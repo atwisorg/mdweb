@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.4.1} - (C) 23.07.2025
+    echo "${0##*/} ${1:-0.4.2} - (C) 23.07.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1658,7 +1658,6 @@ parse_block_structure ()
         # ◦◦◦-
         NESTING_DEPTH[-1]="${NESTING_DEPTH[-1]}:$((${NESTING_DEPTH[-1]} + 2))"
     }
-    return 1
 }
 
 serialize_pre_code_language ()
