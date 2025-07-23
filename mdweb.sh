@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.4.4} - (C) 23.07.2025
+    echo "${0##*/} ${1:-0.4.5} - (C) 23.07.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -453,19 +453,19 @@ check_args ()
     }
 }
 
-add_paragraph_to_list_item ()
+preparing_a_paragraph ()
 {
-    #                                                                                         ┌─  1 ─> <ul>
-    #                                                                                         ├─  2 ─> <li>\x18
-    #                                                                                         ├─  3 ─> <p>\x18
-    #                            ┌─ 1 ─> <ul> ─────────── 1 ─┐                                ├─  4 ─> \x1ffoo
-    # -◦foo ─ 1 ┐                ├─ 2 ─> <li>\x18 ─────── 2 ─┤                                ├─  5 ─> \x19</p>
-    #       ─ 2 ┼─> open_block ─>┼─ 3 ─> foo\x01\x1abar ─ 3 ─┼─> add_paragraph_to_list_item ─>┼─  6 ─> <p>\x18
-    # ◦◦bar ─ 3 ┘                ├─ 4 ─> \x19</li> ────── 4 ─┤                                ├─  7 ─> \x1fbar
-    #                            └─ 5 ─> </ul> ────────── 5 ─┘                                ├─  8 ─> \x19</p>
-    #                                                                                         ├─  9 ─> </li>\x19
-    #                                                                                         └─ 10 ─> </ul>
-
+    #                                                                                    ┌─  1 ─> <ul>
+    #                                                                                    ├─  2 ─> <li>\x18
+    #                                                                                    ├─  3 ─> <p>\x18
+    #                            ┌─ 1 ─> <ul> ─────────── 1 ─┐                           ├─  4 ─> \x1ffoo
+    # -◦foo ─ 1 ┐                ├─ 2 ─> <li>\x18 ─────── 2 ─┤                           ├─  5 ─> \x19</p>
+    #       ─ 2 ┼─> open_block ─>┼─ 3 ─> foo\x01\x1abar ─ 3 ─┼─> preparing_a_paragraph ─>┼─  6 ─> <p>\x18
+    # ◦◦bar ─ 3 ┘                ├─ 4 ─> \x19</li> ────── 4 ─┤                           ├─  7 ─> \x1fbar
+    #                            └─ 5 ─> </ul> ────────── 5 ─┘                           ├─  8 ─> \x19</p>
+    #                                                                                    ├─  9 ─> </li>\x19
+    #                                                                                    └─ 10 ─> </ul>
+ 
     sed '
         # (^_|\x1f|\037) MARKER_FORMAT_STRING first in the buffer string
         /^\x1f/!{
@@ -1936,21 +1936,21 @@ convert_md2html ()
 
     # open_block | cat -A
     # open_block
-    # open_block | add_paragraph_to_list_item | cat -A
-    # open_block | add_paragraph_to_list_item
-    # open_block | add_paragraph_to_list_item | format_string | cat -A
-    # open_block | add_paragraph_to_list_item | format_string
-    # open_block | add_paragraph_to_list_item | format_string | combine_string_with_tag | cat -A
-    # open_block | add_paragraph_to_list_item | format_string | combine_string_with_tag
-    # open_block | add_paragraph_to_list_item | format_string | combine_string_with_tag | split_strings | cat -A
-    open_block | add_paragraph_to_list_item | format_string | combine_string_with_tag | split_strings
+    # open_block | preparing_a_paragraph | cat -A
+    # open_block | preparing_a_paragraph
+    # open_block | preparing_a_paragraph | format_string | cat -A
+    # open_block | preparing_a_paragraph | format_string
+    # open_block | preparing_a_paragraph | format_string | combine_string_with_tag | cat -A
+    # open_block | preparing_a_paragraph | format_string | combine_string_with_tag
+    # open_block | preparing_a_paragraph | format_string | combine_string_with_tag | split_strings | cat -A
+    open_block | preparing_a_paragraph | format_string | combine_string_with_tag | split_strings
 
-    # open_block | add_paragraph_to_list_item | combine_string_with_tag | cat -A
-    # open_block | add_paragraph_to_list_item | combine_string_with_tag
-    # open_block | add_paragraph_to_list_item | combine_string_with_tag | split_strings | cat -A
-    # open_block | add_paragraph_to_list_item | combine_string_with_tag | split_strings
-    # open_block | add_paragraph_to_list_item | format_string | split_strings | cat -A
-    # open_block | add_paragraph_to_list_item | format_string | split_strings
+    # open_block | preparing_a_paragraph | combine_string_with_tag | cat -A
+    # open_block | preparing_a_paragraph | combine_string_with_tag
+    # open_block | preparing_a_paragraph | combine_string_with_tag | split_strings | cat -A
+    # open_block | preparing_a_paragraph | combine_string_with_tag | split_strings
+    # open_block | preparing_a_paragraph | format_string | split_strings | cat -A
+    # open_block | preparing_a_paragraph | format_string | split_strings
 }
 
 open_html ()
