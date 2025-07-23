@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.4.5} - (C) 23.07.2025
+    echo "${0##*/} ${1:-0.4.6} - (C) 23.07.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1758,18 +1758,12 @@ open_list_item ()
 open_unordered_list ()
 {
     [[ "$STRING" =~ ^"$1"([[:blank:]]|$) ]] && {
-        if is_equal "${OPEN_BLOCKS["$((DEPTH + 1))"]:-}" "$1"
+        DEPTH="$((DEPTH + 1))"
+        if is_equal "${OPEN_BLOCKS["$DEPTH"]:-}" "$1"
         then
-            DEPTH="$((DEPTH + 1))"
             print_buffer "close tags to the current list item"
         else
-            if is_empty "${!STRING_BUFFER[@]}"
-            then
-                DEPTH="$((DEPTH + 1))"
-            else
-                DEPTH="$((DEPTH + 1))"
-                print_buffer
-            fi
+            is_empty "${!STRING_BUFFER[@]}" || print_buffer
             OPEN_BLOCKS["$DEPTH"]="$1"
             get_tag "ul"
             put_tag_in_buffer
