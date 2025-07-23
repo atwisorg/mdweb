@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.5.0} - (C) 23.07.2025
+    echo "${0##*/} ${1:-0.5.1} - (C) 23.07.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1074,7 +1074,7 @@ get_tag ()
             CLOSING_TAG_INDENT=""
             ;;
         ol)
-            OPENING_TAG="$MARKER_NEW_STRING<$1${OL_START:+ start="$OL_START"}>"
+            OPENING_TAG="$MARKER_NEW_STRING<$1${OL_START:+ start=\"$OL_START\"}>"
             CLOSING_TAG="</$1>"
             OPENING_TAG_INDENT="${TAG_INDENT:-}"
             CLOSING_TAG_INDENT="${TAG_INDENT:-}"
@@ -1793,6 +1793,8 @@ open_ordered_list ()
     else
         is_empty "${!STRING_BUFFER[@]}" || print_buffer
         OPEN_BLOCKS["$DEPTH"]="$1"
+        OL_START="${STRING%%[!0-9]*}"
+        is_diff "$OL_START" 1 || OL_START=
         get_tag "ol"
         put_tag_in_buffer
     fi
