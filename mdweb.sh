@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.4.0} - (C) 23.07.2025
+    echo "${0##*/} ${1:-0.4.1} - (C) 23.07.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1473,7 +1473,14 @@ parse_indent ()
     else
         case "${OPEN_BLOCKS["$((DEPTH + 1))"]}" in
             "code_block")
-                add_to_code_block
+                if test "$INDENT_LENGTH" -lt 4
+                then
+                    trim_indent "$EXCESS_INDENT"
+                    add_to_code_block
+                else
+                    trim_indent "$EXCESS_INDENT"
+                    put_string_in_buffer
+                fi
                 return 1
                 ;;
             "indent_code_block")
@@ -1586,13 +1593,13 @@ parse_block_structure ()
 {
     DEPTH="0"
     CHAR_NUM="0"
-    string_is_not_empty "${STRING:-}" || parse_empty_string || return
+    string_is_not_empty "${STRING:-}" || parse_empty_string || return 0
 
     NESTING_DEPTH["$DEPTH"]=""
 
     while is_not_empty "${STRING:-}"
     do
-        parse_indent || return
+        parse_indent || return 0
 
         STRING="${STRING#"${INDENT:-}"}"
         case "$STRING" in
@@ -1601,32 +1608,32 @@ parse_block_structure ()
                 ;;
             [_]*)
                 print_horizontal_rule "_" || put_string_in_buffer
-                return 1
+                return
                 ;;
             [#]*)
                 print_heading_atx || put_string_in_buffer
-                return 1
+                return
                 ;;
             [=]*)
                 print_heading_setext "=" || put_string_in_buffer
-                return 1
+                return
                 ;;
             [-]*)
                 print_heading_setext  "-" ||
-                print_horizontal_rule "-" && return 1 ||
+                print_horizontal_rule "-" && return ||
                 open_unordered_list   "-" || {
                     put_string_in_buffer
-                    return 1
+                    return
                 }
                 ;;
             [*]*)
-                print_horizontal_rule "*" && return 1 ||
+                print_horizontal_rule "*" && return ||
                 is_not_empty "${NESTING_DEPTH[$((DEPTH+1))]:-}" ||
                 [[ "$STRING" =~ ^"*"[[:blank:]]+[![:blank:]] ]] ||
                 string_buffer_is_empty  &&
                 open_unordered_list "*" || {
                     put_string_in_buffer
-                    return 1
+                    return
                 }
                 ;;
             [+]*)
@@ -1635,10 +1642,12 @@ parse_block_structure ()
                 string_buffer_is_empty  &&
                 open_unordered_list "+" || {
                     put_string_in_buffer
-                    return 1
+                    return
                 }
                 ;;
             *)
+                add_to_code_block ||
+                put_string_in_buffer
                 return
         esac
         STRING="${STRING:1}"
@@ -1680,8 +1689,8 @@ is_code_block ()
 {
     if is_empty "${FENCE_CHAR:-}"
     then
-        [[ "${STRING:-}" =~ ^\`{3,}[^\`]*$ ]] ||
-        [[ "${STRING:-}" =~  ^~{3,}        ]] && {
+        [[ "${STRING:-}" =~ ^[[:blank:]]*\`{3,}[^\`]*$ ]] ||
+        [[ "${STRING:-}" =~ ^[[:blank:]]*~{3,} ]] && {
             FENCE_CHAR="${STRING%%[!~\`]*}"
             FENCE_LENGTH="${#FENCE_CHAR}"
             CLASS="${STRING#"$FENCE_CHAR"}"
@@ -1690,12 +1699,13 @@ is_code_block ()
             FENCE_CHAR="${FENCE_CHAR:0:1}"
         }
     else
-        [[ "${STRING:-}" =~ ^$FENCE_CHAR{$FENCE_LENGTH,}[[:blank:]]*$ ]]
+        [[ "${STRING:-}" =~ ^[[:blank:]]*$FENCE_CHAR{$FENCE_LENGTH,}[[:blank:]]*$ ]]
     fi
 }
 
 open_code_block ()
 {
+    DEPTH="$((DEPTH + 1))"
     get_tag "code_block"
     put_tag_in_buffer
     CODE_BLOCK="open"
@@ -1715,12 +1725,7 @@ add_to_code_block ()
 {
     if is_equal "${CODE_BLOCK:-}" "open"
     then
-        is_empty "${INDENTED_CODE_BLOCK:-}" &&
-        is_code_block && close_code_block "$DEPTH" || {
-            STRING="${INDENT:-}$STRING"
-            trim_indent "$EXCESS_INDENT"
-            put_string_in_buffer
-        }
+        is_code_block && close_code_block "$DEPTH" || put_string_in_buffer
     else
         is_code_block && {
             string_buffer_is_empty || print_buffer
@@ -1883,9 +1888,7 @@ open_block ()
     while IFS= read -r STRING || is_not_empty "${STRING:-}"
     do
         TAG_INDENT="${MAIN_TAG_INDENT:-}"
-        parse_block_structure || continue
-        add_to_code_block ||
-        put_string_in_buffer
+        parse_block_structure
     done < <(cat "${INPUT:--}")
     if no_open_blocks
     then
