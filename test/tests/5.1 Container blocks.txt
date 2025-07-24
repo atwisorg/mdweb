@@ -1,0 +1,340 @@
+# https://spec.commonmark.org/0.31.2/#block-quotes
+
+# https://spec.commonmark.org/0.31.2/#example-228
+:test: 5.1 Block quotes (Example 228)
+:sample: |
+> # Foo
+> bar
+> baz
+:expect: |
+<blockquote>
+<h1>Foo</h1>
+<p>bar
+baz</p>
+</blockquote>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-229
+:test: 5.1 Block quotes (Example 229)
+:sample: |
+># Foo
+>bar
+> baz
+:expect: |
+<blockquote>
+<h1>Foo</h1>
+<p>bar
+baz</p>
+</blockquote>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-230
+:test: 5.1 Block quotes (Example 230)
+:sample: |
+   > # Foo
+   > bar
+ > baz
+:expect: |
+<blockquote>
+<h1>Foo</h1>
+<p>bar
+baz</p>
+</blockquote>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-231
+:test: 5.1 Block quotes (Example 231)
+:sample: |
+    > # Foo
+    > bar
+    > baz
+:expect: |
+<pre><code>&gt; # Foo
+&gt; bar
+&gt; baz
+</code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-232
+:test: 5.1 Block quotes (Example 232)
+:sample: |
+> # Foo
+> bar
+baz
+:expect: |
+<blockquote>
+<h1>Foo</h1>
+<p>bar
+baz</p>
+</blockquote>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-233
+:test: 5.1 Block quotes (Example 233)
+:sample: |
+> bar
+baz
+> foo
+:expect: |
+<blockquote>
+<p>bar
+baz
+foo</p>
+</blockquote>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-234
+:test: 5.1 Block quotes (Example 234)
+:sample: |
+> foo
+---
+:expect: |
+<blockquote>
+<p>foo</p>
+</blockquote>
+<hr />
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-235
+:test: 5.1 Block quotes (Example 235)
+:sample: |
+> - foo
+- bar
+:expect: |
+<blockquote>
+<ul>
+<li>foo</li>
+</ul>
+</blockquote>
+<ul>
+<li>bar</li>
+</ul>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-236
+:test: 5.1 Block quotes (Example 236)
+:sample: |
+>     foo
+    bar
+:expect: |
+<blockquote>
+<pre><code>foo
+</code></pre>
+</blockquote>
+<pre><code>bar
+</code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-237
+:test: 5.1 Block quotes (Example 237)
+:sample: |
+> ```
+foo
+```
+:expect: |
+<blockquote>
+<pre><code></code></pre>
+</blockquote>
+<p>foo</p>
+<pre><code></code></pre
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-238
+:test: 5.1 Block quotes (Example 238)
+:sample: |
+> foo
+    - bar
+:expect: |
+<blockquote>
+<p>foo
+- bar</p>
+</blockquote>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-239
+:test: 5.1 Block quotes (Example 239)
+:sample: |
+>
+:expect: |
+<blockquote>
+</blockquote>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-240
+:test: 5.1 Block quotes (Example 240)
+:sample: |
+>
+>  
+> 
+:expect: |
+<blockquote>
+</blockquote>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-241
+:test: 5.1 Block quotes (Example 241)
+:sample: |
+>
+> foo
+>  
+:expect: |
+<blockquote>
+<p>foo</p>
+</blockquote>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-242
+:test: 5.1 Block quotes (Example 242)
+:sample: |
+> foo
+
+> bar
+:expect: |
+<blockquote>
+<p>foo</p>
+</blockquote>
+<blockquote>
+<p>bar</p>
+</blockquote>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-243
+:test: 5.1 Block quotes (Example 243)
+:sample: |
+> foo
+> bar
+:expect: |
+<blockquote>
+<p>foo
+bar</p>
+</blockquote>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-244
+:test: 5.1 Block quotes (Example 244)
+:sample: |
+> foo
+>
+> bar
+:expect: |
+<blockquote>
+<p>foo</p>
+<p>bar</p>
+</blockquote>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-245
+:test: 5.1 Block quotes (Example 245)
+:sample: |
+foo
+> bar
+:expect: |
+<p>foo</p>
+<blockquote>
+<p>bar</p>
+</blockquote>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-246
+:test: 5.1 Block quotes (Example 246)
+:sample: |
+> aaa
+***
+> bbb
+:expect: |
+<blockquote>
+<p>aaa</p>
+</blockquote>
+<hr />
+<blockquote>
+<p>bbb</p>
+</blockquote>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-247
+:test: 5.1 Block quotes (Example 247)
+:sample: |
+> bar
+baz
+:expect: |
+<blockquote>
+<p>bar
+baz</p>
+</blockquote>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-248
+:test: 5.1 Block quotes (Example 248)
+:sample: |
+> bar
+
+baz
+:expect: |
+<blockquote>
+<p>bar</p>
+</blockquote>
+<p>baz</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-249
+:test: 5.1 Block quotes (Example 249)
+:sample: |
+> bar
+>
+baz
+:expect: |
+<blockquote>
+<p>bar</p>
+</blockquote>
+<p>baz</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-250
+:test: 5.1 Block quotes (Example 250)
+:sample: |
+> > > foo
+bar
+:expect: |
+<blockquote>
+<blockquote>
+<blockquote>
+<p>foo
+bar</p>
+</blockquote>
+</blockquote>
+</blockquote>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-251
+:test: 5.1 Block quotes (Example 251)
+:sample: |
+>>> foo
+> bar
+>>baz
+:expect: |
+<blockquote>
+<blockquote>
+<blockquote>
+<p>foo
+bar
+baz</p>
+</blockquote>
+</blockquote>
+</blockquote>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-252
+:test: 5.1 Block quotes (Example 252)
+:sample: |
+>     code
+
+>    not code
+:expect: |
+<blockquote>
+<pre><code>code
+</code></pre>
+</blockquote>
+<blockquote>
+<p>not code</p>
+</blockquote>
+:run:
