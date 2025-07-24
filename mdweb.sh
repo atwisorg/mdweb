@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.5.3} - (C) 24.07.2025
+    echo "${0##*/} ${1:-0.5.4} - (C) 24.07.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1507,6 +1507,7 @@ parse_indent ()
                     else
                         put_string_in_buffer
                     fi
+                    return 1
                 fi
         esac
 
@@ -1515,7 +1516,7 @@ parse_indent ()
             if test "$INDENT_LENGTH" -lt "${NESTING_DEPTH["$((DEPTH + 1))"]#*:}"
             then
                 test "$INDENT_LENGTH" -ge 4 || return 0
-                if string_buffer_is_empty
+                if is_empty "${!STRING_BUFFER[@]}"
                 then
                     #   ┌> ${NESTING_DEPTH["$DEPTH"]%:*} -> 3
                     #   │ ┌> ${NESTING_DEPTH["$DEPTH"]#*:} -> 5 <┐
@@ -1554,7 +1555,7 @@ parse_indent ()
                     # ◦◦◦◦◦◦◦◦-◦◦◦◦bar (current string)
                     DEPTH="$((DEPTH + 1))"
                     test "$INDENT_LENGTH" -le "$(( ${NESTING_DEPTH["$DEPTH"]#*:} + 3))" || {
-                        if string_buffer_is_empty
+                        if is_empty "${!STRING_BUFFER[@]}"
                         then
                             is_diff "${OPEN_BLOCKS["$DEPTH"]}" "block_quote" || print_buffer
                             open_indent_code_block "$(( ${NESTING_DEPTH["$DEPTH"]#*:} + 4))"
@@ -1775,7 +1776,7 @@ open_unordered_list ()
         then
             print_buffer "close tags to the current list item"
         else
-            is_empty "${!STRING_BUFFER[@]}" || print_buffer
+            print_buffer
             OPEN_BLOCKS["$DEPTH"]="$1"
             get_tag "ul"
             put_tag_in_buffer
@@ -1792,7 +1793,7 @@ open_ordered_list ()
     then
         print_buffer "close tags to the current list item"
     else
-        is_empty "${!STRING_BUFFER[@]}" || print_buffer
+        print_buffer
         OPEN_BLOCKS["$DEPTH"]="$1"
         OL_START="${STRING%%[!0-9]*}"
         LENGTH_ORDERED_LIST_NUM="${#OL_START}"
