@@ -1,0 +1,25 @@
+# https://spec.commonmark.org/0.31.2/#textual-content
+
+# https://spec.commonmark.org/0.31.2/#example-650
+:test: 6.9 Textual content (Example 650)
+:sample: |
+hello $.;'there
+:expect: |
+<p>hello $.;'there</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-651
+:test: 6.9 Textual content (Example 651)
+:sample: |
+Foo χρῆν
+:expect: |
+<p>Foo χρῆν</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-652
+:test: 6.9 Textual content (Example 652)
+:sample: |
+Multiple     spaces
+:expect: |
+<p>Multiple     spaces</p>
+:run:
