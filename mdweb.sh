@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.5.6} - (C) 24.07.2025
+    echo "${0##*/} ${1:-0.5.7} - (C) 25.07.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1455,24 +1455,12 @@ parse_indent ()
     # ├┐│    ├>---┌> DEPTH -> 2 (8:13) # │    ├>---┌> DEPTH -> 2 (5:10)
     # ◦◦◦-◦◦◦◦-◦◦◦◦foo                 # -◦◦◦◦-◦◦◦◦foo
     # ◦◦◦◦◦◦◦◦-◦◦◦◦baz
-    get_indent || {
-        is_empty "${NESTING_DEPTH[-1]}" || {
-            #     ┌> there are no characters after the indent
-            # ◦◦◦-◦◦◦◦
-            NESTING_DEPTH[-1]="${NESTING_DEPTH[-1]}:$CHAR_NUM"
-        }
-        return 1
-    }
 
     if no_open_blocks
     then
-        if test "$INDENT_LENGTH" -lt 4
-        then
-            #   ┌> the indent length is less than or equal to 3
-            # ◦◦◦foo (current string)
-            CHAR_NUM="$((CHAR_NUM + INDENT_LENGTH + 1))"
-            return 0
-        else
+        #   ┌> the indent length is less than or equal to 3
+        # ◦◦◦foo (current string)
+        test "$INDENT_LENGTH" -lt 4 || {
             #    ┌> indent length greater than 3
             # ◦◦◦◦foo (current string)
             if string_buffer_is_empty
@@ -1482,15 +1470,15 @@ parse_indent ()
                 put_string_in_buffer
             fi
             return 1
-        fi
+        }
+        return 0
     elif is_max_nesting
     then
         if test "$INDENT_LENGTH" -lt 4
         then
             #         ┌> the indent length is less than or equal to 3
             # ◦◦◦-◦◦◦-◦foo (current string)
-            CHAR_NUM="$((CHAR_NUM + INDENT_LENGTH + 1))"
-            NESTING_DEPTH[-1]="${NESTING_DEPTH[-1]}:$((CHAR_NUM - 1))"
+            NESTING_DEPTH[-1]="${NESTING_DEPTH[-1]}:$((CHAR_NUM + INDENT_LENGTH))"
             return 0
         else
             #             ┌> indent length greater than 3
@@ -1505,14 +1493,14 @@ parse_indent ()
             return 1
         fi
     else
+
         case "${OPEN_BLOCKS["$((DEPTH + 1))"]}" in
             "code_block")
+                trim_indent "$EXCESS_INDENT"
                 if test "$INDENT_LENGTH" -lt 4
                 then
-                    trim_indent "$EXCESS_INDENT"
                     add_to_code_block
                 else
-                    trim_indent "$EXCESS_INDENT"
                     put_string_in_buffer
                 fi
                 return 1
@@ -1521,7 +1509,6 @@ parse_indent ()
                 if test "$INDENT_LENGTH" -lt 4
                 then
                     print_buffer
-                    CHAR_NUM="$((CHAR_NUM + INDENT_LENGTH + 1))"
                     return 0
                 else
                     trim_indent
@@ -1530,11 +1517,7 @@ parse_indent ()
                 fi
                 ;;
             "block_quote")
-                if test "$INDENT_LENGTH" -lt 4
-                then
-                    CHAR_NUM="$((CHAR_NUM + INDENT_LENGTH + 1))"
-                    return 0
-                else
+                test "$INDENT_LENGTH" -lt 4 || {
                     if  string_buffer_is_empty ||
                         is_equal "${OPEN_BLOCKS[-1]}" "indent_code_block"
                     then
@@ -1544,7 +1527,8 @@ parse_indent ()
                         put_string_in_buffer
                     fi
                     return 1
-                fi
+                }
+                return 0
         esac
 
         while true
@@ -1579,7 +1563,6 @@ parse_indent ()
                 #   ┌> the current indent is equal to the next nesting level
                 # ◦◦◦-◦◦◦◦bar (current string)
                 DEPTH="$((DEPTH + 1))"
-                CHAR_NUM="$((CHAR_NUM + INDENT_LENGTH + 1))"
                 return 0
             else
                 if is_empty "${NESTING_DEPTH["$((DEPTH + 2))"]:-}"
@@ -1607,7 +1590,6 @@ parse_indent ()
                         fi
                         return 1
                     }
-                    CHAR_NUM="$((CHAR_NUM + INDENT_LENGTH + 1))"
                     return 0
                 else
                     #   ┌> ${NESTING_DEPTH["$DEPTH"]%:*} -> 3
@@ -1628,17 +1610,21 @@ parse_block_structure ()
 {
     DEPTH="0"
     CHAR_NUM="0"
+    TAG_INDENT="${MAIN_TAG_INDENT:-}"
     string_is_not_empty "${STRING:-}" || parse_empty_string || return 0
 
     NESTING_DEPTH["$DEPTH"]=""
 
     while is_not_empty "${STRING:-}"
     do
+        get_indent   || break
         parse_indent || return 0
 
         STRING="${STRING#"${INDENT:-}"}"
+        CHAR_NUM="$((CHAR_NUM + INDENT_LENGTH + 1))"
+
         case "$STRING" in
-            \>*)
+             \>*)
                 open_block_quote
                 ;;
             [_]*)
@@ -1680,15 +1666,10 @@ parse_block_structure ()
                     return
                 }
                 ;;
-            *)
-                if [[ "$STRING" =~ ^[0-9]{1,9}\)([[:blank:]]|$) ]]
+               *)
+                if  [[ "$STRING" =~ ^[0-9]{1,9}\)([[:blank:]]|$) ]] && open_ordered_list ")" || {
+                    [[ "$STRING" =~ ^[0-9]{1,9}\.([[:blank:]]|$) ]] && open_ordered_list "."  ; }
                 then
-                    open_ordered_list ")"
-                    STRING="${STRING:"$LENGTH_ORDERED_LIST_NUM"}"
-                    CHAR_NUM="$((CHAR_NUM + LENGTH_ORDERED_LIST_NUM))"
-                elif [[ "$STRING" =~ ^[0-9]{1,9}\.([[:blank:]]|$) ]]
-                then
-                    open_ordered_list "."
                     STRING="${STRING:"$LENGTH_ORDERED_LIST_NUM"}"
                     CHAR_NUM="$((CHAR_NUM + LENGTH_ORDERED_LIST_NUM))"
                 else
@@ -1697,14 +1678,10 @@ parse_block_structure ()
                 fi
         esac
         STRING="${STRING:1}"
-        trim_indent 1 "$CHAR_NUM"
-        CHAR_NUM="$((CHAR_NUM + 1))"
+        trim_indent 1 "$CHAR_NUM" && CHAR_NUM="$((CHAR_NUM + 1))" || true
     done
-    is_empty "${NESTING_DEPTH[-1]:-}" || {
-        #     ┌> current position
-        # ◦◦◦-
+    is_empty "${!NESTING_DEPTH[@]}" ||
         NESTING_DEPTH[-1]="${NESTING_DEPTH[-1]}:$CHAR_NUM"
-    }
 }
 
 serialize_pre_code_language ()
@@ -1947,7 +1924,6 @@ open_block ()
 {
     while IFS= read -r STRING || is_not_empty "${STRING:-}"
     do
-        TAG_INDENT="${MAIN_TAG_INDENT:-}"
         parse_block_structure
     done < <(cat "${INPUT:--}")
     if no_open_blocks
