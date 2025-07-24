@@ -43,7 +43,7 @@
 # https://spec.commonmark.org/0.31.2/#example-333
 :test: 6.1 Code spans (Example 333)
 :sample: |
-` b `
+` b `
 :expect: |
 <p><code> b </code></p>
 :run:
@@ -51,7 +51,7 @@
 # https://spec.commonmark.org/0.31.2/#example-334
 :test: 6.1 Code spans (Example 334)
 :sample: |
-` `
+` `
 `  `
 :expect: |
 <p><code> </code>
