@@ -1,0 +1,210 @@
+# https://spec.commonmark.org/0.31.2/#images
+
+# https://spec.commonmark.org/0.31.2/#example-572
+:test: 6.4 Images (Example 572)
+:sample: |
+![foo](/url "title")
+:expect: |
+<p><img src="/url" alt="foo" title="title" /></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-573
+:test: 6.4 Images (Example 573)
+:sample: |
+![foo *bar*]
+
+[foo *bar*]: train.jpg "train & tracks"
+:expect: |
+<p><img src="train.jpg" alt="foo bar" title="train &amp; tracks" /></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-574
+:test: 6.4 Images (Example 574)
+:sample: |
+![foo ![bar](/url)](/url2)
+:expect: |
+<p><img src="/url2" alt="foo bar" /></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-575
+:test: 6.4 Images (Example 575)
+:sample: |
+![foo [bar](/url)](/url2)
+:expect: |
+<p><img src="/url2" alt="foo bar" /></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-576
+:test: 6.4 Images (Example 576)
+:sample: |
+![foo *bar*][]
+
+[foo *bar*]: train.jpg "train & tracks"
+:expect: |
+<p><img src="train.jpg" alt="foo bar" title="train &amp; tracks" /></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-577
+:test: 6.4 Images (Example 577)
+:sample: |
+![foo *bar*][foobar]
+
+[FOOBAR]: train.jpg "train & tracks"
+:expect: |
+<p><img src="train.jpg" alt="foo bar" title="train &amp; tracks" /></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-578
+:test: 6.4 Images (Example 578)
+:sample: |
+![foo](train.jpg)
+:expect: |
+<p><img src="train.jpg" alt="foo" /></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-579
+:test: 6.4 Images (Example 579)
+:sample: |
+My ![foo bar](/path/to/train.jpg  "title"   )
+:expect: |
+<p>My <img src="/path/to/train.jpg" alt="foo bar" title="title" /></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-580
+:test: 6.4 Images (Example 580)
+:sample: |
+![foo](<url>)
+:expect: |
+<p><img src="url" alt="foo" /></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-581
+:test: 6.4 Images (Example 581)
+:sample: |
+![](/url)
+:expect: |
+<p><img src="/url" alt="" /></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-582
+:test: 6.4 Images (Example 582)
+:sample: |
+![foo][bar]
+
+[bar]: /url
+:expect: |
+<p><img src="/url" alt="foo" /></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-583
+:test: 6.4 Images (Example 583)
+:sample: |
+![foo][bar]
+
+[BAR]: /url
+:expect: |
+<p><img src="/url" alt="foo" /></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-584
+:test: 6.4 Images (Example 584)
+:sample: |
+![foo][]
+
+[foo]: /url "title"
+:expect: |
+<p><img src="/url" alt="foo" title="title" /></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-585
+:test: 6.4 Images (Example 585)
+:sample: |
+![*foo* bar][]
+
+[*foo* bar]: /url "title"
+:expect: |
+<p><img src="/url" alt="foo bar" title="title" /></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-586
+:test: 6.4 Images (Example 586)
+:sample: |
+![Foo][]
+
+[foo]: /url "title"
+:expect: |
+<p><img src="/url" alt="Foo" title="title" /></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-587
+:test: 6.4 Images (Example 587)
+:sample: |
+![foo] 
+[]
+
+[foo]: /url "title"
+:expect: |
+<p><img src="/url" alt="foo" title="title" />
+[]</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-588
+:test: 6.4 Images (Example 588)
+:sample: |
+![foo]
+
+[foo]: /url "title"
+:expect: |
+<p><img src="/url" alt="foo" title="title" /></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-589
+:test: 6.4 Images (Example 589)
+:sample: |
+![*foo* bar]
+
+[*foo* bar]: /url "title"
+:expect: |
+<p><img src="/url" alt="foo bar" title="title" /></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-590
+:test: 6.4 Images (Example 590)
+:sample: |
+![[foo]]
+
+[[foo]]: /url "title"
+:expect: |
+<p>![[foo]]</p>
+<p>[[foo]]: /url &quot;title&quot;</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-591
+:test: 6.4 Images (Example 591)
+:sample: |
+![Foo]
+
+[foo]: /url "title"
+:expect: |
+<p><img src="/url" alt="Foo" title="title" /></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-592
+:test: 6.4 Images (Example 592)
+:sample: |
+!\[foo]
+
+[foo]: /url "title"
+:expect: |
+<p>![foo]</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-593
+:test: 6.4 Images (Example 593)
+:sample: |
+\![foo]
+
+[foo]: /url "title"
+:expect: |
+<p>!<a href="/url" title="title">foo</a></p>
+:run:
