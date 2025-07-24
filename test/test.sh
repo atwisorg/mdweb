@@ -271,9 +271,22 @@ unset_vars ()
     LOAD_TEST="no"
     SAMPLE=
     TESTED_ARGS=()
+    TIMEOUT=
     REPORT_STDOUT=()
     REPORT_STDERR=()
     REPORT_RETURN=()
+}
+
+get_result ()
+{
+    printf '%16s %s\n' "$H1" "" "${PREFIX[@]}" "$H2" "" "sample:" "|${SAMPLE//$NEW_STRING/|$NEW_STRING$INDENT}|"
+    if cmp_results
+    then
+        is_equal "$SAVE_RESULTS" "no" || save_result "$TEST_OK"
+    else
+        save_result "$TEST_FAILURE"
+    fi
+    unset_vars
 }
 
 run_test_file ()
@@ -322,6 +335,19 @@ run_test_file ()
             *)
                 is_equal "$LOAD_TEST" "yes" || continue
                 case "${LINE:-}" in
+                    :args|:return|:return-code|:timeout)
+                        ;;
+                    :args:*)
+                        is_equal "$LOAD_TEST" "yes" || continue
+                        set -- ${LINE#:args:} "${GLOBAL_ARGS[@]}"
+                        TESTED_ARGS=( "$@" )
+                        ;;
+                    :break|:break:*)
+                        break
+                        ;;
+                    :exit|:exit:*)
+                        return 1
+                        ;;
                     :expect|:expect-out|:expect-stdout|:expect:*|:expect-out:*|:expect-stdout:*)
                         NEXT_LINE="expect-stdout"
                         COMPARE_STDOUT="yes"
@@ -329,19 +355,6 @@ run_test_file ()
                     :expect-err|:expect-stderr|:expect-err:*|:expect-stderr:*)
                         NEXT_LINE="expect-stderr"
                         COMPARE_STDERR="yes"
-                        ;;
-                    :args)
-                        ;;
-                    :args:*)
-                        is_equal "$LOAD_TEST" "yes" || continue
-                        set -- ${LINE#:args:} "${GLOBAL_ARGS[@]}"
-                        TESTED_ARGS=( "$@" )
-                        ;;
-                    :sample|:sample:*)
-                        is_equal "$LOAD_TEST" "yes" || continue
-                        NEXT_LINE="sample"
-                        ;;
-                    :return|:return-code)
                         ;;
                     :return:*)
                         is_equal "$LOAD_TEST" "yes" || continue
@@ -367,24 +380,21 @@ run_test_file ()
                         STDOUT="$PKG_DIR/${NAME_TESTED_FILE}_$STRING_NUM_TEST.out"
                         STDERR="$PKG_DIR/${NAME_TESTED_FILE}_$STRING_NUM_TEST.err"
                         is_diff "${#TESTED_ARGS[@]}" 0 || TESTED_ARGS=( "${GLOBAL_ARGS[@]}" )
-        
                         RETURN_CODE=0
-                        ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_SCRIPT" "${TESTED_ARGS[@]}" <<< "$SAMPLE" > "$STDOUT" 2> "$STDERR" || RETURN_CODE=$?
-        
-                        printf '%16s %s\n' "$H1" "" "${PREFIX[@]}" "$H2" "" "sample:" "|${SAMPLE//$NEW_STRING/|$NEW_STRING$INDENT}|"
-                        if cmp_results
-                        then
-                            is_equal "$SAVE_RESULTS" "no" || save_result "$TEST_OK"
-                        else
-                            save_result "$TEST_FAILURE"
-                        fi
-                        unset_vars
+                        timeout "${GLOBAL_TIMEOUT:-"${TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_SCRIPT" "${TESTED_ARGS[@]}" <<< "$SAMPLE" > "$STDOUT" 2> "$STDERR" &
+                        CHILD_PID="$!"
+                        wait "$CHILD_PID"
+                        RETURN_CODE="$?"
+                        get_result
                         ;;
-                    :break|:break:*)
-                        break
+                    :sample|:sample:*)
+                        is_equal "$LOAD_TEST" "yes" || continue
+                        NEXT_LINE="sample"
                         ;;
-                    :exit|:exit:*)
-                        return 1
+                    :timeout:*)
+                        is_equal "$LOAD_TEST" "yes" || continue
+                        set -- ${LINE#:args:}
+                        TIMEOUT="${1:-}"
                         ;;
                     *)
                         if is_equal "$NEXT_LINE" "expect-stdout"
@@ -475,20 +485,24 @@ run_test ()
     report >&3
 }
 
+is_not_key ()
+{
+    for KEY in "${ARGS[@]}"
+    do
+        is_diff "$1" "--$KEY" || return
+    done
+}
+
 argparse ()
 {
+    ARGS=( "args" "clear" "save-results" "test-file" "test-num" "timeout" )
     while is_diff $# 0
     do
         case "${1:-}" in
             --args)
                 while is_diff $# 0
                 do
-                    is_not_empty "${2:-}"             &&
-                    is_diff "${2:-}" "--args"         &&
-                    is_diff "${2:-}" "--clear"        &&
-                    is_diff "${2:-}" "--save-results" &&
-                    is_diff "${2:-}" "--test-file"    &&
-                    is_diff "${2:-}" "--test-num"     || break
+                    is_not_empty "${2:-}" && is_not_key "$2" || break
                     GLOBAL_ARGS+=( "${2:-}" )
                     shift
                 done
@@ -502,12 +516,7 @@ argparse ()
             --test-file)
                 while is_diff $# 0
                 do
-                    is_not_empty "${2:-}"             &&
-                    is_diff "${2:-}" "--args"         &&
-                    is_diff "${2:-}" "--clear"        &&
-                    is_diff "${2:-}" "--save-results" &&
-                    is_diff "${2:-}" "--test-file"    &&
-                    is_diff "${2:-}" "--test-num"     || break
+                    is_not_empty "${2:-}" && is_not_key "$2" || break
                     TESTED_FILES+=( "${2:-}" )
                     shift
                 done
@@ -515,15 +524,16 @@ argparse ()
             --test-num)
                 while is_diff $# 0
                 do
-                    is_not_empty "${2:-}"             &&
-                    is_diff "${2:-}" "--args"         &&
-                    is_diff "${2:-}" "--clear"        &&
-                    is_diff "${2:-}" "--save-results" &&
-                    is_diff "${2:-}" "--test-file"    &&
-                    is_diff "${2:-}" "--test-num"     || break
+                    is_not_empty "${2:-}" && is_not_key "$2" || break
                     TEST_NUM+=( "${2:-}" )
                     shift
                 done
+                ;;
+            --timeout)
+                is_not_empty "${2:-}" && is_not_key "$2" && {
+                    GLOBAL_TIMEOUT="${2:-}"
+                    shift
+                } || true
                 ;;
             *[!0-9,-]*)
                 GLOBAL_ARGS+=( "${1:-}" )
@@ -574,5 +584,19 @@ main ()
     }
     run_test
 }
+
+out ()
+{
+    echo
+    CHILD_PIDS=( $(ps aux | grep -v grep | grep "${TESTED_SCRIPT##*/}" | awk '{print $2}') )
+    # https://stackoverflow.com/questions/1570262/get-exit-code-of-a-background-process#1570356
+    kill -9 "${CHILD_PIDS[@]}"
+       wait "${CHILD_PIDS[@]}" 2>/dev/null
+    get_result
+    report >&3
+    exit 1
+}
+
+trap 'out' INT
 
 main "$@"

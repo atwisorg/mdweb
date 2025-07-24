@@ -26,6 +26,11 @@
                             file `.testignor` is not used
   --test-num NUM ...        specify test numbers separated by commas/spaces
                             and/or ranges of test numbers to run
+  --timeout DURATION        start test, and kill it if still running after DURATION
+
+DURATION is a floating point number with an optional suffix:
+'s' for seconds (the default), 'm' for minutes, 'h' for hours or 'd' for days.
+A duration of 0 disables the associated timeout.
 ```
 
 ## Run test
@@ -66,6 +71,13 @@ The order of other keywords in the body of the test does not matter.
 ***`:test`***
 
 Start of the test body. If desired, you can specify the test name:`:test:name test`
+
+***`:timeout:DURATION`***
+
+Run a test with a time limit.
+
+`DURATION` is a floating point number with an optional suffix: `s` for seconds (the default), `m` for minutes, `h` for hours or `d` for days.
+A duration of 0 disables the associated timeout.
 
 ***`:args`***
 
