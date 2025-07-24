@@ -1,0 +1,21 @@
+# https://spec.commonmark.org/0.31.2/#soft-line-breaks
+
+# https://spec.commonmark.org/0.31.2/#example-648
+:test: 6.8 Soft line breaks (Example 648)
+:sample: |
+foo
+baz
+:expect: |
+<p>foo
+baz</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-649
+:test: 6.8 Soft line breaks (Example 649)
+:sample: |
+foo 
+ baz
+:expect: |
+<p>foo
+baz</p>
+:run:
