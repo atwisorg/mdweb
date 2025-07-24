@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.5.2} - (C) 23.07.2025
+    echo "${0##*/} ${1:-0.5.3} - (C) 24.07.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1327,7 +1327,7 @@ parse_empty_string ()
 
 trim_indent ()
 {
-    is_not_empty "${STRING:-}" || return
+    is_not_empty "${STRING:-}" || return 0
     SAVED_STRING="$STRING"
     TRIM_SPACE="${1:-4}"
     CHARACTER_POSITION="${2:-0}"
@@ -1423,7 +1423,7 @@ parse_indent ()
         is_empty "${NESTING_DEPTH[-1]}" || {
             #     ┌> there are no characters after the indent
             # ◦◦◦-◦◦◦◦
-            NESTING_DEPTH[-1]="${NESTING_DEPTH[-1]}:$((${NESTING_DEPTH[-1]} + 2))"
+            NESTING_DEPTH[-1]="${NESTING_DEPTH[-1]}:$CHAR_NUM"
         }
         return 1
     }
@@ -1660,12 +1660,13 @@ parse_block_structure ()
                 fi
         esac
         STRING="${STRING:1}"
-        trim_indent 1 "$CHAR_NUM" && CHAR_NUM="$((CHAR_NUM + 1))" || true
+        trim_indent 1 "$CHAR_NUM"
+        CHAR_NUM="$((CHAR_NUM + 1))"
     done
     is_empty "${NESTING_DEPTH[-1]:-}" || {
         #     ┌> current position
         # ◦◦◦-
-        NESTING_DEPTH[-1]="${NESTING_DEPTH[-1]}:$((${NESTING_DEPTH[-1]} + 2))"
+        NESTING_DEPTH[-1]="${NESTING_DEPTH[-1]}:$CHAR_NUM"
     }
 }
 
