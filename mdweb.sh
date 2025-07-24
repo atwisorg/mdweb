@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.5.4} - (C) 24.07.2025
+    echo "${0##*/} ${1:-0.5.5} - (C) 24.07.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -455,16 +455,18 @@ check_args ()
 
 preparing_a_paragraph ()
 {
-    #                                                                                    ┌─  1 ─> <ul>
-    #                                                                                    ├─  2 ─> <li>\x18
-    #                                                                                    ├─  3 ─> <p>\x18
-    #                            ┌─ 1 ─> <ul> ─────────── 1 ─┐                           ├─  4 ─> \x1ffoo
-    # -◦foo ─ 1 ┐                ├─ 2 ─> <li>\x18 ─────── 2 ─┤                           ├─  5 ─> \x19</p>
-    #       ─ 2 ┼─> open_block ─>┼─ 3 ─> foo\x01\x1abar ─ 3 ─┼─> preparing_a_paragraph ─>┼─  6 ─> <p>\x18
-    # ◦◦bar ─ 3 ┘                ├─ 4 ─> \x19</li> ────── 4 ─┤                           ├─  7 ─> \x1fbar
-    #                            └─ 5 ─> </ul> ────────── 5 ─┘                           ├─  8 ─> \x19</p>
-    #                                                                                    ├─  9 ─> </li>\x19
-    #                                                                                    └─ 10 ─> </ul>
+    #         ┌──────────────────> sequence of incoming strings <─────────────────────────────┐
+    #         │                      ^                     ^
+    #         │                      │                     │                              ┌─  1 ─> <ul>
+    #         │                      │                     │                              ├─  2 ─> <li>\x18
+    #         │                                                                           ├─  3 ─> <p>\x18
+    #                             ┌─ 1 ─> <ul> ─────────── 1 ─┐                           ├─  4 ─> \x1ffoo
+    # -◦foo ─ 1 ─┐                ├─ 2 ─> <li>\x18 ─────── 2 ─┤                           ├─  5 ─> \x19</p>
+    #       ─ 2 ─┼─> open_block ─>┼─ 3 ─> foo\x01\x1abar ─ 3 ─┼─> preparing_a_paragraph ─>┼─  6 ─> <p>\x18
+    # ◦◦bar ─ 3 ─┘                ├─ 4 ─> \x19</li> ────── 4 ─┤                           ├─  7 ─> \x1fbar
+    #                             └─ 5 ─> </ul> ────────── 5 ─┘                           ├─  8 ─> \x19</p>
+    #                                                                                     ├─  9 ─> </li>\x19
+    #                                                                                     └─ 10 ─> </ul>
  
     sed '
         # (^_|\x1f|\037) MARKER_FORMAT_STRING first in the buffer string
@@ -951,13 +953,19 @@ format_string ()
 
 combine_string_with_tag ()
 {
-    #                 ┌─> sequence of incoming strings <──┐
-    #                 │                                   │
-    # <ul> ────────── 1 ─┐                                │
-    # <li>\x18 ────── 2 ─┤                             ┌─ 1 ─> <ul>
-    # STRING_BUFFER ─ 3 ─┼─> combine_string_with_tag ─>┼─ 2 ─> <li>STRING_BUFFER</li>
-    # \x19</li> ───── 4 ─┤                             └─ 3 ─> </ul>
-    # </ul> ───────── 5 ─┘
+    #              ┌─> sequence of incoming strings <──┐
+    #                                                  │
+    # <ul> ──────  1 ─┐                                │
+    # <li>\x18 ──  2 ─┤
+    # <p>\x18 ───  3 ─┤                             ┌─ 1 ─> <ul>
+    # \x1ffoo ───  4 ─┤                             ├─ 2 ─> <li>
+    # \x19</p> ──  5 ─┤                             ├─ 3 ─> <p>foo</p>
+    # <p>\x18 ───  6 ─┼─> combine_string_with_tag ─>┼─ 4 ─> <p>bar</p>
+    # \x1fbar ───  7 ─┤                             ├─ 5 ─> </li>
+    # \x19</p> ──  8 ─┤                             └─ 6 ─> </ul>
+    # </li>\x19 ─  9 ─┤
+    # </ul> ───── 10 ─┘
+
     sed '
         # (^X|\x18|\030) MARKER_START_MERGE_STRING at the end of the opening tag
         /\x18$/ {
