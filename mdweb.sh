@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.5.5} - (C) 24.07.2025
+    echo "${0##*/} ${1:-0.5.6} - (C) 24.07.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -453,6 +453,34 @@ check_args ()
     }
 }
 
+preparing_a_code ()
+{
+    #       ┌───────────────────> sequence of incoming strings <─────────────────────────┐
+    #       │                      ^                        ^                            │
+    #                              │                        │                            │
+    # ``` ─ 1 ─┐
+    # < ─── 2 ─┤                ┌─ 1 ─> <pre><code>\x18 ─── 1 ─┐                      ┌─ 1 ─> <pre><code>\x18
+    # ◦> ── 3 ─┼─> open_block ─>┼─ 2 ─> \x1b<\x01 > ─────── 2 ─┼─> preparing_a_code ─>┼─ 2 ─> &lt;\x01 &gt;
+    # ``` ─ 4 ─┘                └─ 3 ─> \x19</code></pre> ─ 3 ─┘                      └─ 3 ─> \x19</code></pre>
+
+    sed '
+        # (^[|\x1b|\033) MARKER_CODE at the beginning of the code block
+        /^\x1b/!{
+            # skip the created html tag and code
+            b end_of_line
+        }
+        
+        # delete MARKER_CODE
+        s%^\x1b%%
+
+        s%&%\&amp;%g
+        s%<%\&lt;%g
+        s%>%\&gt;%g
+
+        : end_of_line
+    '
+}
+
 preparing_a_paragraph ()
 {
     #         ┌──────────────────> sequence of incoming strings <─────────────────────────────┐
@@ -462,7 +490,7 @@ preparing_a_paragraph ()
     #         │                                                                           ├─  3 ─> <p>\x18
     #                             ┌─ 1 ─> <ul> ─────────── 1 ─┐                           ├─  4 ─> \x1ffoo
     # -◦foo ─ 1 ─┐                ├─ 2 ─> <li>\x18 ─────── 2 ─┤                           ├─  5 ─> \x19</p>
-    #       ─ 2 ─┼─> open_block ─>┼─ 3 ─> foo\x01\x1abar ─ 3 ─┼─> preparing_a_paragraph ─>┼─  6 ─> <p>\x18
+    #  ────── 2 ─┼─> open_block ─>┼─ 3 ─> foo\x01\x1abar ─ 3 ─┼─> preparing_a_paragraph ─>┼─  6 ─> <p>\x18
     # ◦◦bar ─ 3 ─┘                ├─ 4 ─> \x19</li> ────── 4 ─┤                           ├─  7 ─> \x1fbar
     #                             └─ 5 ─> </ul> ────────── 5 ─┘                           ├─  8 ─> \x19</p>
     #                                                                                     ├─  9 ─> </li>\x19
@@ -1167,10 +1195,10 @@ get_string_buffer ()
             case "${OPEN_BLOCKS[-1]}" in
                 "indent_code_block")
                     remove_last_empty_strings
-                    STRING_BUFFER[-1]="${STRING_BUFFER[-1]}${CANONICAL_PRE_CODE:-}"
+                    STRING_BUFFER[-1]="$MARKER_CODE${STRING_BUFFER[-1]}${CANONICAL_PRE_CODE:-}"
                     ;;
                 "code_block")
-                    STRING_BUFFER[-1]="${STRING_BUFFER[-1]}${CANONICAL_PRE_CODE:-}"
+                    STRING_BUFFER[-1]="$MARKER_CODE${STRING_BUFFER[-1]}${CANONICAL_PRE_CODE:-}"
                     ;;
                 "block_quote")
                     SAVED_DEPTH="$DEPTH"
@@ -1964,6 +1992,7 @@ convert_md2html ()
             MARKER_NEW_STRING="$(tr '\n' '\001' <<< "")" # ^A [\x01]
                 MARKER_TAG_BR="$(tr '\n' '\177' <<< "")" # ^? [\x7f]
                  EMPTY_STRING="$(tr '\n' '\032' <<< "")" # ^Z [\x1a]
+                  MARKER_CODE="$(tr '\n' '\033' <<< "")" # ^[ [\x1b]
                         SPACE=" "                        #    [\x20]
                           TAB=$'\t'                      # ^I [\x09]
                    NEW_STRING=$'\n'                      #  $ [\x0a]
@@ -1971,21 +2000,21 @@ convert_md2html ()
 
     # open_block | cat -A
     # open_block
-    # open_block | preparing_a_paragraph | cat -A
-    # open_block | preparing_a_paragraph
-    # open_block | preparing_a_paragraph | format_string | cat -A
-    # open_block | preparing_a_paragraph | format_string
-    # open_block | preparing_a_paragraph | format_string | combine_string_with_tag | cat -A
-    # open_block | preparing_a_paragraph | format_string | combine_string_with_tag
-    # open_block | preparing_a_paragraph | format_string | combine_string_with_tag | split_strings | cat -A
-    open_block | preparing_a_paragraph | format_string | combine_string_with_tag | split_strings
+    # open_block | preparing_a_code | preparing_a_paragraph | cat -A
+    # open_block | preparing_a_code | preparing_a_paragraph
+    # open_block | preparing_a_code | preparing_a_paragraph | format_string | cat -A
+    # open_block | preparing_a_code | preparing_a_paragraph | format_string
+    # open_block | preparing_a_code | preparing_a_paragraph | format_string | combine_string_with_tag | cat -A
+    # open_block | preparing_a_code | preparing_a_paragraph | format_string | combine_string_with_tag
+    # open_block | preparing_a_code | preparing_a_paragraph | format_string | combine_string_with_tag | split_strings | cat -A
+    open_block | preparing_a_code | preparing_a_paragraph | format_string | combine_string_with_tag | split_strings
 
-    # open_block | preparing_a_paragraph | combine_string_with_tag | cat -A
-    # open_block | preparing_a_paragraph | combine_string_with_tag
-    # open_block | preparing_a_paragraph | combine_string_with_tag | split_strings | cat -A
-    # open_block | preparing_a_paragraph | combine_string_with_tag | split_strings
-    # open_block | preparing_a_paragraph | format_string | split_strings | cat -A
-    # open_block | preparing_a_paragraph | format_string | split_strings
+    # open_block | preparing_a_code | preparing_a_paragraph | combine_string_with_tag | cat -A
+    # open_block | preparing_a_code | preparing_a_paragraph | combine_string_with_tag
+    # open_block | preparing_a_code | preparing_a_paragraph | combine_string_with_tag | split_strings | cat -A
+    # open_block | preparing_a_code | preparing_a_paragraph | combine_string_with_tag | split_strings
+    # open_block | preparing_a_code | preparing_a_paragraph | format_string | split_strings | cat -A
+    # open_block | preparing_a_code | preparing_a_paragraph | format_string | split_strings
 }
 
 open_html ()
