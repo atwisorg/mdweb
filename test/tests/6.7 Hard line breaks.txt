@@ -1,0 +1,141 @@
+# https://spec.commonmark.org/0.31.2/#hard-line-breaks
+
+# https://spec.commonmark.org/0.31.2/#example-633
+:test: 6.7 Hard line breaks (Example 633)
+:sample: |
+foo  
+baz
+:expect: |
+<p>foo<br />
+baz</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-634
+:test: 6.7 Hard line breaks (Example 634)
+:sample: |
+foo\
+baz
+:expect: |
+<p>foo<br />
+baz</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-635
+:test: 6.7 Hard line breaks (Example 635)
+:sample: |
+foo       
+baz
+:expect: |
+<p>foo<br />
+baz</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-636
+:test: 6.7 Hard line breaks (Example 636)
+:sample: |
+foo  
+     bar
+:expect: |
+<p>foo<br />
+bar</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-637
+:test: 6.7 Hard line breaks (Example 637)
+:sample: |
+foo\
+     bar
+:expect: |
+<p>foo<br />
+bar</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-638
+:test: 6.7 Hard line breaks (Example 638)
+:sample: |
+*foo  
+bar*
+:expect: |
+<p><em>foo<br />
+bar</em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-639
+:test: 6.7 Hard line breaks (Example 639)
+:sample: |
+*foo\
+bar*
+:expect: |
+<p><em>foo<br />
+bar</em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-640
+:test: 6.7 Hard line breaks (Example 640)
+:sample: |
+`code  
+span`
+:expect: |
+<p><code>code   span</code></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-641
+:test: 6.7 Hard line breaks (Example 641)
+:sample: |
+`code\
+span`
+:expect: |
+<p><code>code\ span</code></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-642
+:test: 6.7 Hard line breaks (Example 642)
+:sample: |
+<a href="foo  
+bar">
+:expect: |
+<p><a href="foo  
+bar"></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-643
+:test: 6.7 Hard line breaks (Example 643)
+:sample: |
+<a href="foo\
+bar">
+:expect: |
+<p><a href="foo\
+bar"></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-644
+:test: 6.7 Hard line breaks (Example 644)
+:sample: |
+foo\
+:expect: |
+<p>foo\</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-645
+:test: 6.7 Hard line breaks (Example 645)
+:sample: |
+foo  
+:expect: |
+<p>foo</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-646
+:test: 6.7 Hard line breaks (Example 646)
+:sample: |
+### foo\
+:expect: |
+<h3>foo\</h3>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-647
+:test: 6.7 Hard line breaks (Example 647)
+:sample: |
+### foo  
+:expect: |
+<h3>foo</h3>
+:run:
