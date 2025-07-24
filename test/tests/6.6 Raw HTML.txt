@@ -1,0 +1,176 @@
+# https://spec.commonmark.org/0.31.2/#raw-html
+
+# https://spec.commonmark.org/0.31.2/#example-613
+:test: 6.6 Raw HTML (Example 613)
+:sample: |
+<a><bab><c2c>
+:expect: |
+<p><a><bab><c2c></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-614
+:test: 6.6 Raw HTML (Example 614)
+:sample: |
+<a/><b2/>
+:expect: |
+<p><a/><b2/></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-615
+:test: 6.6 Raw HTML (Example 615)
+:sample: |
+<a  /><b2
+data="foo" >
+:expect: |
+<p><a  /><b2
+data="foo" ></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-616
+:test: 6.6 Raw HTML (Example 616)
+:sample: |
+<a foo="bar" bam = 'baz <em>"</em>'
+_boolean zoop:33=zoop:33 />
+:expect: |
+<p><a foo="bar" bam = 'baz <em>"</em>'
+_boolean zoop:33=zoop:33 /></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-617
+:test: 6.6 Raw HTML (Example 617)
+:sample: |
+Foo <responsive-image src="foo.jpg" />
+:expect: |
+<p>Foo <responsive-image src="foo.jpg" /></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-618
+:test: 6.6 Raw HTML (Example 618)
+:sample: |
+<33> <__>
+:expect: |
+<p>&lt;33&gt; &lt;__&gt;</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-619
+:test: 6.6 Raw HTML (Example 619)
+:sample: |
+<a h*#ref="hi">
+:expect: |
+<p>&lt;a h*#ref=&quot;hi&quot;&gt;</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-620
+:test: 6.6 Raw HTML (Example 620)
+:sample: |
+<a href="hi'> <a href=hi'>
+:expect: |
+<p>&lt;a href=&quot;hi'&gt; &lt;a href=hi'&gt;</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-621
+:test: 6.6 Raw HTML (Example 621)
+:sample: |
+< a><
+foo><bar/ >
+<foo bar=baz
+bim!bop />
+:expect: |
+<p>&lt; a&gt;&lt;
+foo&gt;&lt;bar/ &gt;
+&lt;foo bar=baz
+bim!bop /&gt;</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-622
+:test: 6.6 Raw HTML (Example 622)
+:sample: |
+<a href='bar'title=title>
+:expect: |
+<p>&lt;a href='bar'title=title&gt;</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-623
+:test: 6.6 Raw HTML (Example 623)
+:sample: |
+</a></foo >
+:expect: |
+<p></a></foo ></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-624
+:test: 6.6 Raw HTML (Example 624)
+:sample: |
+</a href="foo">
+:expect: |
+<p>&lt;/a href=&quot;foo&quot;&gt;</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-625
+:test: 6.6 Raw HTML (Example 625)
+:sample: |
+foo <!-- this is a --
+comment - with hyphens -->
+:expect: |
+<p>foo <!-- this is a --
+comment - with hyphens --></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-626
+:test: 6.6 Raw HTML (Example 626)
+:sample: |
+foo <!--> foo -->
+
+foo <!---> foo -->
+:expect: |
+<p>foo <!--> foo --&gt;</p>
+<p>foo <!---> foo --&gt;</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-627
+:test: 6.6 Raw HTML (Example 627)
+:sample: |
+foo <?php echo $a; ?>
+:expect: |
+<p>foo <?php echo $a; ?></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-628
+:test: 6.6 Raw HTML (Example 628)
+:sample: |
+foo <!ELEMENT br EMPTY>
+:expect: |
+<p>foo <!ELEMENT br EMPTY></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-629
+:test: 6.6 Raw HTML (Example 629)
+:sample: |
+foo <![CDATA[>&<]]>
+:expect: |
+<p>foo <![CDATA[>&<]]></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-630
+:test: 6.6 Raw HTML (Example 630)
+:sample: |
+foo <a href="&ouml;">
+:expect: |
+<p>foo <a href="&ouml;"></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-631
+:test: 6.6 Raw HTML (Example 631)
+:sample: |
+foo <a href="\*">
+:expect: |
+<p>foo <a href="\*"></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-632
+:test: 6.6 Raw HTML (Example 632)
+:sample: |
+<a href="\"">
+:expect: |
+<p>&lt;a href=&quot;&quot;&quot;&gt;</p>
+:run:
