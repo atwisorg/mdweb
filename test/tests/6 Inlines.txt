@@ -1,0 +1,9 @@
+# https://spec.commonmark.org/0.31.2/#inlines
+
+# https://spec.commonmark.org/0.31.2/#example-227
+:test: 6 Inlines (Example 327)
+:sample: |
+`hi`lo`
+:expect: |
+<p><code>hi</code>lo`</p>
+:run:
