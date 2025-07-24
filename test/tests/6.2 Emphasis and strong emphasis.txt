@@ -1,0 +1,1075 @@
+# https://spec.commonmark.org/0.31.2/#emphasis-and-strong-emphasis
+
+# https://spec.commonmark.org/0.31.2/#example-350
+:test: 6.2 Emphasis and strong emphasis (Example 350)
+:sample: |
+*foo bar*
+:expect: |
+<p><em>foo bar</em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-351
+:test: 6.2 Emphasis and strong emphasis (Example 351)
+:sample: |
+a * foo bar*
+:expect: |
+<p>a * foo bar*</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-352
+:test: 6.2 Emphasis and strong emphasis (Example 352)
+:sample: |
+a*"foo"*
+:expect: |
+<p>a*&quot;foo&quot;*</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-353
+:test: 6.2 Emphasis and strong emphasis (Example 353)
+:sample: |
+* a *
+:expect: |
+<p>* a *</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-354
+:test: 6.2 Emphasis and strong emphasis (Example 354)
+:sample: |
+*$*alpha.
+
+*£*bravo.
+
+*€*charlie.
+:expect: |
+<p>*$*alpha.</p>
+<p>*£*bravo.</p>
+<p>*€*charlie.</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-355
+:test: 6.2 Emphasis and strong emphasis (Example 355)
+:sample: |
+foo*bar*
+:expect: |
+<p>foo<em>bar</em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-356
+:test: 6.2 Emphasis and strong emphasis (Example 356)
+:sample: |
+5*6*78
+:expect: |
+<p>5<em>6</em>78</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-357
+:test: 6.2 Emphasis and strong emphasis (Example 357)
+:sample: |
+_foo bar_
+:expect: |
+<p><em>foo bar</em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-358
+:test: 6.2 Emphasis and strong emphasis (Example 358)
+:sample: |
+_ foo bar_
+:expect: |
+<p>_ foo bar_</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-359
+:test: 6.2 Emphasis and strong emphasis (Example 359)
+:sample: |
+a_"foo"_
+:expect: |
+<p>a_&quot;foo&quot;_</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-360
+:test: 6.2 Emphasis and strong emphasis (Example 360)
+:sample: |
+foo_bar_
+:expect: |
+<p>foo_bar_</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-361
+:test: 6.2 Emphasis and strong emphasis (Example 361)
+:sample: |
+5_6_78
+:expect: |
+<p>5_6_78</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-362
+:test: 6.2 Emphasis and strong emphasis (Example 362)
+:sample: |
+пристаням_стремятся_
+:expect: |
+<p>пристаням_стремятся_</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-363
+:test: 6.2 Emphasis and strong emphasis (Example 363)
+:sample: |
+aa_"bb"_cc
+:expect: |
+<p>aa_&quot;bb&quot;_cc</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-364
+:test: 6.2 Emphasis and strong emphasis (Example 364)
+:sample: |
+foo-_(bar)_
+:expect: |
+<p>foo-<em>(bar)</em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-365
+:test: 6.2 Emphasis and strong emphasis (Example 365)
+:sample: |
+_foo*
+:expect: |
+<p>_foo*</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-366
+:test: 6.2 Emphasis and strong emphasis (Example 366)
+:sample: |
+*foo bar *
+:expect: |
+<p>*foo bar *</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-367
+:test: 6.2 Emphasis and strong emphasis (Example 367)
+:sample: |
+*foo bar
+*
+:expect: |
+<p>*foo bar
+*</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-368
+:test: 6.2 Emphasis and strong emphasis (Example 368)
+:sample: |
+*(*foo)
+:expect: |
+<p>*(*foo)</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-369
+:test: 6.2 Emphasis and strong emphasis (Example 369)
+:sample: |
+*(*foo*)*
+:expect: |
+<p><em>(<em>foo</em>)</em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-370
+:test: 6.2 Emphasis and strong emphasis (Example 370)
+:sample: |
+*foo*bar
+:expect: |
+<p><em>foo</em>bar</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-371
+:test: 6.2 Emphasis and strong emphasis (Example 371)
+:sample: |
+_foo bar _
+:expect: |
+<p>_foo bar _</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-372
+:test: 6.2 Emphasis and strong emphasis (Example 372)
+:sample: |
+_(_foo)
+:expect: |
+<p>_(_foo)</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-373
+:test: 6.2 Emphasis and strong emphasis (Example 373)
+:sample: |
+_(_foo_)_
+:expect: |
+<p><em>(<em>foo</em>)</em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-374
+:test: 6.2 Emphasis and strong emphasis (Example 374)
+:sample: |
+_foo_bar
+:expect: |
+<p>_foo_bar</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-375
+:test: 6.2 Emphasis and strong emphasis (Example 375)
+:sample: |
+_пристаням_стремятся
+:expect: |
+<p>_пристаням_стремятся</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-376
+:test: 6.2 Emphasis and strong emphasis (Example 376)
+:sample: |
+_foo_bar_baz_
+:expect: |
+<p><em>foo_bar_baz</em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-377
+:test: 6.2 Emphasis and strong emphasis (Example 377)
+:sample: |
+_(bar)_.
+:expect: |
+<p><em>(bar)</em>.</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-378
+:test: 6.2 Emphasis and strong emphasis (Example 378)
+:sample: |
+**foo bar**
+:expect: |
+<p><strong>foo bar</strong></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-379
+:test: 6.2 Emphasis and strong emphasis (Example 379)
+:sample: |
+** foo bar**
+:expect: |
+<p>** foo bar**</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-380
+:test: 6.2 Emphasis and strong emphasis (Example 380)
+:sample: |
+a**"foo"**
+:expect: |
+<p>a**&quot;foo&quot;**</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-381
+:test: 6.2 Emphasis and strong emphasis (Example 381)
+:sample: |
+foo**bar**
+:expect: |
+<p>foo<strong>bar</strong></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-382
+:test: 6.2 Emphasis and strong emphasis (Example 382)
+:sample: |
+__foo bar__
+:expect: |
+<p><strong>foo bar</strong></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-383
+:test: 6.2 Emphasis and strong emphasis (Example 383)
+:sample: |
+__ foo bar__
+:expect: |
+<p>__ foo bar__</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-384
+:test: 6.2 Emphasis and strong emphasis (Example 384)
+:sample: |
+__
+foo bar__
+:expect: |
+<p>__
+foo bar__</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-385
+:test: 6.2 Emphasis and strong emphasis (Example 385)
+:sample: |
+a__"foo"__
+:expect: |
+<p>a__&quot;foo&quot;__</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-386
+:test: 6.2 Emphasis and strong emphasis (Example 386)
+:sample: |
+foo__bar__
+:expect: |
+<p>foo__bar__</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-387
+:test: 6.2 Emphasis and strong emphasis (Example 387)
+:sample: |
+5__6__78
+:expect: |
+<p>5__6__78</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-388
+:test: 6.2 Emphasis and strong emphasis (Example 388)
+:sample: |
+пристаням__стремятся__
+:expect: |
+<p>пристаням__стремятся__</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-389
+:test: 6.2 Emphasis and strong emphasis (Example 389)
+:sample: |
+__foo, __bar__, baz__
+:expect: |
+<p><strong>foo, <strong>bar</strong>, baz</strong></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-390
+:test: 6.2 Emphasis and strong emphasis (Example 390)
+:sample: |
+foo-__(bar)__
+:expect: |
+<p>foo-<strong>(bar)</strong></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-391
+:test: 6.2 Emphasis and strong emphasis (Example 391)
+:sample: |
+**foo bar **
+:expect: |
+<p>**foo bar **</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-392
+:test: 6.2 Emphasis and strong emphasis (Example 392)
+:sample: |
+**(**foo)
+:expect: |
+<p>**(**foo)</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-393
+:test: 6.2 Emphasis and strong emphasis (Example 393)
+:sample: |
+*(**foo**)*
+:expect: |
+<p><em>(<strong>foo</strong>)</em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-394
+:test: 6.2 Emphasis and strong emphasis (Example 394)
+:sample: |
+**Gomphocarpus (*Gomphocarpus physocarpus*, syn.
+*Asclepias physocarpa*)**
+:expect: |
+<p><strong>Gomphocarpus (<em>Gomphocarpus physocarpus</em>, syn.
+<em>Asclepias physocarpa</em>)</strong></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-395
+:test: 6.2 Emphasis and strong emphasis (Example 395)
+:sample: |
+**foo "*bar*" foo**
+:expect: |
+<p><strong>foo &quot;<em>bar</em>&quot; foo</strong></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-396
+:test: 6.2 Emphasis and strong emphasis (Example 396)
+:sample: |
+**foo**bar
+:expect: |
+<p><strong>foo</strong>bar</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-397
+:test: 6.2 Emphasis and strong emphasis (Example 397)
+:sample: |
+__foo bar __
+:expect: |
+<p>__foo bar __</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-398
+:test: 6.2 Emphasis and strong emphasis (Example 398)
+:sample: |
+__(__foo)
+:expect: |
+<p>__(__foo)</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-399
+:test: 6.2 Emphasis and strong emphasis (Example 399)
+:sample: |
+_(__foo__)_
+:expect: |
+<p><em>(<strong>foo</strong>)</em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-400
+:test: 6.2 Emphasis and strong emphasis (Example 400)
+:sample: |
+__foo__bar
+:expect: |
+<p>__foo__bar</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-401
+:test: 6.2 Emphasis and strong emphasis (Example 401)
+:sample: |
+__пристаням__стремятся
+:expect: |
+<p>__пристаням__стремятся</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-402
+:test: 6.2 Emphasis and strong emphasis (Example 402)
+:sample: |
+__foo__bar__baz__
+:expect: |
+<p><strong>foo__bar__baz</strong></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-403
+:test: 6.2 Emphasis and strong emphasis (Example 403)
+:sample: |
+__(bar)__.
+:expect: |
+<p><strong>(bar)</strong>.</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-404
+:test: 6.2 Emphasis and strong emphasis (Example 404)
+:sample: |
+*foo [bar](/url)*
+:expect: |
+<p><em>foo <a href="/url">bar</a></em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-405
+:test: 6.2 Emphasis and strong emphasis (Example 405)
+:sample: |
+*foo
+bar*
+:expect: |
+<p><em>foo
+bar</em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-406
+:test: 6.2 Emphasis and strong emphasis (Example 406)
+:sample: |
+_foo __bar__ baz_
+:expect: |
+<p><em>foo <strong>bar</strong> baz</em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-407
+:test: 6.2 Emphasis and strong emphasis (Example 407)
+:sample: |
+_foo _bar_ baz_
+:expect: |
+<p><em>foo <em>bar</em> baz</em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-408
+:test: 6.2 Emphasis and strong emphasis (Example 408)
+:sample: |
+__foo_ bar_
+:expect: |
+<p><em><em>foo</em> bar</em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-409
+:test: 6.2 Emphasis and strong emphasis (Example 409)
+:sample: |
+*foo *bar**
+:expect: |
+<p><em>foo <em>bar</em></em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-410
+:test: 6.2 Emphasis and strong emphasis (Example 410)
+:sample: |
+*foo **bar** baz*
+:expect: |
+<p><em>foo <strong>bar</strong> baz</em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-411
+:test: 6.2 Emphasis and strong emphasis (Example 411)
+:sample: |
+*foo**bar**baz*
+:expect: |
+<p><em>foo<strong>bar</strong>baz</em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-412
+:test: 6.2 Emphasis and strong emphasis (Example 412)
+:sample: |
+*foo**bar*
+:expect: |
+<p><em>foo**bar</em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-413
+:test: 6.2 Emphasis and strong emphasis (Example 413)
+:sample: |
+***foo** bar*
+:expect: |
+<p><em><strong>foo</strong> bar</em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-414
+:test: 6.2 Emphasis and strong emphasis (Example 414)
+:sample: |
+*foo **bar***
+:expect: |
+<p><em>foo <strong>bar</strong></em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-415
+:test: 6.2 Emphasis and strong emphasis (Example 415)
+:sample: |
+*foo**bar***
+:expect: |
+<p><em>foo<strong>bar</strong></em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-416
+:test: 6.2 Emphasis and strong emphasis (Example 416)
+:sample: |
+foo***bar***baz
+:expect: |
+<p>foo<em><strong>bar</strong></em>baz</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-417
+:test: 6.2 Emphasis and strong emphasis (Example 417)
+:sample: |
+foo******bar*********baz
+:expect: |
+<p>foo<strong><strong><strong>bar</strong></strong></strong>***baz</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-418
+:test: 6.2 Emphasis and strong emphasis (Example 418)
+:sample: |
+*foo **bar *baz* bim** bop*
+:expect: |
+<p><em>foo <strong>bar <em>baz</em> bim</strong> bop</em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-419
+:test: 6.2 Emphasis and strong emphasis (Example 419)
+:sample: |
+*foo [*bar*](/url)*
+:expect: |
+<p><em>foo <a href="/url"><em>bar</em></a></em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-420
+:test: 6.2 Emphasis and strong emphasis (Example 420)
+:sample: |
+** is not an empty emphasis
+:expect: |
+<p>** is not an empty emphasis</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-421
+:test: 6.2 Emphasis and strong emphasis (Example 421)
+:sample: |
+**** is not an empty strong emphasis
+:expect: |
+<p>**** is not an empty strong emphasis</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-422
+:test: 6.2 Emphasis and strong emphasis (Example 422)
+:sample: |
+**foo [bar](/url)**
+:expect: |
+<p><strong>foo <a href="/url">bar</a></strong></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-423
+:test: 6.2 Emphasis and strong emphasis (Example 423)
+:sample: |
+**foo
+bar**
+:expect: |
+<p><strong>foo
+bar</strong></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-424
+:test: 6.2 Emphasis and strong emphasis (Example 424)
+:sample: |
+__foo _bar_ baz__
+:expect: |
+<p><strong>foo <em>bar</em> baz</strong></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-425
+:test: 6.2 Emphasis and strong emphasis (Example 425)
+:sample: |
+__foo __bar__ baz__
+:expect: |
+<p><strong>foo <strong>bar</strong> baz</strong></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-426
+:test: 6.2 Emphasis and strong emphasis (Example 426)
+:sample: |
+____foo__ bar__
+:expect: |
+<p><strong><strong>foo</strong> bar</strong></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-427
+:test: 6.2 Emphasis and strong emphasis (Example 427)
+:sample: |
+**foo **bar****
+:expect: |
+<p><strong>foo <strong>bar</strong></strong></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-428
+:test: 6.2 Emphasis and strong emphasis (Example 428)
+:sample: |
+**foo *bar* baz**
+:expect: |
+<p><strong>foo <em>bar</em> baz</strong></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-429
+:test: 6.2 Emphasis and strong emphasis (Example 429)
+:sample: |
+**foo*bar*baz**
+:expect: |
+<p><strong>foo<em>bar</em>baz</strong></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-430
+:test: 6.2 Emphasis and strong emphasis (Example 430)
+:sample: |
+***foo* bar**
+:expect: |
+<p><strong><em>foo</em> bar</strong></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-431
+:test: 6.2 Emphasis and strong emphasis (Example 431)
+:sample: |
+**foo *bar***
+:expect: |
+<p><strong>foo <em>bar</em></strong></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-432
+:test: 6.2 Emphasis and strong emphasis (Example 432)
+:sample: |
+**foo *bar **baz**
+bim* bop**
+:expect: |
+<p><strong>foo <em>bar <strong>baz</strong>
+bim</em> bop</strong></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-433
+:test: 6.2 Emphasis and strong emphasis (Example 433)
+:sample: |
+**foo [*bar*](/url)**
+:expect: |
+<p><strong>foo <a href="/url"><em>bar</em></a></strong></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-434
+:test: 6.2 Emphasis and strong emphasis (Example 434)
+:sample: |
+__ is not an empty emphasis
+:expect: |
+<p>__ is not an empty emphasis</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-435
+:test: 6.2 Emphasis and strong emphasis (Example 435)
+:sample: |
+____ is not an empty strong emphasis
+:expect: |
+<p>____ is not an empty strong emphasis</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-436
+:test: 6.2 Emphasis and strong emphasis (Example 436)
+:sample: |
+foo ***
+:expect: |
+<p>foo ***</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-437
+:test: 6.2 Emphasis and strong emphasis (Example 437)
+:sample: |
+foo *\**
+:expect: |
+<p>foo <em>*</em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-438
+:test: 6.2 Emphasis and strong emphasis (Example 438)
+:sample: |
+foo *_*
+:expect: |
+<p>foo <em>_</em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-439
+:test: 6.2 Emphasis and strong emphasis (Example 439)
+:sample: |
+foo *****
+:expect: |
+<p>foo *****</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-440
+:test: 6.2 Emphasis and strong emphasis (Example 440)
+:sample: |
+foo **\***
+:expect: |
+<p>foo <strong>*</strong></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-441
+:test: 6.2 Emphasis and strong emphasis (Example 441)
+:sample: |
+foo **_**
+:expect: |
+<p>foo <strong>_</strong></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-442
+:test: 6.2 Emphasis and strong emphasis (Example 442)
+:sample: |
+**foo*
+:expect: |
+<p>*<em>foo</em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-443
+:test: 6.2 Emphasis and strong emphasis (Example 443)
+:sample: |
+*foo**
+:expect: |
+<p><em>foo</em>*</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-444
+:test: 6.2 Emphasis and strong emphasis (Example 444)
+:sample: |
+***foo**
+:expect: |
+<p>*<strong>foo</strong></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-445
+:test: 6.2 Emphasis and strong emphasis (Example 445)
+:sample: |
+****foo*
+:expect: |
+<p>***<em>foo</em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-446
+:test: 6.2 Emphasis and strong emphasis (Example 446)
+:sample: |
+**foo***
+:expect: |
+<p><strong>foo</strong>*</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-447
+:test: 6.2 Emphasis and strong emphasis (Example 447)
+:sample: |
+*foo****
+:expect: |
+<p><em>foo</em>***</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-448
+:test: 6.2 Emphasis and strong emphasis (Example 448)
+:sample: |
+foo ___
+:expect: |
+<p>foo ___</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-449
+:test: 6.2 Emphasis and strong emphasis (Example 449)
+:sample: |
+foo _\__
+:expect: |
+<p>foo <em>_</em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-450
+:test: 6.2 Emphasis and strong emphasis (Example 450)
+:sample: |
+foo _*_
+:expect: |
+<p>foo <em>*</em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-451
+:test: 6.2 Emphasis and strong emphasis (Example 451)
+:sample: |
+foo _____
+:expect: |
+<p>foo _____</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-452
+:test: 6.2 Emphasis and strong emphasis (Example 452)
+:sample: |
+foo __\___
+:expect: |
+<p>foo <strong>_</strong></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-453
+:test: 6.2 Emphasis and strong emphasis (Example 453)
+:sample: |
+foo __*__
+:expect: |
+<p>foo <strong>*</strong></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-454
+:test: 6.2 Emphasis and strong emphasis (Example 454)
+:sample: |
+__foo_
+:expect: |
+<p>_<em>foo</em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-455
+:test: 6.2 Emphasis and strong emphasis (Example 455)
+:sample: |
+_foo__
+:expect: |
+<p><em>foo</em>_</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-456
+:test: 6.2 Emphasis and strong emphasis (Example 456)
+:sample: |
+___foo__
+:expect: |
+<p>_<strong>foo</strong></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-457
+:test: 6.2 Emphasis and strong emphasis (Example 457)
+:sample: |
+____foo_
+:expect: |
+<p>___<em>foo</em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-458
+:test: 6.2 Emphasis and strong emphasis (Example 458)
+:sample: |
+__foo___
+:expect: |
+<p><strong>foo</strong>_</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-459
+:test: 6.2 Emphasis and strong emphasis (Example 459)
+:sample: |
+_foo____
+:expect: |
+<p><em>foo</em>___</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-460
+:test: 6.2 Emphasis and strong emphasis (Example 460)
+:sample: |
+**foo**
+:expect: |
+<p><strong>foo</strong></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-461
+:test: 6.2 Emphasis and strong emphasis (Example 461)
+:sample: |
+*_foo_*
+:expect: |
+<p><em><em>foo</em></em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-462
+:test: 6.2 Emphasis and strong emphasis (Example 462)
+:sample: |
+__foo__
+:expect: |
+<p><strong>foo</strong></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-463
+:test: 6.2 Emphasis and strong emphasis (Example 463)
+:sample: |
+_*foo*_
+:expect: |
+<p><em><em>foo</em></em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-464
+:test: 6.2 Emphasis and strong emphasis (Example 464)
+:sample: |
+****foo****
+:expect: |
+<p><strong><strong>foo</strong></strong></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-465
+:test: 6.2 Emphasis and strong emphasis (Example 465)
+:sample: |
+____foo____
+:expect: |
+<p><strong><strong>foo</strong></strong></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-466
+:test: 6.2 Emphasis and strong emphasis (Example 466)
+:sample: |
+******foo******
+:expect: |
+<p><strong><strong><strong>foo</strong></strong></strong></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-467
+:test: 6.2 Emphasis and strong emphasis (Example 467)
+:sample: |
+***foo***
+:expect: |
+<p><em><strong>foo</strong></em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-468
+:test: 6.2 Emphasis and strong emphasis (Example 468)
+:sample: |
+_____foo_____
+:expect: |
+<p><em><strong><strong>foo</strong></strong></em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-469
+:test: 6.2 Emphasis and strong emphasis (Example 469)
+:sample: |
+*foo _bar* baz_
+:expect: |
+<p><em>foo _bar</em> baz_</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-470
+:test: 6.2 Emphasis and strong emphasis (Example 470)
+:sample: |
+*foo __bar *baz bim__ bam*
+:expect: |
+<p><em>foo <strong>bar *baz bim</strong> bam</em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-471
+:test: 6.2 Emphasis and strong emphasis (Example 471)
+:sample: |
+**foo **bar baz**
+:expect: |
+<p>**foo <strong>bar baz</strong></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-472
+:test: 6.2 Emphasis and strong emphasis (Example 472)
+:sample: |
+*foo *bar baz*
+:expect: |
+<p>*foo <em>bar baz</em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-473
+:test: 6.2 Emphasis and strong emphasis (Example 473)
+:sample: |
+*[bar*](/url)
+:expect: |
+<p>*<a href="/url">bar*</a></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-474
+:test: 6.2 Emphasis and strong emphasis (Example 474)
+:sample: |
+_foo [bar_](/url)
+:expect: |
+<p>_foo <a href="/url">bar_</a></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-475
+:test: 6.2 Emphasis and strong emphasis (Example 475)
+:sample: |
+*<img src="foo" title="*"/>
+:expect: |
+<p>*<img src="foo" title="*"/></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-476
+:test: 6.2 Emphasis and strong emphasis (Example 476)
+:sample: |
+**<a href="**">
+:expect: |
+<p>**<a href="**"></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-477
+:test: 6.2 Emphasis and strong emphasis (Example 477)
+:sample: |
+__<a href="__">
+:expect: |
+<p>__<a href="__"></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-478
+:test: 6.2 Emphasis and strong emphasis (Example 478)
+:sample: |
+*a `*`*
+:expect: |
+<p><em>a <code>*</code></em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-479
+:test: 6.2 Emphasis and strong emphasis (Example 479)
+:sample: |
+_a `_`_
+:expect: |
+<p><em>a <code>_</code></em></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-480
+:test: 6.2 Emphasis and strong emphasis (Example 480)
+:sample: |
+**a<https://foo.bar/?q=**>
+:expect: |
+<p>**a<a href="https://foo.bar/?q=**">https://foo.bar/?q=**</a></p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-481
+:test: 6.2 Emphasis and strong emphasis (Example 481)
+:sample: |
+__a<https://foo.bar/?q=__>
+:expect: |
+<p>__a<a href="https://foo.bar/?q=__">https://foo.bar/?q=__</a></p>
+:run:
