@@ -1,0 +1,512 @@
+# https://spec.commonmark.org/0.31.2/#lists
+
+# https://spec.commonmark.org/0.31.2/#example-301
+:test: 5.3 Lists (Example 301)
+:sample: |
+- foo
+- bar
++ baz
+:expect: |
+<ul>
+<li>foo</li>
+<li>bar</li>
+</ul>
+<ul>
+<li>baz</li>
+</ul>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-302
+:test: 5.3 Lists (Example 302)
+:sample: |
+1. foo
+2. bar
+3) baz
+:expect: |
+<ol>
+<li>foo</li>
+<li>bar</li>
+</ol>
+<ol start="3">
+<li>baz</li>
+</ol>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-303
+:test: 5.3 Lists (Example 303)
+:sample: |
+Foo
+- bar
+- baz
+:expect: |
+<p>Foo</p>
+<ul>
+<li>bar</li>
+<li>baz</li>
+</ul>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-304
+:test: 5.3 Lists (Example 304)
+:sample: |
+The number of windows in my house is
+14.  The number of doors is 6.
+:expect: |
+<p>The number of windows in my house is
+14.  The number of doors is 6.</p>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-305
+:test: 5.3 Lists (Example 305)
+:sample: |
+The number of windows in my house is
+1.  The number of doors is 6.
+:expect: |
+<p>The number of windows in my house is</p>
+<ol>
+<li>The number of doors is 6.</li>
+</ol>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-306
+:test: 5.3 Lists (Example 306)
+:sample: |
+- foo
+
+- bar
+
+
+- baz
+:expect: |
+<ul>
+<li>
+<p>foo</p>
+</li>
+<li>
+<p>bar</p>
+</li>
+<li>
+<p>baz</p>
+</li>
+</ul>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-307
+:test: 5.3 Lists (Example 307)
+:sample: |
+- foo
+  - bar
+    - baz
+
+
+      bim
+:expect: |
+<ul>
+<li>foo
+<ul>
+<li>bar
+<ul>
+<li>
+<p>baz</p>
+<p>bim</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-308
+:test: 5.3 Lists (Example 308)
+:sample: |
+- foo
+- bar
+
+<!-- -->
+
+- baz
+- bim
+:expect: |
+<ul>
+<li>foo</li>
+<li>bar</li>
+</ul>
+<!-- -->
+<ul>
+<li>baz</li>
+<li>bim</li>
+</ul>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-309
+:test: 5.3 Lists (Example 309)
+:sample: |
+-   foo
+
+    notcode
+
+-   foo
+
+<!-- -->
+
+    code
+:expect: |
+<ul>
+<li>
+<p>foo</p>
+<p>notcode</p>
+</li>
+<li>
+<p>foo</p>
+</li>
+</ul>
+<!-- -->
+<pre><code>code
+</code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-310
+:test: 5.3 Lists (Example 310)
+:sample: |
+- a
+ - b
+  - c
+   - d
+  - e
+ - f
+- g
+:expect: |
+<ul>
+<li>a</li>
+<li>b</li>
+<li>c</li>
+<li>d</li>
+<li>e</li>
+<li>f</li>
+<li>g</li>
+</ul>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-311
+:test: 5.3 Lists (Example 311)
+:sample: |
+1. a
+
+  2. b
+
+   3. c
+:expect: |
+<ol>
+<li>
+<p>a</p>
+</li>
+<li>
+<p>b</p>
+</li>
+<li>
+<p>c</p>
+</li>
+</ol>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-312
+:test: 5.3 Lists (Example 312)
+:sample: |
+- a
+ - b
+  - c
+   - d
+    - e
+:expect: |
+<ul>
+<li>a</li>
+<li>b</li>
+<li>c</li>
+<li>d
+- e</li>
+</ul>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-313
+:test: 5.3 Lists (Example 313)
+:sample: |
+1. a
+
+  2. b
+
+    3. c
+:expect: |
+<ol>
+<li>
+<p>a</p>
+</li>
+<li>
+<p>b</p>
+</li>
+</ol>
+<pre><code>3. c
+</code></pre>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-314
+:test: 5.3 Lists (Example 314)
+:sample: |
+- a
+- b
+
+- c
+:expect: |
+<ul>
+<li>
+<p>a</p>
+</li>
+<li>
+<p>b</p>
+</li>
+<li>
+<p>c</p>
+</li>
+</ul>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-315
+:test: 5.3 Lists (Example 315)
+:sample: |
+* a
+*
+
+* c
+:expect: |
+<ul>
+<li>
+<p>a</p>
+</li>
+<li></li>
+<li>
+<p>c</p>
+</li>
+</ul>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-316
+:test: 5.3 Lists (Example 316)
+:sample: |
+- a
+- b
+
+  c
+- d
+:expect: |
+<ul>
+<li>
+<p>a</p>
+</li>
+<li>
+<p>b</p>
+<p>c</p>
+</li>
+<li>
+<p>d</p>
+</li>
+</ul>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-317
+:test: 5.3 Lists (Example 317)
+:sample: |
+- a
+- b
+
+  [ref]: /url
+- d
+:expect: |
+<ul>
+<li>
+<p>a</p>
+</li>
+<li>
+<p>b</p>
+</li>
+<li>
+<p>d</p>
+</li>
+</ul>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-318
+:test: 5.3 Lists (Example 318)
+:sample: |
+- a
+- ```
+  b
+
+
+  ```
+- c
+:expect: |
+<ul>
+<li>a</li>
+<li>
+<pre><code>b
+
+
+</code></pre>
+</li>
+<li>c</li>
+</ul>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-319
+:test: 5.3 Lists (Example 319)
+:sample: |
+- a
+  - b
+
+    c
+- d
+:expect: |
+<ul>
+<li>a
+<ul>
+<li>
+<p>b</p>
+<p>c</p>
+</li>
+</ul>
+</li>
+<li>d</li>
+</ul>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-320
+:test: 5.3 Lists (Example 320)
+:sample: |
+* a
+  > b
+  >
+* c
+:expect: |
+<ul>
+<li>a
+<blockquote>
+<p>b</p>
+</blockquote>
+</li>
+<li>c</li>
+</ul>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-321
+:test: 5.3 Lists (Example 321)
+:sample: |
+- a
+  > b
+  ```
+  c
+  ```
+- d
+:expect: |
+<ul>
+<li>a
+<blockquote>
+<p>b</p>
+</blockquote>
+<pre><code>c
+</code></pre>
+</li>
+<li>d</li>
+</ul>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-322
+:test: 5.3 Lists (Example 322)
+:sample: |
+- a
+:expect: |
+<ul>
+<li>a</li>
+</ul>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-323
+:test: 5.3 Lists (Example 323)
+:sample: |
+- a
+  - b
+:expect: |
+<ul>
+<li>a
+<ul>
+<li>b</li>
+</ul>
+</li>
+</ul>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-324
+:test: 5.3 Lists (Example 324)
+:sample: |
+1. ```
+   foo
+   ```
+
+   bar
+:expect: |
+<ol>
+<li>
+<pre><code>foo
+</code></pre>
+<p>bar</p>
+</li>
+</ol>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-325
+:test: 5.3 Lists (Example 325)
+:sample: |
+* foo
+  * bar
+
+  baz
+:expect: |
+<ul>
+<li>
+<p>foo</p>
+<ul>
+<li>bar</li>
+</ul>
+<p>baz</p>
+</li>
+</ul>
+:run:
+
+# https://spec.commonmark.org/0.31.2/#example-326
+:test: 5.3 Lists (Example 326)
+:sample: |
+- a
+  - b
+  - c
+
+- d
+  - e
+  - f
+:expect: |
+<ul>
+<li>
+<p>a</p>
+<ul>
+<li>b</li>
+<li>c</li>
+</ul>
+</li>
+<li>
+<p>d</p>
+<ul>
+<li>e</li>
+<li>f</li>
+</ul>
+</li>
+</ul>
+:run:
+
