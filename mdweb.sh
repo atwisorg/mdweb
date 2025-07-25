@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.5.7} - (C) 25.07.2025
+    echo "${0##*/} ${1:-0.5.8} - (C) 25.07.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -107,7 +107,7 @@ is_equal ()
 {
     case "${1:-}" in
         "${2:-}")
-            return 0
+            return
     esac
     return 1
 }
@@ -189,7 +189,7 @@ request ()
         do
             case "${REPLY:-}" in
                 [yYдД]|[yY][eE]|[yY][eE][sS]|[дД][аА])
-                    return 0
+                    return
                     ;;
                 ""|[nNнН]|[nN][oO]|[нН][еЕ]|[нН][еЕ][тТ])
                     return 1
@@ -1471,7 +1471,7 @@ parse_indent ()
             fi
             return 1
         }
-        return 0
+        return
     elif is_max_nesting
     then
         if test "$INDENT_LENGTH" -lt 4
@@ -1479,7 +1479,7 @@ parse_indent ()
             #         ┌> the indent length is less than or equal to 3
             # ◦◦◦-◦◦◦-◦foo (current string)
             NESTING_DEPTH[-1]="${NESTING_DEPTH[-1]}:$((CHAR_NUM + INDENT_LENGTH))"
-            return 0
+            return
         else
             #             ┌> indent length greater than 3
             # ◦◦◦-◦◦◦-◦◦◦◦◦foo (current string)
@@ -1509,7 +1509,7 @@ parse_indent ()
                 if test "$INDENT_LENGTH" -lt 4
                 then
                     print_buffer
-                    return 0
+                    return
                 else
                     trim_indent
                     put_string_in_buffer
@@ -1528,7 +1528,7 @@ parse_indent ()
                     fi
                     return 1
                 }
-                return 0
+                return
         esac
 
         while true
@@ -1563,7 +1563,7 @@ parse_indent ()
                 #   ┌> the current indent is equal to the next nesting level
                 # ◦◦◦-◦◦◦◦bar (current string)
                 DEPTH="$((DEPTH + 1))"
-                return 0
+                return
             else
                 if is_empty "${NESTING_DEPTH["$((DEPTH + 2))"]:-}"
                 then
@@ -1590,7 +1590,7 @@ parse_indent ()
                         fi
                         return 1
                     }
-                    return 0
+                    return
                 else
                     #   ┌> ${NESTING_DEPTH["$DEPTH"]%:*} -> 3
                     #   │    ┌> ${NESTING_DEPTH["$DEPTH"]#*:} -> 8 <────┐
@@ -1624,9 +1624,6 @@ parse_block_structure ()
         CHAR_NUM="$((CHAR_NUM + INDENT_LENGTH + 1))"
 
         case "$STRING" in
-             \>*)
-                open_block_quote
-                ;;
             [_]*)
                 print_horizontal_rule "_" || put_string_in_buffer
                 return
@@ -1666,6 +1663,9 @@ parse_block_structure ()
                     return
                 }
                 ;;
+             \>*)
+                open_block_quote
+                ;;
                *)
                 if  [[ "$STRING" =~ ^[0-9]{1,9}\)([[:blank:]]|$) ]] && open_ordered_list ")" || {
                     [[ "$STRING" =~ ^[0-9]{1,9}\.([[:blank:]]|$) ]] && open_ordered_list "."  ; }
@@ -1676,6 +1676,7 @@ parse_block_structure ()
                     add_to_code_block || put_string_in_buffer
                     return
                 fi
+                ;;
         esac
         STRING="${STRING:1}"
         trim_indent 1 "$CHAR_NUM" && CHAR_NUM="$((CHAR_NUM + 1))" || true
@@ -1840,7 +1841,7 @@ open_block_quote ()
     } || {
         if is_equal "${CLOSING_TAG_BUFFER["$DEPTH"]}" "$CLOSING_TAG"
         then
-            return 0
+            return
         else
             print_buffer
         fi
