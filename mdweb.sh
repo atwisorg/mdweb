@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.5.8} - (C) 25.07.2025
+    echo "${0##*/} ${1:-0.5.9} - (C) 25.07.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1183,6 +1183,7 @@ get_paragraph ()
     remove_last_empty_strings
     mark_a_string_buffer
     OPEN_BLOCKS["$DEPTH"]="paragraph"
+    NESTING_DEPTH["$DEPTH"]=""
 }
 
 get_string_buffer ()
@@ -1834,21 +1835,13 @@ open_block_quote ()
     # including this block, when an empty string or other block occurs.
     DEPTH="$((DEPTH + 1))"
     BLOCK_QUOTE="${BLOCK_QUOTE:-"$DEPTH"}"
-
-    get_tag "blockquote"
-    is_empty "${!CLOSING_TAG_BUFFER[@]}" || is_empty "${CLOSING_TAG_BUFFER["$DEPTH"]:-}" && {
-        string_buffer_is_empty || print_buffer "without closing tags"
-    } || {
-        if is_equal "${CLOSING_TAG_BUFFER["$DEPTH"]}" "$CLOSING_TAG"
-        then
-            return
-        else
-            print_buffer
-        fi
+    is_equal "${OPEN_BLOCKS["$DEPTH"]:-}" "block_quote" || {
+        print_buffer
+        OPEN_BLOCKS["$DEPTH"]="block_quote"
+        get_tag "blockquote"
+        put_tag_in_buffer
+        NESTING_DEPTH["$DEPTH"]="$((CHAR_NUM - 1))"
     }
-    OPEN_BLOCKS["$DEPTH"]="block_quote"
-    NESTING_DEPTH["$DEPTH"]="$((CHAR_NUM - 1))"
-    put_tag_in_buffer
 }
 
 close_block_quote ()
