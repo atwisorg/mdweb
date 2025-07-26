@@ -136,7 +136,7 @@ foo
 <pre><code></code></pre>
 </blockquote>
 <p>foo</p>
-<pre><code></code></pre
+<pre><code></code></pre>
 :run:
 
 # https://spec.commonmark.org/0.31.2/#example-238
