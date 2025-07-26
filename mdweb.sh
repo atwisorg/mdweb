@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.5.9} - (C) 25.07.2025
+    echo "${0##*/} ${1:-0.5.10} - (C) 26.07.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -107,7 +107,7 @@ is_equal ()
 {
     case "${1:-}" in
         "${2:-}")
-            return
+            return 0
     esac
     return 1
 }
@@ -1158,17 +1158,22 @@ put_tag_in_subbuffer ()
 
 string_buffer_is_empty ()
 {
+    is_empty "${!STRING_BUFFER[@]}"
+}
+
+current_depth_string_buffer_is_empty ()
+{
     is_empty "${STRING_BUFFER["$DEPTH"]:-}"
 }
 
-string_buffer_is_not_empty ()
+current_depth_string_buffer_is_not_empty ()
 {
-    string_buffer_is_empty && return 1 || return 0
+    current_depth_string_buffer_is_empty && return 1 || return 0
 }
 
 remove_last_empty_strings ()
 {
-    STRING_BUFFER[-1]="${STRING_BUFFER[-1]%"${STRING_BUFFER[-1]##*[!$MARKER_NEW_STRING]}"}"
+    STRING_BUFFER[-1]="${STRING_BUFFER[-1]%"${STRING_BUFFER[-1]##*[!$MARKER_NEW_STRING$EMPTY_STRING]}"}"
 }
 
 mark_a_string_buffer ()
@@ -1188,7 +1193,7 @@ get_paragraph ()
 
 get_string_buffer ()
 {
-    is_empty "${!STRING_BUFFER[@]}" || {
+    string_buffer_is_empty || {
         if no_open_blocks
         then
             get_paragraph
@@ -1202,10 +1207,13 @@ get_string_buffer ()
                     STRING_BUFFER[-1]="$MARKER_CODE${STRING_BUFFER[-1]}${CANONICAL_PRE_CODE:-}"
                     ;;
                 "block_quote")
-                    SAVED_DEPTH="$DEPTH"
-                    DEPTH="$((${#OPEN_BLOCKS[@]} + 1))"
-                    get_paragraph
-                    DEPTH="$SAVED_DEPTH"
+                    remove_last_empty_strings
+                    [[ "${STRING_BUFFER[-1]}" =~ "$EMPTY_STRING" ]] && mark_a_string_buffer || {
+                        SAVED_DEPTH="$DEPTH"
+                        DEPTH="$((${#OPEN_BLOCKS[@]} + 1))"
+                        get_paragraph
+                        DEPTH="$SAVED_DEPTH"
+                    }
                     ;;
                 *)
                     mark_a_string_buffer
@@ -1217,7 +1225,7 @@ get_string_buffer ()
 
 print_opening_tags ()
 {
-    is_empty "${!OPEN_BLOCKS[@]}" || {
+    no_open_blocks || {
         TAG=
         for i in "${!OPEN_BLOCKS[@]}"
         do
@@ -1236,7 +1244,7 @@ print_opening_tags ()
 
 print_closing_tags ()
 {
-    is_empty "${!OPEN_BLOCKS[@]}" || {
+    no_open_blocks || {
         case "${1:-}" in
             "without closing tags")
                 return
@@ -1276,7 +1284,7 @@ print_buffer ()
 
 put_string_in_buffer ()
 {
-    is_empty "${!STRING_BUFFER[@]}" && {
+    string_buffer_is_empty && {
         is_empty "${!CLOSING_INDENT_BUFFER[@]}" || TAG_INDENT="${CLOSING_INDENT_BUFFER[-1]}"
         BUFFER_INDENT="${TAG_INDENT:-}"
         STRING_BUFFER["$DEPTH"]="${STRING:-"$EMPTY_STRING"}"
@@ -1329,13 +1337,13 @@ parse_empty_string ()
     if no_open_blocks
     then
         # print a paragraph
-        is_empty "${!STRING_BUFFER[@]}" || print_buffer
+        string_buffer_is_empty || print_buffer
     else
         if list_is_open
         then
             if block_quote_is_closed
             then
-                if is_empty "${!STRING_BUFFER[@]}"
+                if string_buffer_is_empty
                 then
                     close_list "last list"
                 else
@@ -1464,7 +1472,7 @@ parse_indent ()
         test "$INDENT_LENGTH" -lt 4 || {
             #    ┌> indent length greater than 3
             # ◦◦◦◦foo (current string)
-            if string_buffer_is_empty
+            if current_depth_string_buffer_is_empty
             then
                 open_indent_code_block
             else
@@ -1485,7 +1493,7 @@ parse_indent ()
             #             ┌> indent length greater than 3
             # ◦◦◦-◦◦◦-◦◦◦◦◦foo (current string)
             NESTING_DEPTH[-1]="${NESTING_DEPTH[-1]}:$CHAR_NUM"
-            if string_buffer_is_empty
+            if current_depth_string_buffer_is_empty
             then
                 open_indent_code_block
             else
@@ -1537,7 +1545,7 @@ parse_indent ()
             if test "$INDENT_LENGTH" -lt "${NESTING_DEPTH["$((DEPTH + 1))"]#*:}"
             then
                 test "$INDENT_LENGTH" -ge 4 || return 0
-                if is_empty "${!STRING_BUFFER[@]}"
+                if string_buffer_is_empty
                 then
                     #   ┌> ${NESTING_DEPTH["$DEPTH"]%:*} -> 3
                     #   │ ┌> ${NESTING_DEPTH["$DEPTH"]#*:} -> 5 <┐
@@ -1575,7 +1583,7 @@ parse_indent ()
                     # ◦◦◦◦◦◦◦◦-◦◦◦◦bar (current string)
                     DEPTH="$((DEPTH + 1))"
                     test "$INDENT_LENGTH" -le "$(( ${NESTING_DEPTH["$DEPTH"]#*:} + 3))" || {
-                        if is_empty "${!STRING_BUFFER[@]}"
+                        if string_buffer_is_empty
                         then
                             is_diff "${OPEN_BLOCKS["$DEPTH"]}" "block_quote" || print_buffer
                             open_indent_code_block "$(( ${NESTING_DEPTH["$DEPTH"]#*:} + 4))"
@@ -1614,8 +1622,6 @@ parse_block_structure ()
     TAG_INDENT="${MAIN_TAG_INDENT:-}"
     string_is_not_empty "${STRING:-}" || parse_empty_string || return 0
 
-    NESTING_DEPTH["$DEPTH"]=""
-
     while is_not_empty "${STRING:-}"
     do
         get_indent   || break
@@ -1649,7 +1655,7 @@ parse_block_structure ()
                 print_horizontal_rule "*" && return ||
                 is_not_empty "${NESTING_DEPTH[$((DEPTH+1))]:-}" ||
                 [[ "$STRING" =~ ^"*"[[:blank:]]+[![:blank:]] ]] ||
-                string_buffer_is_empty  &&
+                current_depth_string_buffer_is_empty  &&
                 open_unordered_list "*" || {
                     put_string_in_buffer
                     return
@@ -1658,7 +1664,7 @@ parse_block_structure ()
             [+]*)
                 is_not_empty "${NESTING_DEPTH[$((DEPTH+1))]:-}" ||
                 [[ "$STRING" =~ ^"+"[[:blank:]]+[![:blank:]] ]] ||
-                string_buffer_is_empty  &&
+                current_depth_string_buffer_is_empty  &&
                 open_unordered_list "+" || {
                     put_string_in_buffer
                     return
@@ -1668,13 +1674,25 @@ parse_block_structure ()
                 open_block_quote
                 ;;
                *)
-                if  [[ "$STRING" =~ ^[0-9]{1,9}\)([[:blank:]]|$) ]] && open_ordered_list ")" || {
-                    [[ "$STRING" =~ ^[0-9]{1,9}\.([[:blank:]]|$) ]] && open_ordered_list "."  ; }
+                if  [[ "$STRING" =~ ^[0-9]{1,9}\)([[:blank:]]|$) ]] &&
+                    open_ordered_list ")" || {
+                        [[ "$STRING" =~ ^[0-9]{1,9}\.([[:blank:]]|$) ]] &&
+                            open_ordered_list "."
+                    }
                 then
                     STRING="${STRING:"$LENGTH_ORDERED_LIST_NUM"}"
                     CHAR_NUM="$((CHAR_NUM + LENGTH_ORDERED_LIST_NUM))"
                 else
-                    add_to_code_block || put_string_in_buffer
+                    add_to_code_block  || {
+                        no_open_blocks || {
+                            is_diff "${OPEN_BLOCKS[-1]:-}" "code_block" && {
+                                string_buffer_is_empty ||
+                                current_depth_string_buffer_is_not_empty ||
+                                [[ "${STRING_BUFFER[-1]}" =~ [^$EMPTY_STRING]$ ]]
+                            }
+                        } || print_buffer
+                        put_string_in_buffer
+                    }
                     return
                 fi
                 ;;
@@ -1682,8 +1700,13 @@ parse_block_structure ()
         STRING="${STRING:1}"
         trim_indent 1 "$CHAR_NUM" && CHAR_NUM="$((CHAR_NUM + 1))" || true
     done
-    is_empty "${!NESTING_DEPTH[@]}" ||
+    no_open_blocks || {
         NESTING_DEPTH[-1]="${NESTING_DEPTH[-1]}:$CHAR_NUM"
+        block_quote_is_closed || string_buffer_is_empty || {
+            STRING="$EMPTY_STRING"
+            put_string_in_buffer
+        }
+    }
 }
 
 serialize_pre_code_language ()
@@ -1735,6 +1758,7 @@ open_code_block ()
     put_tag_in_buffer
     CODE_BLOCK="open"
     OPEN_BLOCKS["$DEPTH"]="code_block"
+    NESTING_DEPTH["$DEPTH"]="$STRING"
     EXCESS_INDENT="${#INDENT}"
 }
 
@@ -1748,12 +1772,13 @@ close_code_block ()
 
 add_to_code_block ()
 {
-    if is_equal "${CODE_BLOCK:-}" "open"
+    # if is_equal "${CODE_BLOCK:-}" "open"
+    if is_equal "${OPEN_BLOCKS["$((DEPTH + 1))"]:-}" "code_block"
     then
         is_code_block && close_code_block "$DEPTH" || put_string_in_buffer
     else
         is_code_block && {
-            string_buffer_is_empty || print_buffer
+            current_depth_string_buffer_is_empty || print_buffer
             open_code_block
         }
     fi
@@ -1762,8 +1787,8 @@ add_to_code_block ()
 open_indent_code_block ()
 {
     DEPTH="$((DEPTH + 1))"
-    NESTING_DEPTH["$DEPTH"]=
     OPEN_BLOCKS["$DEPTH"]="indent_code_block"
+    NESTING_DEPTH["$DEPTH"]=""
     INDENT_CODE_BLOCK="open"
     EXCESS_INDENT="${1:-4}"
     trim_indent "$EXCESS_INDENT" "$CHAR_NUM"
@@ -1883,7 +1908,7 @@ print_heading_atx ()
 
 print_heading_setext ()
 {
-    string_buffer_is_not_empty &&
+    current_depth_string_buffer_is_not_empty &&
     [[ "$STRING" =~ ^"$1"+[[:blank:]]*$ ]] && {
         STRING="$STRING_BUFFER"
         unset -v "STRING_BUFFER[-1]"
