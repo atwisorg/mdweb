@@ -221,19 +221,27 @@ cmp_results ()
     is_equal "$RETURN" 0 && SUCCESS="$((SUCCESS+1))" || {
                              FAILED="$((FAILED+1))"
         FAILED_TEST_NUMBERS+=( "$TOTAL_TEST_NUMBER" )
-        is_not_empty "${COMPARE_STDOUT:-}" || {
+    }
+
+    is_not_empty "${COMPARE_STDOUT:-}" || {        
+        is_equal "$RETURN" 0 && is_empty "${SHOW_STDOUT:-}" || {
             REPORT_STDOUT=(
                 "$H2" ""
                 "stdout:" "$(info_out "${STDOUT_RESULT:-}")"
             )
         }
-        is_not_empty "${COMPARE_STDERR:-}" || {
+    }
+
+    is_not_empty "${COMPARE_STDERR:-}" || {
+        is_equal "$RETURN" 0 && is_empty "${SHOW_STDERR:-}" || {
             REPORT_STDERR=(
                 "$H2" ""
                 "stderr:" "$(info_out "${STDERR_RESULT:-}")"
             )
         }
-        is_not_empty "${EXPECT_RETURN_CODE:-}" || {
+    }
+    is_not_empty "${EXPECT_RETURN_CODE:-}" || {
+        is_equal "$RETURN" 0 && is_empty "${SHOW_RETCODE:-}" || {
             REPORT_RETURN=(
                 "$H2" ""
                 "return:" "$(info_out "${RETURN_CODE:-}")"
@@ -495,7 +503,7 @@ is_not_key ()
 
 argparse ()
 {
-    ARGS=( "args" "clear" "save-results" "test-file" "test-num" "timeout" )
+    ARGS=( "args" "clear" "save-results" "show-stdout" "show-stderr" "show-retcode" "test-file" "test-num" "timeout" )
     while is_diff $# 0
     do
         case "${1:-}" in
@@ -512,6 +520,15 @@ argparse ()
                 ;;
             --save-results)
                 SAVE_RESULTS="yes"
+                ;;
+            --show-stdout)
+                SHOW_STDOUT="yes"
+                ;;
+            --show-stderr)
+                SHOW_STDERR="yes"
+                ;;
+            --show-retcode)
+                SHOW_RETCODE="yes"
                 ;;
             --test-file)
                 while is_diff $# 0

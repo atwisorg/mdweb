@@ -22,6 +22,9 @@
                             before starting testing
   --save-results            save all test results;
                             by default, only the results of failed tests are saved
+  --show-stdout             show 'stdout' for any test result
+  --show-stderr             show 'stderr' for any test result
+  --show-retcode            show 'return code' for any test result
   --test-file TEST_FILE...  specify the test file;
                             file `.testignor` is not used
   --test-num NUM ...        specify test numbers separated by commas/spaces
