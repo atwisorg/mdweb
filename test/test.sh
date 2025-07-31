@@ -294,8 +294,12 @@ unset_vars ()
 
 get_result ()
 {
-    is_not_empty "${NO_HEADINGS:-}" ||
+    if is_not_empty "${NO_HEADINGS:-}"
+    then
+        printf '%16s %s\n' "$H1" "" "sample:" "|${SAMPLE//$NEW_STRING/|$NEW_STRING$INDENT}|"
+    else
         printf '%16s %s\n' "$H1" "" "${PREFIX[@]}" "$H2" "" "sample:" "|${SAMPLE//$NEW_STRING/|$NEW_STRING$INDENT}|"
+    fi
     if cmp_results
     then
         is_equal "$SAVE_RESULTS" "no" || save_result "$TEST_OK"
