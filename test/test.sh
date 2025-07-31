@@ -224,8 +224,8 @@ cmp_results ()
     }
 
     is_not_empty "${COMPARE_STDOUT:-}" || {
-        is_empty "${INFO:-"${SHOW_STDOUT:-}"}" && {
-            is_not_empty "${INFO_OFF:-}" || is_equal "$RETURN" 0
+        is_empty "${ALL_STREAMS:-"${SHOW_STDOUT:-}"}" && {
+            is_not_empty "${NO_STREAMS:-}" || is_equal "$RETURN" 0
         } || {
             REPORT_STDOUT=(
                 "$H2" ""
@@ -235,8 +235,8 @@ cmp_results ()
     }
 
     is_not_empty "${COMPARE_STDERR:-}" || {
-        is_empty "${INFO:-"${SHOW_STDERR:-}"}" && {
-            is_not_empty "${INFO_OFF:-}" || is_equal "$RETURN" 0
+        is_empty "${ALL_STREAMS:-"${SHOW_STDERR:-}"}" && {
+            is_not_empty "${NO_STREAMS:-}" || is_equal "$RETURN" 0
         } || {
             REPORT_STDERR=(
                 "$H2" ""
@@ -246,8 +246,8 @@ cmp_results ()
     }
 
     is_not_empty "${EXPECT_RETURN_CODE:-}" || {
-        is_empty "${INFO:-"${SHOW_RETCODE:-}"}" && {
-            is_not_empty "${INFO_OFF:-}" || is_equal "$RETURN" 0
+        is_empty "${ALL_STREAMS:-"${SHOW_RETCODE:-}"}" && {
+            is_not_empty "${NO_STREAMS:-}" || is_equal "$RETURN" 0
         } || {
             REPORT_RETURN=(
                 "$H2" ""
@@ -514,10 +514,14 @@ is_not_key ()
 
 argparse ()
 {
-    ARGS=( "args" "clear" "no-headings" "info" "info-off" "no-report" "save-results" "show-stdout" "show-stderr" "show-retcode" "test-file" "test-num" "timeout" )
+    ARGS=( "all-streams" "args" "clear" "no-headings" "no-report" "no-streams" "save-results" "show-stdout" "show-stderr" "show-retcode" "test-file" "test-num" "timeout" )
     while is_diff $# 0
     do
         case "${1:-}" in
+            --all-streams)
+                ALL_STREAMS="yes"
+                NO_STREAMS=""
+                ;;
             --args)
                 while is_diff $# 0
                 do
@@ -532,16 +536,12 @@ argparse ()
             --no-headings)
                 NO_HEADINGS="yes"
                 ;;
-            --info)
-                INFO="yes"
-                INFO_OFF=""
-                ;;
-            --info-off)
-                INFO=""
-                INFO_OFF="yes"
-                ;;
             --no-report)
                 NO_REPORT="yes"
+                ;;
+            --no-streams)
+                ALL_STREAMS=""
+                NO_STREAMS="yes"
                 ;;
             --save-results)
                 SAVE_RESULTS="yes"
