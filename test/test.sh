@@ -223,8 +223,10 @@ cmp_results ()
         FAILED_TEST_NUMBERS+=( "$TOTAL_TEST_NUMBER" )
     }
 
-    is_not_empty "${COMPARE_STDOUT:-}" || {        
-        is_equal "$RETURN" 0 && is_empty "${SHOW_STDOUT:-}" || {
+    is_not_empty "${COMPARE_STDOUT:-}" || {
+        is_empty "${INFO:-"${SHOW_STDOUT:-}"}" && {
+            is_not_empty "${INFO_OFF:-}" || is_equal "$RETURN" 0
+        } || {
             REPORT_STDOUT=(
                 "$H2" ""
                 "stdout:" "$(info_out "${STDOUT_RESULT:-}")"
@@ -233,15 +235,20 @@ cmp_results ()
     }
 
     is_not_empty "${COMPARE_STDERR:-}" || {
-        is_equal "$RETURN" 0 && is_empty "${SHOW_STDERR:-}" || {
+        is_empty "${INFO:-"${SHOW_STDERR:-}"}" && {
+            is_not_empty "${INFO_OFF:-}" || is_equal "$RETURN" 0
+        } || {
             REPORT_STDERR=(
                 "$H2" ""
                 "stderr:" "$(info_out "${STDERR_RESULT:-}")"
             )
         }
     }
+
     is_not_empty "${EXPECT_RETURN_CODE:-}" || {
-        is_equal "$RETURN" 0 && is_empty "${SHOW_RETCODE:-}" || {
+        is_empty "${INFO:-"${SHOW_RETCODE:-}"}" && {
+            is_not_empty "${INFO_OFF:-}" || is_equal "$RETURN" 0
+        } || {
             REPORT_RETURN=(
                 "$H2" ""
                 "return:" "$(info_out "${RETURN_CODE:-}")"
@@ -503,7 +510,7 @@ is_not_key ()
 
 argparse ()
 {
-    ARGS=( "args" "clear" "save-results" "show-stdout" "show-stderr" "show-retcode" "test-file" "test-num" "timeout" )
+    ARGS=( "args" "clear" "info" "info-off" "save-results" "show-stdout" "show-stderr" "show-retcode" "test-file" "test-num" "timeout" )
     while is_diff $# 0
     do
         case "${1:-}" in
@@ -517,6 +524,14 @@ argparse ()
                 ;;
             --clear)
                 CLEAR_RESULTS="yes"
+                ;;
+            --info)
+                INFO="yes"
+                INFO_OFF=""
+                ;;
+            --info-off)
+                INFO=""
+                INFO_OFF="yes"
                 ;;
             --save-results)
                 SAVE_RESULTS="yes"

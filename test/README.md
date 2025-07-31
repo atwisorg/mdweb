@@ -19,17 +19,23 @@
 ```
   --args ARG...             pass options to the program under test
   --clear                   delete the saved results of the previous test
-                            before starting testing
+                              before starting testing
+  --info                    show all streams output by the program under test;
+                              by default, all streams will be shown when the
+                              test fails
+  --info-off                if the test fails, output only the compared streams
   --save-results            save all test results;
-                            by default, only the results of failed tests are saved
+                              by default, only the results of failed tests are
+                              saved
   --show-stdout             show 'stdout' for any test result
   --show-stderr             show 'stderr' for any test result
   --show-retcode            show 'return code' for any test result
   --test-file TEST_FILE...  specify the test file;
-                            file `.testignor` is not used
+                              file `.testignor` is not used
   --test-num NUM ...        specify test numbers separated by commas/spaces
-                            and/or ranges of test numbers to run
-  --timeout DURATION        start test, and kill it if still running after DURATION
+                              and/or ranges of test numbers to run
+  --timeout DURATION        start test, and kill it if still running after
+                              DURATION
 
 DURATION is a floating point number with an optional suffix:
 's' for seconds (the default), 'm' for minutes, 'h' for hours or 'd' for days.
