@@ -294,7 +294,8 @@ unset_vars ()
 
 get_result ()
 {
-    printf '%16s %s\n' "$H1" "" "${PREFIX[@]}" "$H2" "" "sample:" "|${SAMPLE//$NEW_STRING/|$NEW_STRING$INDENT}|"
+    is_not_empty "${NO_HEADINGS:-}" ||
+        printf '%16s %s\n' "$H1" "" "${PREFIX[@]}" "$H2" "" "sample:" "|${SAMPLE//$NEW_STRING/|$NEW_STRING$INDENT}|"
     if cmp_results
     then
         is_equal "$SAVE_RESULTS" "no" || save_result "$TEST_OK"
@@ -464,17 +465,20 @@ get_range_nums ()
 
 report ()
 {
+
     echo "$H1"
-    is_empty ${!FAIL[@]} || {
-        printf '\033[0;31m%15s\033[0m: \033[1;31m%s\033[0m\n' "${FAIL[@]}"
-        get_range_nums
-        printf '\033[0;31m%15s\033[0m: [\033[1;31m%s\033[0m]\n' "failed tests" "$RANGE_NUMS"
+    is_not_empty "${NO_REPORT:-}" || {
+        is_empty ${!FAIL[@]} || {
+            printf '\033[0;31m%15s\033[0m: \033[1;31m%s\033[0m\n' "${FAIL[@]}"
+            get_range_nums
+            printf '\033[0;31m%15s\033[0m: [\033[1;31m%s\033[0m]\n' "failed tests" "$RANGE_NUMS"
+        }
+        printf '\033[0;31m%15s\033[0m: [\033[1;31m%s\033[0m]\n' "failed"     "$FAILED"
+        printf '\033[0;32m%15s\033[0m: [\033[1;32m%s\033[0m]\n' "successful" "$SUCCESS"
+        is_empty "${SPECIFIC_TEST:-}" || TOTAL_TEST_NUMBER="$SPECIFIC_TEST"
+        printf '\033[0;33m%15s\033[0m: [\033[1;33m%s\033[0m]\n' "total tests" "$TOTAL_TEST_NUMBER"
+        echo "$H1"
     }
-    printf '\033[0;31m%15s\033[0m: [\033[1;31m%s\033[0m]\n' "failed"     "$FAILED"
-    printf '\033[0;32m%15s\033[0m: [\033[1;32m%s\033[0m]\n' "successful" "$SUCCESS"
-    is_empty "${SPECIFIC_TEST:-}" || TOTAL_TEST_NUMBER="$SPECIFIC_TEST"
-    printf '\033[0;33m%15s\033[0m: [\033[1;33m%s\033[0m]\n' "total tests" "$TOTAL_TEST_NUMBER"
-    echo "$H1"
 }
 
 run_test ()
@@ -510,7 +514,7 @@ is_not_key ()
 
 argparse ()
 {
-    ARGS=( "args" "clear" "info" "info-off" "save-results" "show-stdout" "show-stderr" "show-retcode" "test-file" "test-num" "timeout" )
+    ARGS=( "args" "clear" "no-headings" "info" "info-off" "no-report" "save-results" "show-stdout" "show-stderr" "show-retcode" "test-file" "test-num" "timeout" )
     while is_diff $# 0
     do
         case "${1:-}" in
@@ -525,6 +529,9 @@ argparse ()
             --clear)
                 CLEAR_RESULTS="yes"
                 ;;
+            --no-headings)
+                NO_HEADINGS="yes"
+                ;;
             --info)
                 INFO="yes"
                 INFO_OFF=""
@@ -532,6 +539,9 @@ argparse ()
             --info-off)
                 INFO=""
                 INFO_OFF="yes"
+                ;;
+            --no-report)
+                NO_REPORT="yes"
                 ;;
             --save-results)
                 SAVE_RESULTS="yes"

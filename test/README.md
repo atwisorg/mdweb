@@ -20,10 +20,12 @@
   --args ARG...             pass options to the program under test
   --clear                   delete the saved results of the previous test
                               before starting testing
+  --no-headings             don't print test headings
   --info                    show all streams output by the program under test;
                               by default, all streams will be shown when the
                               test fails
   --info-off                if the test fails, output only the compared streams
+  --no-report               don't print summary report
   --save-results            save all test results;
                               by default, only the results of failed tests are
                               saved
