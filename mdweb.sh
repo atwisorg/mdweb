@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.5} - (C) 04.08.2025
+    echo "${0##*/} ${1:-0.6.6} - (C) 04.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -472,9 +472,9 @@ prepare_code ()
         # - convert several characters;
 
         # List of symbols used:
-        # `ˆC`, `\x03`, `\003` - `CODE_MARKER`
-        # `ˆ@`, `\x00`, `\000` - `NULL`
-        #       `\x0a`, `\012` - `newline`
+        # `ˆC`, `\x03` - `CODE_MARKER`
+        # `ˆ@`, `\x00` - `NULL`
+        #       `\x0a` - `newline`
 
         # Skip all lines that are not code
         /^\x03/! b exit
@@ -522,13 +522,13 @@ prepare_paragraph ()
         # - remove spaces from the end of each line
 
         # List of symbols used:
-        # `ˆ[`, `\x1b`, `\033` - `MERGE_START_MARKER`
-        # `ˆ]`, `\x1d`, `\035` - `MERGE_STOP_MARKER`
-        # `ˆP`, `\x10`, `\020` - `PARAGRAPH_MARKER`
-        # `ˆB`, `\x02`, `\002` - `TAG_BR_MARKER`
-        # `ˆ@`, `\x00`, `\000` - `NULL`
-        #       `\x0a`, `\012` - `newline`
-        # `ˆZ`, `\x1a`, `\032` - temporary character to indicate an empty string
+        # `ˆ[`, `\x1b` - `MERGE_START_MARKER`
+        # `ˆ]`, `\x1d` - `MERGE_STOP_MARKER`
+        # `ˆP`, `\x10` - `PARAGRAPH_MARKER`
+        # `ˆB`, `\x02` - `TAG_BR_MARKER`
+        # `ˆ@`, `\x00` - `NULL`
+        #       `\x0a` - `newline`
+        # `ˆZ`, `\x1a` - temporary character to indicate an empty string
 
         # Skip all lines that are not a paragraph
         /^\x10/! b exit
@@ -1031,13 +1031,13 @@ combine_with_tag ()
         #   character by converting `CANONICAL_PRE_CODE` to `NULL`
 
         # List of symbols used:
-        # `ˆ[`, `\x1b`, `\033` - `MERGE_START_MARKER`
-        # `ˆ]`, `\x1d`, `\035` - `MERGE_STOP_MARKER`
-        # `ˆP`, `\x10`, `\020` - `PARAGRAPH_MARKER`
-        # `ˆC`, `\x03`, `\003` - `CODE_MARKER`
-        # `ˆN`, `\x0e`, `\016` - `CANONICAL_PRE_CODE`
-        # `ˆ@`, `\x00`, `\000` - `NULL`
-        #       `\x0a`, `\012` - `newline`
+        # `ˆ[`, `\x1b` - `MERGE_START_MARKER`
+        # `ˆ]`, `\x1d` - `MERGE_STOP_MARKER`
+        # `ˆP`, `\x10` - `PARAGRAPH_MARKER`
+        # `ˆC`, `\x03` - `CODE_MARKER`
+        # `ˆN`, `\x0e` - `CANONICAL_PRE_CODE`
+        # `ˆ@`, `\x00` - `NULL`
+        #       `\x0a` - `newline`
 
 
         # If the `</p>` tag is nested in the `</li>` tag,
@@ -1097,8 +1097,8 @@ split ()
         #   character with a newline;
 
         # List of symbols used:
-        # `ˆ@`, `\x00`, `\000` - `NULL`
-        #       `\x0a`, `\012` - `newline`
+        # `ˆ@`, `\x00` - `NULL`
+        #       `\x0a` - `newline`
 
         s%\x00%\x0a%g
     '
@@ -2123,15 +2123,15 @@ parse ()
     ID_NUM=0
     declare -A ID_BASE
 
-    MERGE_START_MARKER="$(tr '\n' '\033' <<< "")" # ˆ[ [\x1b]
-     MERGE_STOP_MARKER="$(tr '\n' '\035' <<< "")" # ˆ] [\x1d]
-      PARAGRAPH_MARKER="$(tr '\n' '\020' <<< "")" # ˆP [\x10]
-           CODE_MARKER="$(tr '\n' '\003' <<< "")" # ˆC [\x03]
-     NEW_STRING_MARKER="$(tr '\n' '\016' <<< "")" # ˆN [\x0e]
-         TAG_BR_MARKER="$(tr '\n' '\002' <<< "")" # ˆB [\x02]
-            NEW_STRING=$'\n'                      #  $ [\x0a]
-                   TAB=$'\t'                      # ˆI [\x09]
-                 SPACE=" "                        #    [\x20]
+    MERGE_START_MARKER="$(sed 's%.%\x1b%' <<< ".")" # ˆ[ [\x1b]
+     MERGE_STOP_MARKER="$(sed 's%.%\x1d%' <<< ".")" # ˆ] [\x1d]
+      PARAGRAPH_MARKER="$(sed 's%.%\x10%' <<< ".")" # ˆP [\x10]
+           CODE_MARKER="$(sed 's%.%\x03%' <<< ".")" # ˆC [\x03]
+     NEW_STRING_MARKER="$(sed 's%.%\x0e%' <<< ".")" # ˆN [\x0e]
+         TAG_BR_MARKER="$(sed 's%.%\x02%' <<< ".")" # ˆB [\x02]
+            NEW_STRING=$'\n'                        #  $ [\x0a]
+                   TAB=$'\t'                        # ˆI [\x09]
+                 SPACE=" "                          #    [\x20]
     CANONICAL_PRE_CODE="${CANONICAL_PRE_CODE:+"$NEW_STRING_MARKER"}"
 
     # open_block | cat -vT
