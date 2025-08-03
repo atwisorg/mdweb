@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.7} - (C) 04.08.2025
+    echo "${0##*/} ${1:-0.6.8} - (C) 04.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -2071,15 +2071,6 @@ open_string_block ()
     STRING=
 }
 
-reset_block_variables ()
-{
-    STRING_BLOCK=()
-    INDENT_CODE_BLOCK=
-    CODE_BLOCK=
-    BLOCK_QUOTE=
-    LIST_ITEM=
-}
-
 preparing_input ()
 {
                         # replace NUL characters for security
@@ -2107,6 +2098,7 @@ open_block ()
     fi
 }
 
+# The main parsing function.  Returns a parsed document HTML.
 parse ()
 {
     PREFIX_INDENT=
@@ -2124,7 +2116,11 @@ parse ()
     OPENING_TAG_SUB_BLOCK=()
     OPENING_INDENT_SUB_BLOCK=()
 
-    reset_block_variables
+    STRING_BLOCK=()
+    INDENT_CODE_BLOCK=
+    CODE_BLOCK=
+    BLOCK_QUOTE=
+    LIST_ITEM=
 
     ID_NUM=0
     declare -A ID_BASE
