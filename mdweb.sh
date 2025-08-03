@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.6} - (C) 04.08.2025
+    echo "${0##*/} ${1:-0.6.7} - (C) 04.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -2080,12 +2080,18 @@ reset_block_variables ()
     LIST_ITEM=
 }
 
+preparing_input ()
+{
+                        # replace NUL characters for security
+    cat "${INPUT:--}" | sed 's%\x00%\xef\xbf\xbd%g'
+}
+
 open_block ()
 {
     while IFS= read -r STRING || is_not_empty "${STRING:-}"
     do
         parse_block_structure
-    done < <(cat "${INPUT:--}" | sed 's%\o000%\o357\o277\o275%g')
+    done < <(preparing_input)
     if no_open_blocks
     then
         print_block
