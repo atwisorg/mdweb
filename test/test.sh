@@ -401,7 +401,7 @@ run_test_file ()
                         STDERR="$PKG_DIR/${NAME_TESTED_FILE}_$STRING_NUM_TEST.err"
                         is_diff "${#TESTED_ARGS[@]}" 0 || TESTED_ARGS=( "${GLOBAL_ARGS[@]}" )
                         RETURN_CODE=0
-                        timeout "${GLOBAL_TIMEOUT:-"${TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_SCRIPT" "${TESTED_ARGS[@]}" <<< "$SAMPLE" > "$STDOUT" 2> "$STDERR" &
+                        timeout "${GLOBAL_TIMEOUT:-"${TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_SCRIPT" "${TESTED_ARGS[@]}" < <(sed 's%\o357\o277\o275%\o000%g' <<< "$SAMPLE") > "$STDOUT" 2> "$STDERR" &
                         CHILD_PID="$!"
                         wait "$CHILD_PID"
                         RETURN_CODE="$?"
@@ -428,7 +428,7 @@ run_test_file ()
                         fi
                 esac
         esac
-    done < "$TESTED_FILE"
+    done < <(cat "$TESTED_FILE" | sed 's%\o000%\o357\o277\o275%g')
 }
 
 get_range_nums ()
