@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.2} - (C) 04.08.2025
+    echo "${0##*/} ${1:-0.6.3} - (C) 04.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -2233,10 +2233,10 @@ create_document ()
 create_document_with_message ()
 {
     is_equal "$STDIN" "pipeline" &&
-    say "converting stdin" >&2 ||
-    say "converting a file: $INPUT" >&2
-    create_document >&3
-    say "conversion completed" >&2
+    >&2 say "converting stdin"   ||
+    >&2 say "converting a file: $INPUT"
+    >&3 create_document
+    >&2 say "conversion completed"
 }
 
 main ()
