@@ -1,8 +1,3 @@
 # https://spec.commonmark.org/0.31.2/#insecure-characters
 
 For security reasons, the Unicode character U+0000 must be replaced with the REPLACEMENT CHARACTER (U+FFFD).
-
-Architecturally, the sh and bash shell use the NULL
-character (Unicode; U+0000, Hex: \\x00, Oct: \\000) as a separator,
-and this character cannot be part of the value of variables
-and, accordingly, cannot be replaced.
