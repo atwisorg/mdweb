@@ -2212,7 +2212,7 @@ close_html ()
     echo "</html>"
 }
 
-convert ()
+create_document ()
 {
     if is_empty "${ONLY_CONTENT:-}"
     then
@@ -2235,7 +2235,7 @@ report_and_convert ()
     is_equal "$STDIN" "pipeline" &&
     say "converting stdin" >&2 ||
     say "converting a file: $INPUT" >&2
-    convert >&3
+    create_document >&3
     say "conversion completed" >&2
 }
 
@@ -2250,10 +2250,10 @@ main ()
     is_empty "${OUTPUT:-}" && exec 3>&1 || exec 3>"$OUTPUT"
     is_empty "${OUTPUT:-}" && {
         is_terminal stdout && {
-            is_terminal stderr && convert >&3 || report_and_convert
+            is_terminal stderr && create_document >&3 || report_and_convert
         }
     } || {
-        is_not_terminal stderr && is_equal_fds stderr 3 && convert >&3 || report_and_convert
+        is_not_terminal stderr && is_equal_fds stderr 3 && create_document >&3 || report_and_convert
     }
 }
 
