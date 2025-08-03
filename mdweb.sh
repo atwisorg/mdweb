@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.8} - (C) 04.08.2025
+    echo "${0##*/} ${1:-0.6.9} - (C) 04.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1351,7 +1351,7 @@ print_closing_tags ()
     }
 }
 
-print_block ()
+finalize ()
 {
     get_string_block
     print_opening_tags
@@ -1403,7 +1403,7 @@ parse_empty_string ()
     if no_open_blocks
     then
         # print a paragraph
-        string_block_is_empty || print_block
+        string_block_is_empty || finalize
     else
         if list_is_open
         then
@@ -1581,7 +1581,7 @@ parse_indent ()
                 "indent_code_block")
                     if test "$INDENT_LENGTH" -lt 4
                     then
-                        print_block
+                        finalize
                         return
                     else
                         trim_indent "$EXCESS_INDENT"
@@ -1594,7 +1594,7 @@ parse_indent ()
                         if  string_block_is_empty ||
                             is_equal "${BLOCK_TYPE[-1]}" "indent_code_block"
                         then
-                            print_block
+                            finalize
                             open_indent_code_block
                         else
                             open_string_block
@@ -1622,7 +1622,7 @@ parse_indent ()
                     # ◦◦◦-                                                      │
                     # ┌──┬─> the current indent is less than the next nesting level
                     # ◦◦◦◦-◦◦◦◦bar (current string)
-                    print_block
+                    finalize
                     open_indent_code_block
                 else
                     # ┌───┬─> LEVEL=0 BLOCK_TYPE[0]="-" NESTING_DEPTH[0]="3:5" <┐
@@ -1631,7 +1631,7 @@ parse_indent ()
                     # ◦◦◦◦-◦◦◦◦bar (current string)
                     if [[ "${STRING_BLOCK[-1]}" =~ "$NEW_STRING"$ ]]
                     then
-                        print_block
+                        finalize
                         open_indent_code_block
                     else
                         open_string_block
@@ -1656,7 +1656,7 @@ parse_indent ()
                     test "$INDENT_LENGTH" -le "$(( ${NESTING_DEPTH["$LEVEL"]#*:} + 3))" || {
                         if string_block_is_empty
                         then
-                            is_diff "${BLOCK_TYPE["$LEVEL"]}" "block_quote" || print_block
+                            is_diff "${BLOCK_TYPE["$LEVEL"]}" "block_quote" || finalize
                             LEVEL="$((LEVEL + 1))"
                             open_indent_code_block "$(( ${NESTING_DEPTH["$((LEVEL - 1))"]#*:} + 4))"
                         else
@@ -1666,7 +1666,7 @@ parse_indent ()
                                 case "${STRING_BLOCK[-1]}" in
                                     *[!$NEW_STRING]*)
                                         get_paragraph
-                                        print_block
+                                        finalize
                                         ;;
                                     *)  STRING_BLOCK=()
                                 esac
@@ -1848,7 +1848,7 @@ open_indent_code_block ()
 
 close_indent_code_block ()
 {
-    is_empty "${INDENT_CODE_BLOCK:-}" || print_block
+    is_empty "${INDENT_CODE_BLOCK:-}" || finalize
 }
 
 open_code_block ()
@@ -1863,7 +1863,7 @@ open_code_block ()
 
 close_code_block ()
 {
-    print_block
+    finalize
     FENCE_CHAR=
     INDENTED_CODE_BLOCK="closed"
              CODE_BLOCK="closed"
@@ -1876,7 +1876,7 @@ add_to_code_block ()
         is_code_block && close_code_block "$LEVEL" || open_string_block
     else
         is_code_block && {
-            is_empty "${BLOCK_TYPE["$LEVEL"]:-"${STRING_BLOCK["$LEVEL"]:-}"}" || print_block
+            is_empty "${BLOCK_TYPE["$LEVEL"]:-"${STRING_BLOCK["$LEVEL"]:-}"}" || finalize
             open_code_block
         }
     fi
@@ -1893,9 +1893,9 @@ open_unordered_list ()
     [[ "$STRING" =~ ^"$1"([[:blank:]]|$) ]] && {
         if is_equal "${BLOCK_TYPE["$LEVEL"]:-}" "$1"
         then
-            print_block "close tags to the current list item"
+            finalize "close tags to the current list item"
         else
-            string_block_is_empty || print_block
+            string_block_is_empty || finalize
             BLOCK_TYPE["$LEVEL"]="$1"
 
             get_tag "ul"
@@ -1918,9 +1918,9 @@ open_ordered_list ()
 {
     if is_equal "${BLOCK_TYPE["$LEVEL"]:-}" "$1"
     then
-        print_block "close tags to the current list item"
+        finalize "close tags to the current list item"
     else
-        string_block_is_empty || print_block
+        string_block_is_empty || finalize
         BLOCK_TYPE["$LEVEL"]="$1"
 
         OL_START="${STRING%%[!0-9]*}"
@@ -1949,7 +1949,7 @@ open_block_quote ()
     # including this block, when an empty string or other block occurs.
     BLOCK_QUOTE="${BLOCK_QUOTE:-"$LEVEL"}"
     is_equal "${BLOCK_TYPE["$LEVEL"]:-}" "block_quote" || {
-        string_block_is_empty || print_block
+        string_block_is_empty || finalize
         BLOCK_TYPE["$LEVEL"]="block_quote"
 
         get_tag "blockquote"
@@ -1968,7 +1968,7 @@ open_block_quote ()
 close_block_quote ()
 {
     LEVEL="$BLOCK_QUOTE"
-    print_block
+    finalize
     BLOCK_QUOTE=""
     PRIMARY_INDENT="0"
 }
@@ -1981,7 +1981,7 @@ trim_white_space ()
 
 print_heading ()
 {
-    print_block
+    finalize
     BLOCK_TYPE["$LEVEL"]="heading"
     NESTING_DEPTH["$LEVEL"]=""
     trim_white_space
@@ -1990,7 +1990,7 @@ print_heading ()
     LEVEL="$((LEVEL + 1))"
     is_empty "${STRING:-}" || open_string_block
     LEVEL="$((LEVEL - 1))"
-    print_block
+    finalize
 }
 
 print_heading_atx ()
@@ -2022,7 +2022,7 @@ print_horizontal_rule ()
     [[ "${STRING//[[:blank:]]}" =~ ^"$1"{3,}$ ]] && {
         STRING="${TAG_INDENT:-}<hr />"
         is_equal "$LEVEL" 0  &&
-                print_block || print_block "without closing tags"
+                finalize || finalize "without closing tags"
         echo "$STRING"
     }
 }
@@ -2035,7 +2035,7 @@ put_in_string_block ()
 open_string_block ()
 {
     string_block_is_empty && {
-        is_empty "${BLOCK_TYPE["$LEVEL"]:-}" || print_block
+        is_empty "${BLOCK_TYPE["$LEVEL"]:-}" || finalize
         is_empty "${!CLOSING_INDENT_BLOCK[@]}" || TAG_INDENT="${CLOSING_INDENT_BLOCK[-1]}"
         BUFFER_INDENT="${TAG_INDENT:-}"
         STRING_BLOCK["$LEVEL"]="${STRING:-}"
@@ -2047,7 +2047,7 @@ open_string_block ()
                 if [[ "${STRING_BLOCK[-1]}" =~ ^"$NEW_STRING" ]]
                 then
                     LEVEL="$((LEVEL - 1))"
-                    print_block
+                    finalize
                     STRING_BLOCK["$LEVEL"]="$STRING"
                 elif [[ "${STRING_BLOCK[-1]}" =~ ^"$NEW_STRING" ]]
                 then
@@ -2056,7 +2056,7 @@ open_string_block ()
                     put_in_string_block
                 fi
             else
-                print_block
+                finalize
                 STRING_BLOCK["$LEVEL"]="$STRING"
             fi
         else
@@ -2085,7 +2085,7 @@ open_block ()
     done < <(preparing_input)
     if no_open_blocks
     then
-        print_block
+        finalize
     else
         LEVEL=""
         case "${BLOCK_TYPE[-1]}" in
@@ -2093,7 +2093,7 @@ open_block ()
                 close_code_block
                 ;;
             *)
-                print_block
+                finalize
         esac
     fi
 }
