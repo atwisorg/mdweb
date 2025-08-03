@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.0} - (C) 03.08.2025
+    echo "${0##*/} ${1:-0.6.1} - (C) 04.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -2247,14 +2247,13 @@ main ()
     is_empty "${VERSION:-}" || show_version
     check_args
 
-    is_empty "${OUTPUT:-}" && exec 3>&1 || exec 3>"$OUTPUT"
-    is_empty "${OUTPUT:-}" && {
-        is_terminal stdout && {
-            is_terminal stderr && create_document >&3 || report_and_convert
-        }
-    } || {
-        is_not_terminal stderr && is_equal_fds stderr 3 && create_document >&3 || report_and_convert
-    }
+       is_empty "${OUTPUT:-}" && exec 3>&1 || exec 3>"$OUTPUT"
+    if is_empty "${OUTPUT:-}" && is_terminal stdout
+    then
+        is_terminal stderr
+    else
+        is_not_terminal stderr && is_equal_fds stderr 3
+    fi && >&3 create_document  || report_and_convert
 }
 
 main "$@"
