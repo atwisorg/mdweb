@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.3} - (C) 04.08.2025
+    echo "${0##*/} ${1:-0.6.4} - (C) 04.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -2101,7 +2101,7 @@ open_block ()
     fi
 }
 
-convert_md2html ()
+parse ()
 {
     PREFIX_INDENT=
     TAG_INDENT_WIDTH=0
@@ -2222,11 +2222,11 @@ create_document ()
         add_style
         close_head
         open_body
-        convert_md2html
+        parse
         close_body
         close_html
     else
-        convert_md2html
+        parse
     fi
 }
 
