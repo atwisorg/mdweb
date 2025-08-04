@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.20} - (C) 04.08.2025
+    echo "${0##*/} ${1:-0.6.21} - (C) 04.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1163,7 +1163,7 @@ get_heading_tag_with_class ()
 {
     ID="$(get_heading_id <<< "${LINE:-}")"
     is_empty "${ID:-}" || {
-        is_empty "${ID_BASE["$ID"]:-}" || ID="$ID-$((ID_NUM+1))"
+        is_empty "${ID_BASE["$ID"]:-}" || ID="$ID-$(( ${ID_NUM:=0} + 1 ))"
         ID_BASE["$ID"]="$ID"
     }
     OPENING_TAG="<$1 class=\"${CLASS:-atx}\" id=\"${ID:-}\">$MERGE_START_MARKER"
