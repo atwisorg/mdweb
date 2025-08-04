@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.17} - (C) 04.08.2025
+    echo "${0##*/} ${1:-0.6.18} - (C) 04.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1383,7 +1383,7 @@ code_block_is_closed ()
 
 line_is_empty ()
 {
-    case "${1:-}" in
+    case "${LINE:-}" in
         *[![:blank:]]*)
             return 1
     esac
@@ -1391,7 +1391,7 @@ line_is_empty ()
 
 line_is_not_empty ()
 {
-    line_is_empty "${1:-}" && return 1 || return 0
+    line_is_empty && return 1 || return 0
 }
 
 parse_empty_string ()
@@ -1496,7 +1496,7 @@ expand_indent ()
 
 get_indent ()
 {
-    line_is_not_empty "${LINE:-}" || return
+    line_is_not_empty || return
     INDENT="${LINE%%[![:blank:]]*}"
     INDENT_LENGTH="$(expand_indent "${LINE:-}" "$CHAR_NUM")"
     INDENT_LENGTH="${INDENT_LENGTH%%[![:blank:]]*}"
@@ -1713,7 +1713,7 @@ parse_block_structure ()
     PRIMARY_INDENT="0"
     TAG_INDENT="${MAIN_TAG_INDENT:-}"
 
-    line_is_not_empty "${LINE:-}" || parse_empty_string || return 0
+    line_is_not_empty || parse_empty_string || return 0
     while  is_not_empty "${LINE:-}"
     do
           get_indent || break
