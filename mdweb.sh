@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.15} - (C) 04.08.2025
+    echo "${0##*/} ${1:-0.6.16} - (C) 04.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1182,7 +1182,7 @@ get_tag ()
             OPENING_TAG="<p>$MERGE_START_MARKER"
             CLOSING_TAG="$MERGE_STOP_MARKER</p>"
             OPENING_TAG_INDENT="${TAG_INDENT:-}"
-            CLOSING_TAG_INDENT=""
+            CLOSING_TAG_INDENT=
             ;;
         code_block)
             $GET_CODE_BLOCK_TAG
@@ -1196,7 +1196,7 @@ get_tag ()
             $GET_HEADING_TAG "$1"
             CLOSING_TAG="$MERGE_STOP_MARKER</$1>"
             OPENING_TAG_INDENT="${TAG_INDENT:-}"
-            CLOSING_TAG_INDENT=""
+            CLOSING_TAG_INDENT=
             CLASS=
             ;;
     esac
@@ -1257,7 +1257,7 @@ get_paragraph ()
     put_in_tag_block
     remove_last_empty_lines
     BLOCK_TYPE["${LEVEL:-0}"]="paragraph"
-    NESTING_DEPTH["${LEVEL:-0}"]=""
+    NESTING_DEPTH["${LEVEL:-0}"]=
 }
 
 get_string_block ()
@@ -1403,7 +1403,7 @@ parse_empty_string ()
     else
         if list_is_open
         then
-            LINE=""
+            LINE=
             string_block_is_empty && open_string_block || put_in_string_block
         else
             if block_quote_is_closed
@@ -1470,7 +1470,7 @@ expand_indent ()
     CHARACTER_POSITION="${2:-0}"
     test "$CHARACTER_POSITION" -le 4 ||
     CHARACTER_POSITION=$(( CHARACTER_POSITION - $(( $(( CHARACTER_POSITION / 4 )) * 4 )) ))
-    INDENT=""
+    INDENT=
     while is_not_empty "${LINE:-}"
     do
         is_diff "$CHARACTER_POSITION" 4 &&
@@ -1854,7 +1854,7 @@ open_code_block ()
     EXCESS_INDENT="${#INDENT}"
     CODE_BLOCK="open"
     BLOCK_TYPE["$LEVEL"]="code_block"
-    NESTING_DEPTH["$LEVEL"]=""
+    NESTING_DEPTH["$LEVEL"]=
 }
 
 close_code_block ()
@@ -1965,7 +1965,7 @@ close_block_quote ()
 {
     LEVEL="$BLOCK_QUOTE"
     finalize
-    BLOCK_QUOTE=""
+    BLOCK_QUOTE=
     PRIMARY_INDENT="0"
 }
 
@@ -1979,7 +1979,7 @@ print_heading ()
 {
     finalize
     BLOCK_TYPE["$LEVEL"]="heading"
-    NESTING_DEPTH["$LEVEL"]=""
+    NESTING_DEPTH["$LEVEL"]=
     trim_white_space
     get_tag "$1"
     put_in_tag_block
@@ -2095,7 +2095,7 @@ parse ()
 {
     PREFIX_INDENT=
     TAG_INDENT_WIDTH=0
-    MAIN_TAG_INDENT=""
+    MAIN_TAG_INDENT=
 
     BLOCK_TYPE=()
     NESTING_DEPTH=()
