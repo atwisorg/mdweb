@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.16} - (C) 04.08.2025
+    echo "${0##*/} ${1:-0.6.17} - (C) 04.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -218,7 +218,7 @@ get_pkg_vars ()
 
 arg_is_not_empty ()
 {
-    RETURN=0
+    RETURN="0"
     case "$1" in
         *=)
             case "${2:-}" in
@@ -236,7 +236,7 @@ arg_is_not_empty ()
                     do
                         case $2 in
                             "--$i"|"--$i="*|"$i"|"$i="*)
-                                RETURN=1
+                                RETURN="1"
                                 break
                         esac
                     done
@@ -1107,8 +1107,8 @@ split ()
 get_tag_indent ()
 {
     case "$1" in
-        -) TAG_INDENT="$(printf "%$((${#TAG_INDENT} - ${2:-"${TAG_INDENT_WIDTH:=2}"}))s" '')" ;;
-        +) TAG_INDENT="$(printf "%$((${#TAG_INDENT} + ${2:-"${TAG_INDENT_WIDTH:=2}"}))s" '')" ;;
+        -) TAG_INDENT="$(printf "%$((${#TAG_INDENT} - ${2:-"${TAG_INDENT_WIDTH:="2"}"}))s" '')" ;;
+        +) TAG_INDENT="$(printf "%$((${#TAG_INDENT} + ${2:-"${TAG_INDENT_WIDTH:="2"}"}))s" '')" ;;
     esac
 }
 
@@ -1435,7 +1435,7 @@ trim_indent ()
         is_diff "$TRIM_SPACE" 0 || break
         is_diff "$CHARACTER_POSITION" 4 &&
             CHARACTER_POSITION="$((CHARACTER_POSITION + 1))" ||
-            CHARACTER_POSITION=1
+            CHARACTER_POSITION="1"
         case "$LINE" in
             $SPACE*)
                 LINE="${LINE:1}"
@@ -1475,7 +1475,7 @@ expand_indent ()
     do
         is_diff "$CHARACTER_POSITION" 4 &&
             CHARACTER_POSITION="$((CHARACTER_POSITION + 1))" ||
-            CHARACTER_POSITION=1
+            CHARACTER_POSITION="1"
         case "$LINE" in
             $SPACE*)
                 INDENT="${INDENT:-} "
@@ -1505,11 +1505,11 @@ get_indent ()
 
 parse_indent ()
 {
-    #    ┌>┌─────────────> LEVEL=0 BLOCK_TYPE[0]="-"                 NESTING_DEPTH[0]="3:6"
-    #    │ │┌────────────> LEVEL=1 BLOCK_TYPE[1]="block_quote"       NESTING_DEPTH[1]="6:0"
-    #    │ ││  ┌>--┌─────> LEVEL=2 BLOCK_TYPE[2]="*"                 NESTING_DEPTH[2]="3:5"
-    #    │ ││  │   │┌>-┌─> LEVEL=3 BLOCK_TYPE[3]=")"                 NESTING_DEPTH[3]="5:4"
-    #    │ ││  │   ││  │┌> LEVEL=4 BLOCK_TYPE[4]="indent_code_block" NESTING_DEPTH[4]="4:4"
+    #    ┌>┌─────────────> LEVEL="0" BLOCK_TYPE[0]="-"                 NESTING_DEPTH[0]="3:6"
+    #    │ │┌────────────> LEVEL="1" BLOCK_TYPE[1]="block_quote"       NESTING_DEPTH[1]="6:0"
+    #    │ ││  ┌>--┌─────> LEVEL="2" BLOCK_TYPE[2]="*"                 NESTING_DEPTH[2]="3:5"
+    #    │ ││  │   │┌>-┌─> LEVEL="3" BLOCK_TYPE[3]=")"                 NESTING_DEPTH[3]="5:4"
+    #    │ ││  │   ││  │┌> LEVEL="4" BLOCK_TYPE[4]="indent_code_block" NESTING_DEPTH[4]="4:4"
     # ◦◦◦-◦◦>◦◦*◦◦◦◦12)◦◦◦◦◦foo
     if is_empty "${!BLOCK_TYPE[@]}"
     then
@@ -1614,14 +1614,14 @@ parse_indent ()
                 }
                 if string_block_is_empty
                 then
-                    # ┌───┬─> LEVEL=0 BLOCK_TYPE[0]="-" NESTING_DEPTH[0]="3:5" <┐
+                    # ┌───┬─> LEVEL="0" BLOCK_TYPE[0]="-" NESTING_DEPTH[0]="3:5" <┐
                     # ◦◦◦-                                                      │
                     # ┌──┬─> the current indent is less than the next nesting level
                     # ◦◦◦◦-◦◦◦◦bar (current string)
                     finalize
                     open_indent_code_block
                 else
-                    # ┌───┬─> LEVEL=0 BLOCK_TYPE[0]="-" NESTING_DEPTH[0]="3:5" <┐
+                    # ┌───┬─> LEVEL="0" BLOCK_TYPE[0]="-" NESTING_DEPTH[0]="3:5" <┐
                     # ◦◦◦-◦foo                                                  │
                     # ┌──┬─> the current indent is less than the next nesting level
                     # ◦◦◦◦-◦◦◦◦bar (current string)
@@ -1636,7 +1636,7 @@ parse_indent ()
                 return 1
             elif test "$INDENT_LENGTH" -eq "${NESTING_DEPTH["$LEVEL"]#*:}"
             then
-                # ┌───┬─> LEVEL=0 BLOCK_TYPE[0]="-" NESTING_DEPTH[0]="3:5" <┐
+                # ┌───┬─> LEVEL="0" BLOCK_TYPE[0]="-" NESTING_DEPTH[0]="3:5" <┐
                 # ◦◦◦-◦foo                                                  │
                 # ┌───┬─> the current indent is equal to the next nesting level
                 # ◦◦◦◦◦-◦◦◦◦bar (current string)
@@ -1645,7 +1645,7 @@ parse_indent ()
             else
                 if is_empty "${BLOCK_TYPE["$((LEVEL + 1))"]:-}"
                 then
-                    # ┌───┬─> LEVEL=0 BLOCK_TYPE[0]="-" NESTING_DEPTH[0]="3:5" <┐
+                    # ┌───┬─> LEVEL="0" BLOCK_TYPE[0]="-" NESTING_DEPTH[0]="3:5" <┐
                     # ◦◦◦-◦foo                                                  │
                     # ┌─────┬─> the current indent is no more than 3 spaces larger than the last nesting level
                     # ◦◦◦◦◦◦◦-◦◦◦◦bar (current string)
@@ -1680,9 +1680,9 @@ parse_indent ()
                     LEVEL="$((LEVEL + 1))"
                     return
                 else
-                    #    ┌>--┌───────> LEVEL=0 BLOCK_TYPE[0]="*" NESTING_DEPTH[0]="3:8" <┐
-                    #    │   │┌>-┌───> LEVEL=1 BLOCK_TYPE[1]="+" NESTING_DEPTH[1]="8:4"  │
-                    #    │   ││  │┌>┌> LEVEL=2 BLOCK_TYPE[2]="-" NESTING_DEPTH[2]="4:3"  │
+                    #    ┌>--┌───────> LEVEL="0" BLOCK_TYPE[0]="*" NESTING_DEPTH[0]="3:8" <┐
+                    #    │   │┌>-┌───> LEVEL="1" BLOCK_TYPE[1]="+" NESTING_DEPTH[1]="8:4"  │
+                    #    │   ││  │┌>┌> LEVEL="2" BLOCK_TYPE[2]="-" NESTING_DEPTH[2]="4:3"  │
                     # ◦◦◦*◦◦◦◦+◦◦◦-◦◦foo                                                 │
                     # ┌──────────────┬─> the current indent is greater than the indent at the 0th nesting level
                     # ◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦-◦◦◦◦bar (current string)
@@ -1690,14 +1690,14 @@ parse_indent ()
                     trim_indent  "${NESTING_DEPTH["$LEVEL"]%:*}" "$CHAR_NUM"
                     CHAR_NUM="$(( ${NESTING_DEPTH["$LEVEL"]%:*} +  CHAR_NUM ))"
                     get_indent
-                    #    ┌>--┌───────> LEVEL=0 BLOCK_TYPE[0]="*" NESTING_DEPTH[0]="3:8" <┐
-                    #    │   │┌>-┌───> LEVEL=1 BLOCK_TYPE[1]="+" NESTING_DEPTH[1]="8:4"  │
-                    #    │   ││  │┌>┌> LEVEL=2 BLOCK_TYPE[2]="-" NESTING_DEPTH[2]="4:3"  │
+                    #    ┌>--┌───────> LEVEL="0" BLOCK_TYPE[0]="*" NESTING_DEPTH[0]="3:8" <┐
+                    #    │   │┌>-┌───> LEVEL="1" BLOCK_TYPE[1]="+" NESTING_DEPTH[1]="8:4"  │
+                    #    │   ││  │┌>┌> LEVEL="2" BLOCK_TYPE[2]="-" NESTING_DEPTH[2]="4:3"  │
                     # ◦◦◦*◦◦◦◦+◦◦◦-◦◦foo                                                 │
                     #         ┌──────┬─> the current indent is greater than the indent at the 1th nesting level
-                    #         ◦◦◦◦◦◦◦◦-◦◦◦◦bar (LEVEL=1)
+                    #         ◦◦◦◦◦◦◦◦-◦◦◦◦bar (LEVEL="1")
                     #             ┌──┬─> the current indent is greater than the indent at the 2th nesting level
-                    #             ◦◦◦◦-◦◦◦◦bar (LEVEL=2)
+                    #             ◦◦◦◦-◦◦◦◦bar (LEVEL="2")
                 fi
             fi
         done
@@ -2094,7 +2094,7 @@ open_block ()
 parse ()
 {
     PREFIX_INDENT=
-    TAG_INDENT_WIDTH=0
+    TAG_INDENT_WIDTH="0"
     MAIN_TAG_INDENT=
 
     BLOCK_TYPE=()
@@ -2114,7 +2114,7 @@ parse ()
     BLOCK_QUOTE=
     LIST_ITEM=
 
-    ID_NUM=0
+    ID_NUM="0"
     declare -A ID_BASE
 
     MERGE_START_MARKER="$(sed 's%.%\x1b%' <<< ".")" # ˆ[ [\x1b]
