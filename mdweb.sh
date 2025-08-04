@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.21} - (C) 04.08.2025
+    echo "${0##*/} ${1:-0.6.22} - (C) 04.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1159,12 +1159,22 @@ get_heading_id ()
     '
 }
 
+is_new_id ()
+{
+    is_empty "${ID_BASE:-}" || {
+        for i in $ID_BASE
+        do
+            is_diff "$ID" "$i" || return
+        done
+    }
+}
+
 get_heading_tag_with_class ()
 {
     ID="$(get_heading_id <<< "${LINE:-}")"
     is_empty "${ID:-}" || {
-        is_empty "${ID_BASE["$ID"]:-}" || ID="$ID-$(( ${ID_NUM:=0} + 1 ))"
-        ID_BASE["$ID"]="$ID"
+        is_new_id || ID="$ID-$(( ${ID_NUM:=0} + 1 ))"
+        ID_BASE="${ID_BASE:+"$ID_BASE$NEW_LINE"}$ID"
     }
     OPENING_TAG="<$1 class=\"${CLASS:-atx}\" id=\"${ID:-}\">$MERGE_START_MARKER"
 }
@@ -2134,9 +2144,6 @@ parse ()
     CODE_BLOCK=
     BLOCK_QUOTE=
     LIST_ITEM=
-
-    ID_NUM="0"
-    declare -A ID_BASE
 
     MERGE_START_MARKER="$(sed 's%.%\x1b%' <<< ".")" # ˆ[ [\x1b]
      MERGE_STOP_MARKER="$(sed 's%.%\x1d%' <<< ".")" # ˆ] [\x1d]
