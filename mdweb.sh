@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.13} - (C) 04.08.2025
+    echo "${0##*/} ${1:-0.6.14} - (C) 04.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1243,7 +1243,7 @@ current_depth_string_block_is_not_empty ()
 
 remove_last_empty_lines ()
 {
-    STRING_BLOCK[-1]="${STRING_BLOCK[-1]%"${STRING_BLOCK[-1]##*[!$NEW_STRING]}"}"
+    STRING_BLOCK[-1]="${STRING_BLOCK[-1]%"${STRING_BLOCK[-1]##*[!$NEW_LINE]}"}"
 }
 
 mark_a_string_block ()
@@ -1279,7 +1279,7 @@ get_string_block ()
                 "block_quote")
                     remove_last_empty_lines
                     is_empty "${STRING_BLOCK[-1]:-}" || {
-                        [[ "${STRING_BLOCK[-1]}" =~ "$NEW_STRING$NEW_STRING" ]] || {
+                        [[ "${STRING_BLOCK[-1]}" =~ "$NEW_LINE$NEW_LINE" ]] || {
                             SAVED_DEPTH="$LEVEL"
                             LEVEL="${#BLOCK_TYPE[@]}"
                             get_paragraph
@@ -1293,7 +1293,7 @@ get_string_block ()
                     mark_a_string_block
             esac
         fi
-        STRING_BLOCK[-1]="${STRING_BLOCK[-1]:+"${STRING_BLOCK[-1]}$NEW_STRING"}"
+        STRING_BLOCK[-1]="${STRING_BLOCK[-1]:+"${STRING_BLOCK[-1]}$NEW_LINE"}"
     }
 }
 
@@ -1304,9 +1304,9 @@ print_opening_tags ()
         for i in "${!NESTING_DEPTH[@]}"
         do
             is_empty "${OPENING_TAG_BLOCK[$i]:-}" ||
-                TAG="${TAG:+$TAG$NEW_STRING}${OPENING_INDENT_BLOCK[$i]:-}${OPENING_TAG_BLOCK[$i]}"
+                TAG="${TAG:+$TAG$NEW_LINE}${OPENING_INDENT_BLOCK[$i]:-}${OPENING_TAG_BLOCK[$i]}"
             is_empty "${OPENING_TAG_SUB_BLOCK[$i]:-}" ||
-                TAG="${TAG:+$TAG$NEW_STRING}${OPENING_INDENT_SUB_BLOCK[$i]:-}${OPENING_TAG_SUB_BLOCK[$i]}"
+                TAG="${TAG:+$TAG$NEW_LINE}${OPENING_INDENT_SUB_BLOCK[$i]:-}${OPENING_TAG_SUB_BLOCK[$i]}"
         done
         OPENING_INDENT_BLOCK=()
         OPENING_INDENT_SUB_BLOCK=()
@@ -1331,12 +1331,12 @@ print_closing_tags ()
             if test "$i" -ge "$LEVEL"
             then
                 is_empty "${CLOSING_TAG_SUB_BLOCK[$i]:-}" || {
-                    TAG="${TAG:+$TAG$NEW_STRING}${CLOSING_INDENT_SUB_BLOCK[$i]:-}${CLOSING_TAG_SUB_BLOCK[$i]}"
+                    TAG="${TAG:+$TAG$NEW_LINE}${CLOSING_INDENT_SUB_BLOCK[$i]:-}${CLOSING_TAG_SUB_BLOCK[$i]}"
                     unset -v "CLOSING_TAG_SUB_BLOCK[-1]" "CLOSING_INDENT_SUB_BLOCK[-1]"
                     is_empty "${1:-}" || is_diff "$i" "$LEVEL" || break
                 }
 
-                TAG="${TAG:+$TAG$NEW_STRING}${CLOSING_INDENT_BLOCK[-1]:-}${CLOSING_TAG_BLOCK[-1]}"
+                TAG="${TAG:+$TAG$NEW_LINE}${CLOSING_INDENT_BLOCK[-1]:-}${CLOSING_TAG_BLOCK[-1]}"
                 unset -v "BLOCK_TYPE[-1]" "NESTING_DEPTH[-1]" "CLOSING_TAG_BLOCK[-1]" "CLOSING_INDENT_BLOCK[-1]"
             else
                 break
@@ -1625,7 +1625,7 @@ parse_indent ()
                     # ◦◦◦-◦foo                                                  │
                     # ┌──┬─> the current indent is less than the next nesting level
                     # ◦◦◦◦-◦◦◦◦bar (current string)
-                    if [[ "${STRING_BLOCK[-1]}" =~ "$NEW_STRING"$ ]]
+                    if [[ "${STRING_BLOCK[-1]}" =~ "$NEW_LINE"$ ]]
                     then
                         finalize
                         open_indent_code_block
@@ -1656,11 +1656,11 @@ parse_indent ()
                             LEVEL="$((LEVEL + 1))"
                             open_indent_code_block "$(( ${NESTING_DEPTH["$((LEVEL - 1))"]#*:} + 4))"
                         else
-                            if [[ "${STRING_BLOCK[-1]}" =~ "$NEW_STRING"$ ]]
+                            if [[ "${STRING_BLOCK[-1]}" =~ "$NEW_LINE"$ ]]
                             then
                                 LEVEL="$((LEVEL + 1))"
                                 case "${STRING_BLOCK[-1]}" in
-                                    *[!$NEW_STRING]*)
+                                    *[!$NEW_LINE]*)
                                         get_paragraph
                                         finalize
                                         ;;
@@ -2025,7 +2025,7 @@ print_horizontal_rule ()
 
 put_in_string_block ()
 {
-    STRING_BLOCK[-1]="${STRING_BLOCK[-1]:-}$NEW_STRING${BUFFER_INDENT:-}${STRING:-}"
+    STRING_BLOCK[-1]="${STRING_BLOCK[-1]:-}$NEW_LINE${BUFFER_INDENT:-}${STRING:-}"
 }
 
 open_string_block ()
@@ -2036,18 +2036,18 @@ open_string_block ()
         BUFFER_INDENT="${TAG_INDENT:-}"
         STRING_BLOCK["$LEVEL"]="${STRING:-}"
     } || {
-        if [[ "${STRING_BLOCK[-1]}" =~ "$NEW_STRING"$ ]]
+        if [[ "${STRING_BLOCK[-1]}" =~ "$NEW_LINE"$ ]]
         then
             if is_empty "${BLOCK_TYPE["$LEVEL"]:-}"
             then
-                if [[ "${STRING_BLOCK[-1]}" =~ ^"$NEW_STRING" ]]
+                if [[ "${STRING_BLOCK[-1]}" =~ ^"$NEW_LINE" ]]
                 then
                     LEVEL="$((LEVEL - 1))"
                     finalize
                     STRING_BLOCK["$LEVEL"]="$STRING"
-                elif [[ "${STRING_BLOCK[-1]}" =~ ^"$NEW_STRING" ]]
+                elif [[ "${STRING_BLOCK[-1]}" =~ ^"$NEW_LINE" ]]
                 then
-                    STRING_BLOCK[-1]="${STRING_BLOCK[-1]#"$NEW_STRING"}$STRING"
+                    STRING_BLOCK[-1]="${STRING_BLOCK[-1]#"$NEW_LINE"}$STRING"
                 else
                     put_in_string_block
                 fi
@@ -2121,12 +2121,12 @@ parse ()
      MERGE_STOP_MARKER="$(sed 's%.%\x1d%' <<< ".")" # ˆ] [\x1d]
       PARAGRAPH_MARKER="$(sed 's%.%\x10%' <<< ".")" # ˆP [\x10]
            CODE_MARKER="$(sed 's%.%\x03%' <<< ".")" # ˆC [\x03]
-     NEW_STRING_MARKER="$(sed 's%.%\x0e%' <<< ".")" # ˆN [\x0e]
+       NEW_LINE_MARKER="$(sed 's%.%\x0e%' <<< ".")" # ˆN [\x0e]
          TAG_BR_MARKER="$(sed 's%.%\x02%' <<< ".")" # ˆB [\x02]
-            NEW_STRING=$'\n'                        #  $ [\x0a]
+              NEW_LINE=$'\n'                        #  $ [\x0a]
                    TAB=$'\t'                        # ˆI [\x09]
                  SPACE=" "                          #    [\x20]
-    CANONICAL_PRE_CODE="${CANONICAL_PRE_CODE:+"$NEW_STRING_MARKER"}"
+    CANONICAL_PRE_CODE="${CANONICAL_PRE_CODE:+"$NEW_LINE_MARKER"}"
 
     # open_block | cat -vT
     # open_block | prepare_paragraph | cat -vT
