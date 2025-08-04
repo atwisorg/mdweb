@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.18} - (C) 04.08.2025
+    echo "${0##*/} ${1:-0.6.19} - (C) 04.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1058,7 +1058,7 @@ combine_with_tag ()
         }
 
         # Waiting for the closing tag with `MERGE_STOP_MARKER` at the beginning
-        /\n\x1d/ {
+        /\x0a\x1d/ {
             # If the `list item` or `code block` is empty:
             s%\x1b\x0a\x1d\x0e\?%%g
             t exit
