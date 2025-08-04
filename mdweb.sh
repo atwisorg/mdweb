@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.11} - (C) 04.08.2025
+    echo "${0##*/} ${1:-0.6.12} - (C) 04.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1381,7 +1381,7 @@ code_block_is_closed ()
     is_diff "${CODE_BLOCK:-"${INDENT_CODE_BLOCK:-}"}" "open"
 }
 
-string_is_empty ()
+line_is_empty ()
 {
     case "${1:-}" in
         *[![:blank:]]*)
@@ -1391,7 +1391,7 @@ string_is_empty ()
 
 string_is_not_empty ()
 {
-    string_is_empty "${1:-}" && return 1 || return 0
+    line_is_empty "${1:-}" && return 1 || return 0
 }
 
 parse_empty_string ()
