@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.9} - (C) 04.08.2025
+    echo "${0##*/} ${1:-0.6.10} - (C) 04.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1280,7 +1280,7 @@ get_string_block ()
                     remove_last_empty_strings
                     is_empty "${STRING_BLOCK[-1]:-}" || {
                         [[ "${STRING_BLOCK[-1]}" =~ "$NEW_STRING$NEW_STRING" ]] || {
-                            SAVED_DEPTH="${LEVEL:-0}"
+                            SAVED_DEPTH="$LEVEL"
                             LEVEL="${#BLOCK_TYPE[@]}"
                             get_paragraph
                             LEVEL="$SAVED_DEPTH"
@@ -1289,11 +1289,7 @@ get_string_block ()
                     }
                     ;;
                 *)
-                    if  is_empty "${LEVEL:-}" ||
-                        test "$LEVEL" -lt "${!STRING_BLOCK[@]}"
-                    then
-                        remove_last_empty_strings
-                    fi
+                    test "$LEVEL" -ge "${!STRING_BLOCK[@]}" || remove_last_empty_strings
                     mark_a_string_block
             esac
         fi
@@ -1332,7 +1328,7 @@ print_closing_tags ()
         # get tags starting from the last one added
         for ((i=$((${#NESTING_DEPTH[@]} - 1)); i>=0; i--))
         do
-            if test "$i" -ge "${LEVEL:-0}"
+            if test "$i" -ge "$LEVEL"
             then
                 is_empty "${CLOSING_TAG_SUB_BLOCK[$i]:-}" || {
                     TAG="${TAG:+$TAG$NEW_STRING}${CLOSING_INDENT_SUB_BLOCK[$i]:-}${CLOSING_TAG_SUB_BLOCK[$i]}"
@@ -2083,19 +2079,15 @@ open_block ()
     do
         parse_block_structure
     done < <(preparing_input)
-    if no_open_blocks
-    then
-        finalize
-    else
-        LEVEL=""
+    no_open_blocks || {
+        LEVEL="0"
         case "${BLOCK_TYPE[-1]}" in
             "code_block" | "indent_code_block")
                 close_code_block
-                ;;
-            *)
-                finalize
+                die
         esac
-    fi
+    }
+    finalize
 }
 
 # The main parsing function.  Returns a parsed document HTML.
