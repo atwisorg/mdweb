@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.19} - (C) 04.08.2025
+    echo "${0##*/} ${1:-0.6.20} - (C) 04.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1039,7 +1039,6 @@ combine_with_tag ()
         # `ˆ@`, `\x00` - `NULL`
         #       `\x0a` - `newline`
 
-
         # If the `</p>` tag is nested in the `</li>` tag,
         # the `</li>` and `</p>` tags must be on different lines
         s%^\x1d%%
@@ -1124,18 +1123,40 @@ get_code_block_tag ()
 
 get_heading_id ()
 {
+    #             ┌─> sequence of incoming strings
+    #
+    # Line ────── 1 ─┬─> get_heading_id ─> line-header-h2
+    # header h2 ─ 2 ─┘
+    # -------
+
     sed '
-        : merge
+        # The following tasks are solved here:
+        # - merge lines of a multi-line header by replacing the newline
+        #   character with '-' to create the header ID;
+
+        # List of symbols used:
+        #       `\x0a` - `newline`
+
+        : add_next_line
         $!N
-        s%[\]*\n%-%
-        t merge
+        s%\x0a%-%
+        t add_next_line
+
+        # replace spaces with the '-' character
         s%[[:blank:]]%-%g
+
+        # remove punctuation characters
         s%[^a-zA-Z0-9_-]%%g
+
+        # replace duplicate '-' characters with one
         s%-\+%-%g
-        s%\(^-\+\|-\+$\)%%g
+
+        # remove the '-' character at the beginning and end
+        s%\(^-\|-$\)%%g
 
         # all in lowercase
-        s%.*%\L&%g'
+        s%.*%\L&%g
+    '
 }
 
 get_heading_tag_with_class ()
