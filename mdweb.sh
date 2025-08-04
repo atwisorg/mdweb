@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.10} - (C) 04.08.2025
+    echo "${0##*/} ${1:-0.6.11} - (C) 04.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1241,7 +1241,7 @@ current_depth_string_block_is_not_empty ()
     current_depth_string_block_is_empty && return 1 || return 0
 }
 
-remove_last_empty_strings ()
+remove_last_empty_lines ()
 {
     STRING_BLOCK[-1]="${STRING_BLOCK[-1]%"${STRING_BLOCK[-1]##*[!$NEW_STRING]}"}"
 }
@@ -1255,7 +1255,7 @@ get_paragraph ()
 {
     get_tag "paragraph"
     put_in_tag_block
-    remove_last_empty_strings
+    remove_last_empty_lines
     BLOCK_TYPE["${LEVEL:-0}"]="paragraph"
     NESTING_DEPTH["${LEVEL:-0}"]=""
 }
@@ -1270,14 +1270,14 @@ get_string_block ()
         else
             case "${BLOCK_TYPE[-1]}" in
                 "indent_code_block")
-                    remove_last_empty_strings
+                    remove_last_empty_lines
                     STRING_BLOCK[-1]="$CODE_MARKER${STRING_BLOCK[-1]}$CODE_MARKER"
                     ;;
                 "code_block")
                     STRING_BLOCK[-1]="$CODE_MARKER${STRING_BLOCK[-1]}$CODE_MARKER"
                     ;;
                 "block_quote")
-                    remove_last_empty_strings
+                    remove_last_empty_lines
                     is_empty "${STRING_BLOCK[-1]:-}" || {
                         [[ "${STRING_BLOCK[-1]}" =~ "$NEW_STRING$NEW_STRING" ]] || {
                             SAVED_DEPTH="$LEVEL"
@@ -1289,7 +1289,7 @@ get_string_block ()
                     }
                     ;;
                 *)
-                    test "$LEVEL" -ge "${!STRING_BLOCK[@]}" || remove_last_empty_strings
+                    test "$LEVEL" -ge "${!STRING_BLOCK[@]}" || remove_last_empty_lines
                     mark_a_string_block
             esac
         fi
