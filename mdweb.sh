@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.29} - (C) 05.08.2025
+    echo "${0##*/} ${1:-0.6.30} - (C) 05.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1511,6 +1511,11 @@ append_to_container ()
 {
     CONTAINER["$1"]="${2:-}"
     CONTAINER_TREE+=( "${1:-}" )
+}
+
+append_to_container_element ()
+{
+    CONTAINER["$1"]="${CONTAINER["$1"]:+"${CONTAINER["$1"]}$NEW_LINE"}${2:-}"
 }
 
 rename_container_element ()
