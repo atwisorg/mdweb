@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.23} - (C) 05.08.2025
+    echo "${0##*/} ${1:-0.6.24} - (C) 05.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1490,6 +1490,13 @@ parse_block_structure ()
     }
 }
 
+reset_container ()
+{
+    unset -v CONTAINER CONTAINER_TREE
+    declare -A CONTAINER
+    CONTAINER_TREE=()
+}
+
 preparing_input ()
 {
                         # replace NUL characters for security
@@ -1498,6 +1505,7 @@ preparing_input ()
 
 open_block ()
 {
+    reset_container
     while IFS= read -r LINE || is_not_empty "${LINE:-}"
     do
         parse_block_structure
