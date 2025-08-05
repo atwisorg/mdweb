@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.22} - (C) 04.08.2025
+    echo "${0##*/} ${1:-0.6.23} - (C) 05.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -453,6 +453,1066 @@ check_args ()
     }
 }
 
+open_html ()
+{
+    echo "\
+<!DOCTYPE html>
+<html lang=\"en\">"
+}
+
+add_title ()
+{
+    echo "<title>${PAGE_TITLE:-}</title>"
+}
+
+open_head ()
+{
+    echo "\
+<head>
+<meta charset=\"UTF-8\">
+<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
+}
+
+add_style ()
+{
+    is_empty "${PAGE_STYLE:-}" || {
+        echo "<style>"
+        cat "$PAGE_STYLE" || die "$STATUS"
+        echo "</style>"
+    }
+}
+
+close_head ()
+{
+    echo "</head>"
+}
+
+open_body ()
+{
+    echo "\
+<body>
+<article class=\"markdown-body\">"
+}
+
+close_body ()
+{
+    echo "\
+</article>
+</body>"
+}
+
+close_html ()
+{
+    echo "</html>"
+}
+
+get_code_block_tag_with_class ()
+{
+    OPENING_TAG="<pre><code class=\"${CLASS:+fenced-code-block language-}${CLASS:-indented-code-block}\">$MERGE_START_MARKER"
+}
+
+get_code_block_tag ()
+{
+    OPENING_TAG="<pre><code${CLASS:+ class=\"language-$CLASS\"}>$MERGE_START_MARKER"
+}
+
+get_heading_id ()
+{
+    #             ┌─> sequence of incoming strings
+    #
+    # Line ────── 1 ─┬─> get_heading_id ─> line-header-h2
+    # header h2 ─ 2 ─┘
+    # -------
+
+    sed '
+        # The following tasks are solved here:
+        # - merge lines of a multi-line header by replacing the newline
+        #   character with '-' to create the header ID;
+
+        # List of symbols used:
+        #       `\x0a` - `newline`
+
+        : add_next_line
+        $!N
+        s%\x0a%-%
+        t add_next_line
+
+        # replace spaces with the '-' character
+        s%[[:blank:]]%-%g
+
+        # remove punctuation characters
+        s%[^a-zA-Z0-9_-]%%g
+
+        # replace duplicate '-' characters with one
+        s%-\+%-%g
+
+        # remove the '-' character at the beginning and end
+        s%\(^-\|-$\)%%g
+
+        # all in lowercase
+        s%.*%\L&%g
+    '
+}
+
+is_new_id ()
+{
+    is_empty "${ID_BASE:-}" || {
+        for i in $ID_BASE
+        do
+            is_diff "$ID" "$i" || return
+        done
+    }
+}
+
+get_heading_tag_with_class ()
+{
+    ID="$(get_heading_id <<< "${LINE:-}")"
+    is_empty "${ID:-}" || {
+        is_new_id || ID="$ID-$(( ${ID_NUM:=0} + 1 ))"
+        ID_BASE="${ID_BASE:+"$ID_BASE$NEW_LINE"}$ID"
+    }
+    OPENING_TAG="<$1 class=\"${CLASS:-atx}\" id=\"${ID:-}\">$MERGE_START_MARKER"
+}
+
+get_heading_tag ()
+{
+    OPENING_TAG="<$1>$MERGE_START_MARKER"
+}
+
+get_tag_indent ()
+{
+    case "$1" in
+        -) TAG_INDENT="$(printf "%$((${#TAG_INDENT} - ${2:-"${TAG_INDENT_WIDTH:="2"}"}))s" '')" ;;
+        +) TAG_INDENT="$(printf "%$((${#TAG_INDENT} + ${2:-"${TAG_INDENT_WIDTH:="2"}"}))s" '')" ;;
+    esac
+}
+
+get_tag ()
+{
+    case "$1" in
+        blockquote|ul)
+            OPENING_TAG="<$1>"
+            CLOSING_TAG="</$1>"
+            OPENING_TAG_INDENT="${TAG_INDENT:-}"
+            CLOSING_TAG_INDENT="${TAG_INDENT:-}"
+            get_tag_indent +
+            ;;
+        ol)
+            OPENING_TAG="<$1${OL_START:+ start=\"$OL_START\"}>"
+            CLOSING_TAG="</$1>"
+            OPENING_TAG_INDENT="${TAG_INDENT:-}"
+            CLOSING_TAG_INDENT="${TAG_INDENT:-}"
+            OL_START=
+            get_tag_indent +
+            ;;
+        li)
+            OPENING_TAG="<$1>$MERGE_START_MARKER"
+            CLOSING_TAG="$MERGE_STOP_MARKER</$1>"
+            OPENING_TAG_INDENT="${TAG_INDENT:-}"
+            CLOSING_TAG_INDENT="${TAG_INDENT:-}"
+            get_tag_indent +
+            ;;
+        paragraph)
+            OPENING_TAG="<p>$MERGE_START_MARKER"
+            CLOSING_TAG="$MERGE_STOP_MARKER</p>"
+            OPENING_TAG_INDENT="${TAG_INDENT:-}"
+            CLOSING_TAG_INDENT=
+            ;;
+        code_block)
+            $GET_CODE_BLOCK_TAG
+            CLOSING_TAG="$MERGE_STOP_MARKER${CANONICAL_PRE_CODE:-}</code></pre>"
+            OPENING_TAG_INDENT="${TAG_INDENT:-}"
+            CLOSING_TAG_INDENT="${CANONICAL_PRE_CODE:+"${TAG_INDENT:-}"}"
+            CLASS=
+            get_tag_indent +
+            ;;
+        h[1-6])
+            $GET_HEADING_TAG "$1"
+            CLOSING_TAG="$MERGE_STOP_MARKER</$1>"
+            OPENING_TAG_INDENT="${TAG_INDENT:-}"
+            CLOSING_TAG_INDENT=
+            CLASS=
+            ;;
+    esac
+}
+
+put_in_tag_block ()
+{
+    OPENING_INDENT_BLOCK["$LEVEL"]="${OPENING_TAG_INDENT:-}"
+    CLOSING_INDENT_BLOCK["$LEVEL"]="${CLOSING_TAG_INDENT:-}"
+
+    OPENING_TAG_BLOCK["$LEVEL"]="$OPENING_TAG"
+    CLOSING_TAG_BLOCK["$LEVEL"]="$CLOSING_TAG"
+
+    OPENING_TAG=
+    CLOSING_TAG=
+}
+
+put_tag_in_sub_block ()
+{
+    OPENING_INDENT_SUB_BLOCK["$LEVEL"]="${OPENING_TAG_INDENT:-}"
+    CLOSING_INDENT_SUB_BLOCK["$LEVEL"]="${CLOSING_TAG_INDENT:-}"
+
+    OPENING_TAG_SUB_BLOCK["$LEVEL"]="$OPENING_TAG"
+    CLOSING_TAG_SUB_BLOCK["$LEVEL"]="$CLOSING_TAG"
+
+    OPENING_TAG=
+    CLOSING_TAG=
+}
+
+remove_last_empty_lines ()
+{
+    STRING_BLOCK[-1]="${STRING_BLOCK[-1]%"${STRING_BLOCK[-1]##*[!$NEW_LINE]}"}"
+}
+
+mark_a_string_block ()
+{
+    STRING_BLOCK[-1]="${STRING_BLOCK[-1]:+"$PARAGRAPH_MARKER${STRING_BLOCK[-1]}$PARAGRAPH_MARKER"}"
+}
+
+get_paragraph ()
+{
+    get_tag "paragraph"
+    put_in_tag_block
+    remove_last_empty_lines
+    BLOCK_TYPE["${LEVEL:-0}"]="paragraph"
+    NESTING_DEPTH["${LEVEL:-0}"]=
+}
+
+string_block_is_empty ()
+{
+    is_empty "${!STRING_BLOCK[@]}"
+}
+
+no_open_blocks ()
+{
+    is_empty "${!BLOCK_TYPE[@]}"
+}
+
+get_string_block ()
+{
+    string_block_is_empty || {
+        if no_open_blocks
+        then
+            get_paragraph
+            mark_a_string_block
+        else
+            case "${BLOCK_TYPE[-1]}" in
+                "indent_code_block")
+                    remove_last_empty_lines
+                    STRING_BLOCK[-1]="$CODE_MARKER${STRING_BLOCK[-1]}$CODE_MARKER"
+                    ;;
+                "code_block")
+                    STRING_BLOCK[-1]="$CODE_MARKER${STRING_BLOCK[-1]}$CODE_MARKER"
+                    ;;
+                "block_quote")
+                    remove_last_empty_lines
+                    is_empty "${STRING_BLOCK[-1]:-}" || {
+                        [[ "${STRING_BLOCK[-1]}" =~ "$NEW_LINE$NEW_LINE" ]] || {
+                            SAVED_DEPTH="$LEVEL"
+                            LEVEL="${#BLOCK_TYPE[@]}"
+                            get_paragraph
+                            LEVEL="$SAVED_DEPTH"
+                        }
+                        mark_a_string_block
+                    }
+                    ;;
+                *)
+                    test "$LEVEL" -ge "${!STRING_BLOCK[@]}" || remove_last_empty_lines
+                    mark_a_string_block
+            esac
+        fi
+        STRING_BLOCK[-1]="${STRING_BLOCK[-1]:+"${STRING_BLOCK[-1]}$NEW_LINE"}"
+    }
+}
+
+print_opening_tags ()
+{
+    no_open_blocks || {
+        TAG=
+        for i in "${!NESTING_DEPTH[@]}"
+        do
+            is_empty "${OPENING_TAG_BLOCK[$i]:-}" ||
+                TAG="${TAG:+$TAG$NEW_LINE}${OPENING_INDENT_BLOCK[$i]:-}${OPENING_TAG_BLOCK[$i]}"
+            is_empty "${OPENING_TAG_SUB_BLOCK[$i]:-}" ||
+                TAG="${TAG:+$TAG$NEW_LINE}${OPENING_INDENT_SUB_BLOCK[$i]:-}${OPENING_TAG_SUB_BLOCK[$i]}"
+        done
+        OPENING_INDENT_BLOCK=()
+        OPENING_INDENT_SUB_BLOCK=()
+        OPENING_TAG_BLOCK=()
+        OPENING_TAG_SUB_BLOCK=()
+        is_empty "${TAG:-}" || echo "$TAG"
+    }
+}
+
+print_closing_tags ()
+{
+    no_open_blocks || {
+        case "${1:-}" in
+            "without closing tags")
+                return
+                ;;
+        esac
+        TAG=
+        # get tags starting from the last one added
+        for ((i=$((${#NESTING_DEPTH[@]} - 1)); i>=0; i--))
+        do
+            if test "$i" -ge "$LEVEL"
+            then
+                is_empty "${CLOSING_TAG_SUB_BLOCK[$i]:-}" || {
+                    TAG="${TAG:+$TAG$NEW_LINE}${CLOSING_INDENT_SUB_BLOCK[$i]:-}${CLOSING_TAG_SUB_BLOCK[$i]}"
+                    unset -v "CLOSING_TAG_SUB_BLOCK[-1]" "CLOSING_INDENT_SUB_BLOCK[-1]"
+                    is_empty "${1:-}" || is_diff "$i" "$LEVEL" || break
+                }
+
+                TAG="${TAG:+$TAG$NEW_LINE}${CLOSING_INDENT_BLOCK[-1]:-}${CLOSING_TAG_BLOCK[-1]}"
+                unset -v "BLOCK_TYPE[-1]" "NESTING_DEPTH[-1]" "CLOSING_TAG_BLOCK[-1]" "CLOSING_INDENT_BLOCK[-1]"
+            else
+                break
+            fi
+        done
+        # TAG_INDENT="${TAG_INDENT%"$(printf "%$((TAG_INDENT_WIDTH*LEVEL+2))s" '')"}"
+        is_empty "${TAG:-}" || echo "$TAG"
+    }
+}
+
+finalize ()
+{
+    get_string_block
+    print_opening_tags
+    echo -n "${STRING_BLOCK[@]:-}"
+    print_closing_tags "${1:-}"
+    STRING_BLOCK=()
+}
+
+put_in_string_block ()
+{
+    STRING_BLOCK[-1]="${STRING_BLOCK[-1]:-}$NEW_LINE${BUFFER_INDENT:-}${LINE:-}"
+}
+
+open_string_block ()
+{
+    string_block_is_empty && {
+        is_empty "${BLOCK_TYPE["$LEVEL"]:-}" || finalize
+        is_empty "${!CLOSING_INDENT_BLOCK[@]}" || TAG_INDENT="${CLOSING_INDENT_BLOCK[-1]}"
+        BUFFER_INDENT="${TAG_INDENT:-}"
+        STRING_BLOCK["$LEVEL"]="${LINE:-}"
+    } || {
+        if [[ "${STRING_BLOCK[-1]}" =~ "$NEW_LINE"$ ]]
+        then
+            if is_empty "${BLOCK_TYPE["$LEVEL"]:-}"
+            then
+                if [[ "${STRING_BLOCK[-1]}" =~ ^"$NEW_LINE" ]]
+                then
+                    LEVEL="$((LEVEL - 1))"
+                    finalize
+                    STRING_BLOCK["$LEVEL"]="$LINE"
+                elif [[ "${STRING_BLOCK[-1]}" =~ ^"$NEW_LINE" ]]
+                then
+                    STRING_BLOCK[-1]="${STRING_BLOCK[-1]#"$NEW_LINE"}$LINE"
+                else
+                    put_in_string_block
+                fi
+            else
+                finalize
+                STRING_BLOCK["$LEVEL"]="$LINE"
+            fi
+        else
+            if is_empty "${STRING_BLOCK[-1]:-}"
+            then
+                STRING_BLOCK[-1]="$LINE"
+            else
+                put_in_string_block
+            fi
+        fi
+    }
+    LINE=
+}
+
+trim_indent ()
+{
+    is_not_empty "${LINE:-}" || return 0
+    SAVED_STRING="$LINE"
+    TRIM_SPACE="${1:-4}"
+    CHARACTER_POSITION="${2:-0}"
+    test "$CHARACTER_POSITION" -le 4 ||
+    CHARACTER_POSITION=$(( CHARACTER_POSITION - $(( $(( CHARACTER_POSITION / 4 )) * 4 )) ))
+
+    while is_not_empty "${LINE:-}"
+    do
+        is_diff "$TRIM_SPACE" 0 || break
+        is_diff "$CHARACTER_POSITION" 4 &&
+            CHARACTER_POSITION="$((CHARACTER_POSITION + 1))" ||
+            CHARACTER_POSITION="1"
+        case "$LINE" in
+            $SPACE*)
+                LINE="${LINE:1}"
+                TRIM_SPACE="$((TRIM_SPACE - 1))"
+                ;;
+            $TAB*)
+                TAB_LENGTH="$((4 -  $((CHARACTER_POSITION - 1))))"
+                CHARACTER_POSITION="$((CHARACTER_POSITION - 1 + TAB_LENGTH))"
+                if is_equal "$TRIM_SPACE" "$TAB_LENGTH"
+                then
+                    LINE="${LINE:1}"
+                    break
+                elif test "$TRIM_SPACE" -lt "$TAB_LENGTH"
+                then
+                    LINE="$(printf "%$((TAB_LENGTH - TRIM_SPACE))s")${LINE:1}"
+                    break
+                else
+                    LINE="${LINE:1}"
+                    TRIM_SPACE="$((TRIM_SPACE - TAB_LENGTH))"
+                fi
+                ;;
+            *)
+                break
+        esac
+    done
+    is_diff "$SAVED_STRING" "${LINE:-}"
+}
+
+open_indent_code_block ()
+{
+    EXCESS_INDENT="${1:-4}"
+    trim_indent "$EXCESS_INDENT" "$CHAR_NUM"
+    get_tag "code_block"
+    put_in_tag_block
+    INDENT_CODE_BLOCK="open"
+    BLOCK_TYPE["$LEVEL"]="indent_code_block"
+    NESTING_DEPTH["$LEVEL"]="$CHAR_NUM:$EXCESS_INDENT"
+    LEVEL="$((LEVEL + 1))"
+    open_string_block
+}
+
+open_code_block ()
+{
+    get_tag "code_block"
+    put_in_tag_block
+    EXCESS_INDENT="${#INDENT}"
+    CODE_BLOCK="open"
+    BLOCK_TYPE["$LEVEL"]="code_block"
+    NESTING_DEPTH["$LEVEL"]=
+}
+
+close_code_block ()
+{
+    finalize
+    FENCE_CHAR=
+    INDENTED_CODE_BLOCK="closed"
+             CODE_BLOCK="closed"
+}
+
+serialize_pre_code_language ()
+{
+    sed '
+        # get the first word
+        s%^[[:blank:]]*\([^[:blank:]]\+\).*$%\1%g
+
+        # all in lowercase
+        s%.*%\L&%g
+
+        # mask ampersand
+        s%\([^\\]\?\)&%\1\x03%g
+
+        # remove backslash-escaped
+        s%\\\([][!"#$%&\x27()*+,./:;<=>?@\\^_`{|}~-]\)%\1%g
+
+        s%&%\&amp;%g
+        s%"%\&quot;%g
+        s%<%\&lt;%g
+        s%>%\&gt;%g
+
+        # unmask ampersand
+        s%\x03%\&%g'
+}
+
+is_code_block ()
+{
+    if is_empty "${FENCE_CHAR:-}"
+    then
+        [[ "${LINE:-}" =~ ^[[:blank:]]*\`{3,}[^\`]*$ ]] ||
+        [[ "${LINE:-}" =~ ^[[:blank:]]*~{3,} ]] && {
+            FENCE_CHAR="${LINE%%[!~\`]*}"
+            FENCE_LENGTH="${#FENCE_CHAR}"
+            CLASS="${LINE#"$FENCE_CHAR"}"
+            is_empty "${CLASS:-}" ||
+                CLASS="$(serialize_pre_code_language <<< "$CLASS")"
+            FENCE_CHAR="${FENCE_CHAR:0:1}"
+        }
+    else
+        [[ "${LINE:-}" =~ ^[[:blank:]]*$FENCE_CHAR{$FENCE_LENGTH,}[[:blank:]]*$ ]]
+    fi
+}
+
+add_to_code_block ()
+{
+    if is_equal "${BLOCK_TYPE["$LEVEL"]:-}" "code_block"
+    then
+        is_code_block && close_code_block "$LEVEL" || open_string_block
+    else
+        is_code_block && {
+            is_empty "${BLOCK_TYPE["$LEVEL"]:-"${STRING_BLOCK["$LEVEL"]:-}"}" || finalize
+            open_code_block
+        }
+    fi
+}
+
+open_list_item ()
+{
+    get_tag "li"
+    put_tag_in_sub_block
+}
+
+open_unordered_list ()
+{
+    [[ "$LINE" =~ ^"$1"([[:blank:]]|$) ]] && {
+        if is_equal "${BLOCK_TYPE["$LEVEL"]:-}" "$1"
+        then
+            finalize "close tags to the current list item"
+        else
+            string_block_is_empty || finalize
+            BLOCK_TYPE["$LEVEL"]="$1"
+
+            get_tag "ul"
+            put_in_tag_block
+        fi
+        open_list_item
+        BULLET_CHAR_NUM="$CHAR_NUM"
+        if is_equal "$LEVEL" 0
+        then
+            NESTING_DEPTH["$LEVEL"]="$CHAR_NUM"
+        else
+            NESTING_DEPTH["$LEVEL"]="${NESTING_DEPTH["$((LEVEL - 1))"]#*:}"
+        fi
+        CHAR_NUM="$((CHAR_NUM + 1))"
+        LEVEL="$((LEVEL + 1))"
+    }
+}
+
+open_ordered_list ()
+{
+    if is_equal "${BLOCK_TYPE["$LEVEL"]:-}" "$1"
+    then
+        finalize "close tags to the current list item"
+    else
+        string_block_is_empty || finalize
+        BLOCK_TYPE["$LEVEL"]="$1"
+
+        OL_START="${LINE%%[!0-9]*}"
+        LENGTH_ORDERED_LIST_NUM="${#OL_START}"
+        is_equal "$LENGTH_ORDERED_LIST_NUM" 1 || OL_START="${OL_START#"${OL_START%%[!0]*}"}"
+        is_diff "$OL_START" 1 || OL_START=
+
+        get_tag "ol"
+        put_in_tag_block
+    fi
+    open_list_item
+    BULLET_CHAR_NUM="$CHAR_NUM"
+    if is_equal "$LEVEL" 0
+    then
+        NESTING_DEPTH["$LEVEL"]="$CHAR_NUM"
+    else
+        NESTING_DEPTH["$LEVEL"]="${NESTING_DEPTH["$((LEVEL - 1))"]#*:}"
+    fi
+    CHAR_NUM="$((CHAR_NUM + 1 + LENGTH_ORDERED_LIST_NUM))"
+    LEVEL="$((LEVEL + 1))"
+}
+
+open_block_quote ()
+{
+    # remember the first nesting depth of the block to close all tags,
+    # including this block, when an empty string or other block occurs.
+    BLOCK_QUOTE="${BLOCK_QUOTE:-"$LEVEL"}"
+    is_equal "${BLOCK_TYPE["$LEVEL"]:-}" "block_quote" || {
+        string_block_is_empty || finalize
+        BLOCK_TYPE["$LEVEL"]="block_quote"
+
+        get_tag "blockquote"
+        put_in_tag_block
+    }
+    if is_equal "$LEVEL" 0
+    then
+        NESTING_DEPTH["$LEVEL"]="$CHAR_NUM"
+    else
+        NESTING_DEPTH["$LEVEL"]="${NESTING_DEPTH["$((LEVEL - 1))"]#*:}"
+    fi
+    CHAR_NUM="$((CHAR_NUM + 1))"
+    LEVEL="$((LEVEL + 1))"
+}
+
+close_block_quote ()
+{
+    LEVEL="$BLOCK_QUOTE"
+    finalize
+    BLOCK_QUOTE=
+    PRIMARY_INDENT="0"
+}
+
+trim_white_space ()
+{
+    LINE="${LINE#"${LINE%%[![:blank:]]*}"}"
+    LINE="${LINE%"${LINE##*[![:blank:]]}"}"
+}
+
+print_heading ()
+{
+    finalize
+    BLOCK_TYPE["$LEVEL"]="heading"
+    NESTING_DEPTH["$LEVEL"]=
+    trim_white_space
+    get_tag "$1"
+    put_in_tag_block
+    LEVEL="$((LEVEL + 1))"
+    is_empty "${LINE:-}" || open_string_block
+    LEVEL="$((LEVEL - 1))"
+    finalize
+}
+
+print_heading_atx ()
+{
+    [[ "${LINE:-}" =~ ^#{1,6}([[:blank:]].*|$) ]] && {
+        HEADER="${LINE%%[[:blank:]]*}"
+        LINE="$(sed 's%\(^#\+\|[[:blank:]]\+#*[[:blank:]]*$\)%%g' <<< "$LINE")"
+        CLASS="atx"
+        print_heading "h${#HEADER}"
+    }
+}
+
+current_depth_string_block_is_empty ()
+{
+    is_empty "${STRING_BLOCK["$LEVEL"]:-}"
+}
+
+current_depth_string_block_is_not_empty ()
+{
+    current_depth_string_block_is_empty && return 1 || return 0
+}
+
+print_heading_setext ()
+{
+    current_depth_string_block_is_not_empty &&
+    [[ "$LINE" =~ ^"$1"+[[:blank:]]*$ ]] && {
+        LINE="${STRING_BLOCK[-1]}"
+        unset -v "STRING_BLOCK[-1]"
+        CLASS="setext"
+        case "$1" in
+            =) print_heading "h1" ;;
+            -) print_heading "h2" ;;
+        esac
+    }
+}
+
+print_horizontal_rule ()
+{
+    [[ "${LINE//[[:blank:]]}" =~ ^"$1"{3,}$ ]] && {
+        LINE="${TAG_INDENT:-}<hr />"
+        is_equal "$LEVEL" 0  &&
+                finalize || finalize "without closing tags"
+        echo "$LINE"
+    }
+}
+
+block_quote_is_closed ()
+{
+    is_empty "${BLOCK_QUOTE:-}"
+}
+
+code_block_is_closed ()
+{
+    is_diff "${CODE_BLOCK:-"${INDENT_CODE_BLOCK:-}"}" "open"
+}
+
+list_is_open ()
+{
+    [[ "${BLOCK_TYPE["$LEVEL"]}" =~ [\).*+-] ]]
+}
+
+parse_empty_string ()
+{
+    if no_open_blocks
+    then
+        # print a paragraph
+        string_block_is_empty || finalize
+    else
+        if list_is_open
+        then
+            LINE=
+            string_block_is_empty && open_string_block || put_in_string_block
+        else
+            if block_quote_is_closed
+            then
+                code_block_is_closed || {
+                    # add an empty string to the code block
+                    trim_indent "$EXCESS_INDENT"
+                    string_block_is_empty && open_string_block || put_in_string_block
+                }
+            else
+                close_block_quote
+            fi
+        fi
+    fi
+    return 1
+}
+
+line_is_empty ()
+{
+    case "${LINE:-}" in
+        *[![:blank:]]*)
+            return 1
+    esac
+}
+
+line_is_not_empty ()
+{
+    line_is_empty && return 1 || return 0
+}
+
+expand_indent ()
+{
+    LINE="$1"
+    CHARACTER_POSITION="${2:-0}"
+    test "$CHARACTER_POSITION" -le 4 ||
+    CHARACTER_POSITION=$(( CHARACTER_POSITION - $(( $(( CHARACTER_POSITION / 4 )) * 4 )) ))
+    INDENT=
+    while is_not_empty "${LINE:-}"
+    do
+        is_diff "$CHARACTER_POSITION" 4 &&
+            CHARACTER_POSITION="$((CHARACTER_POSITION + 1))" ||
+            CHARACTER_POSITION="1"
+        case "$LINE" in
+            $SPACE*)
+                INDENT="${INDENT:-} "
+                LINE="${LINE:1}"
+                ;;
+            $TAB*)
+                TAB_LENGTH="$((4 -  $((CHARACTER_POSITION - 1))))"
+                CHARACTER_POSITION="$((CHARACTER_POSITION - 1 + TAB_LENGTH))"
+                INDENT="${INDENT:-}$(printf "%${TAB_LENGTH}s")"
+                LINE="${LINE:1}"
+                ;;
+            *)
+                break
+        esac
+    done
+    echo "${INDENT:-}${LINE:-}"
+}
+
+get_indent ()
+{
+    line_is_not_empty || return
+    INDENT="${LINE%%[![:blank:]]*}"
+    INDENT_LENGTH="$(expand_indent "${LINE:-}" "$CHAR_NUM")"
+    INDENT_LENGTH="${INDENT_LENGTH%%[![:blank:]]*}"
+    INDENT_LENGTH="${#INDENT_LENGTH}"
+}
+
+parse_indent ()
+{
+    #    ┌>┌─────────────> LEVEL="0" BLOCK_TYPE[0]="-"                 NESTING_DEPTH[0]="3:6"
+    #    │ │┌────────────> LEVEL="1" BLOCK_TYPE[1]="block_quote"       NESTING_DEPTH[1]="6:0"
+    #    │ ││  ┌>--┌─────> LEVEL="2" BLOCK_TYPE[2]="*"                 NESTING_DEPTH[2]="3:5"
+    #    │ ││  │   │┌>-┌─> LEVEL="3" BLOCK_TYPE[3]=")"                 NESTING_DEPTH[3]="5:4"
+    #    │ ││  │   ││  │┌> LEVEL="4" BLOCK_TYPE[4]="indent_code_block" NESTING_DEPTH[4]="4:4"
+    # ◦◦◦-◦◦>◦◦*◦◦◦◦12)◦◦◦◦◦foo
+    if is_empty "${!BLOCK_TYPE[@]}"
+    then
+        #   ┌> the indent length is less than or equal to 4
+        # ◦◦◦-◦◦>◦◦*◦◦◦◦12)◦◦◦◦◦foo
+        test "$INDENT_LENGTH" -lt 4 || {
+            # ┌───┬─> indent length greater than 4
+            # ◦◦◦◦◦foo
+            if current_depth_string_block_is_empty
+            then
+                open_indent_code_block
+            else
+                open_string_block
+            fi
+            return 1
+        }
+        PRIMARY_INDENT="$INDENT_LENGTH"
+        return
+    elif is_empty "${BLOCK_TYPE["$LEVEL"]:-}"
+    then
+        #     ┌┬─> the indent length is less than or equal to 4
+        # ◦◦◦-◦◦>◦◦*◦◦◦◦12)◦◦◦◦◦foo
+        if test "$INDENT_LENGTH" -le 3
+        then
+            if is_equal "${BLOCK_TYPE[-1]}" "block_quote"
+            then
+                #        ┌┬─> the indent is not added to "block_quote"
+                # ◦◦◦-◦◦>◦◦*◦◦◦◦12)◦◦◦◦◦foo
+                PRIMARY_INDENT="$INDENT_LENGTH"
+                NESTING_DEPTH[-1]="${NESTING_DEPTH[-1]}:0"
+            else
+                #           ┌──┬─> the indent length is less than or equal to 4
+                # ◦◦◦-◦◦>◦◦*◦◦◦◦12)◦◦◦◦◦foo
+                # ◦-◦◦◦-◦◦◦foo
+                NESTING_DEPTH[-1]="${NESTING_DEPTH[-1]}:$(( $(( CHAR_NUM + INDENT_LENGTH )) - BULLET_CHAR_NUM + PRIMARY_INDENT ))"
+                PRIMARY_INDENT="0"
+            fi
+            return
+        else
+            #                  ┌───┬─> indent length greater than 4
+            # ◦◦◦-◦◦>◦◦*◦◦◦◦12)◦◦◦◦◦foo
+            NESTING_DEPTH[-1]="${NESTING_DEPTH[-1]}:$CHAR_NUM"
+            if current_depth_string_block_is_empty
+            then
+                open_indent_code_block
+            else
+                open_string_block
+            fi
+            return 1
+        fi
+    else
+        while true
+        do
+            case "${BLOCK_TYPE["$LEVEL"]}" in
+                "code_block")
+                    trim_indent "$EXCESS_INDENT"
+                    if test "$INDENT_LENGTH" -lt 4
+                    then
+                        add_to_code_block
+                    else
+                        open_string_block
+                    fi
+                    return 1
+                    ;;
+                "indent_code_block")
+                    if test "$INDENT_LENGTH" -lt 4
+                    then
+                        finalize
+                        return
+                    else
+                        trim_indent "$EXCESS_INDENT"
+                        put_in_string_block
+                        return 1
+                    fi
+                    ;;
+                "block_quote")
+                    test "$INDENT_LENGTH" -lt 4 || {
+                        if  string_block_is_empty ||
+                            is_equal "${BLOCK_TYPE[-1]}" "indent_code_block"
+                        then
+                            finalize
+                            open_indent_code_block
+                        else
+                            open_string_block
+                        fi
+                        return 1
+                    }
+                    return
+            esac
+
+            if test "$INDENT_LENGTH" -lt "${NESTING_DEPTH["$LEVEL"]#*:}"
+            then
+                test "$INDENT_LENGTH" -ge 4 || {
+                    if is_equal "$LEVEL" 0
+                    then
+                        PRIMARY_INDENT="$INDENT_LENGTH"
+                    else
+                        NESTING_DEPTH[-1]="${NESTING_DEPTH[-1]}:$(( $(( CHAR_NUM + INDENT_LENGTH )) - BULLET_CHAR_NUM + PRIMARY_INDENT ))"
+                        PRIMARY_INDENT="0"
+                    fi
+                    return 0
+                }
+                if string_block_is_empty
+                then
+                    # ┌───┬─> LEVEL="0" BLOCK_TYPE[0]="-" NESTING_DEPTH[0]="3:5" <┐
+                    # ◦◦◦-                                                      │
+                    # ┌──┬─> the current indent is less than the next nesting level
+                    # ◦◦◦◦-◦◦◦◦bar (current string)
+                    finalize
+                    open_indent_code_block
+                else
+                    # ┌───┬─> LEVEL="0" BLOCK_TYPE[0]="-" NESTING_DEPTH[0]="3:5" <┐
+                    # ◦◦◦-◦foo                                                  │
+                    # ┌──┬─> the current indent is less than the next nesting level
+                    # ◦◦◦◦-◦◦◦◦bar (current string)
+                    if [[ "${STRING_BLOCK[-1]}" =~ "$NEW_LINE"$ ]]
+                    then
+                        finalize
+                        open_indent_code_block
+                    else
+                        open_string_block
+                    fi
+                fi
+                return 1
+            elif test "$INDENT_LENGTH" -eq "${NESTING_DEPTH["$LEVEL"]#*:}"
+            then
+                # ┌───┬─> LEVEL="0" BLOCK_TYPE[0]="-" NESTING_DEPTH[0]="3:5" <┐
+                # ◦◦◦-◦foo                                                  │
+                # ┌───┬─> the current indent is equal to the next nesting level
+                # ◦◦◦◦◦-◦◦◦◦bar (current string)
+                LEVEL="$((LEVEL + 1))"
+                return
+            else
+                if is_empty "${BLOCK_TYPE["$((LEVEL + 1))"]:-}"
+                then
+                    # ┌───┬─> LEVEL="0" BLOCK_TYPE[0]="-" NESTING_DEPTH[0]="3:5" <┐
+                    # ◦◦◦-◦foo                                                  │
+                    # ┌─────┬─> the current indent is no more than 3 spaces larger than the last nesting level
+                    # ◦◦◦◦◦◦◦-◦◦◦◦bar (current string)
+                    test "$INDENT_LENGTH" -le "$(( ${NESTING_DEPTH["$LEVEL"]#*:} + 3))" || {
+                        if string_block_is_empty
+                        then
+                            is_diff "${BLOCK_TYPE["$LEVEL"]}" "block_quote" || finalize
+                            LEVEL="$((LEVEL + 1))"
+                            open_indent_code_block "$(( ${NESTING_DEPTH["$((LEVEL - 1))"]#*:} + 4))"
+                        else
+                            if [[ "${STRING_BLOCK[-1]}" =~ "$NEW_LINE"$ ]]
+                            then
+                                LEVEL="$((LEVEL + 1))"
+                                case "${STRING_BLOCK[-1]}" in
+                                    *[!$NEW_LINE]*)
+                                        get_paragraph
+                                        finalize
+                                        ;;
+                                    *)  STRING_BLOCK=()
+                                esac
+                                trim_indent  "${NESTING_DEPTH["$((LEVEL - 1))"]#*:}" "$CHAR_NUM"
+                                CHAR_NUM="$(( ${NESTING_DEPTH["$((LEVEL - 1))"]#*:} +  CHAR_NUM ))"
+                                get_indent
+                                open_indent_code_block
+                            else
+                                put_in_string_block
+                            fi
+                        fi
+                        return 1
+                    }
+                    LEVEL="$((LEVEL + 1))"
+                    return
+                else
+                    #    ┌>--┌───────> LEVEL="0" BLOCK_TYPE[0]="*" NESTING_DEPTH[0]="3:8" <┐
+                    #    │   │┌>-┌───> LEVEL="1" BLOCK_TYPE[1]="+" NESTING_DEPTH[1]="8:4"  │
+                    #    │   ││  │┌>┌> LEVEL="2" BLOCK_TYPE[2]="-" NESTING_DEPTH[2]="4:3"  │
+                    # ◦◦◦*◦◦◦◦+◦◦◦-◦◦foo                                                 │
+                    # ┌──────────────┬─> the current indent is greater than the indent at the 0th nesting level
+                    # ◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦-◦◦◦◦bar (current string)
+                    LEVEL="$((LEVEL + 1))"
+                    trim_indent  "${NESTING_DEPTH["$LEVEL"]%:*}" "$CHAR_NUM"
+                    CHAR_NUM="$(( ${NESTING_DEPTH["$LEVEL"]%:*} +  CHAR_NUM ))"
+                    get_indent
+                    #    ┌>--┌───────> LEVEL="0" BLOCK_TYPE[0]="*" NESTING_DEPTH[0]="3:8" <┐
+                    #    │   │┌>-┌───> LEVEL="1" BLOCK_TYPE[1]="+" NESTING_DEPTH[1]="8:4"  │
+                    #    │   ││  │┌>┌> LEVEL="2" BLOCK_TYPE[2]="-" NESTING_DEPTH[2]="4:3"  │
+                    # ◦◦◦*◦◦◦◦+◦◦◦-◦◦foo                                                 │
+                    #         ┌──────┬─> the current indent is greater than the indent at the 1th nesting level
+                    #         ◦◦◦◦◦◦◦◦-◦◦◦◦bar (LEVEL="1")
+                    #             ┌──┬─> the current indent is greater than the indent at the 2th nesting level
+                    #             ◦◦◦◦-◦◦◦◦bar (LEVEL="2")
+                fi
+            fi
+        done
+    fi
+}
+
+parse_block_structure ()
+{
+    LEVEL="0"
+    CHAR_NUM="0"
+    BULLET_CHAR_NUM="0"
+    INDENT_LENGTH="0"
+    PRIMARY_INDENT="0"
+    TAG_INDENT="${MAIN_TAG_INDENT:-}"
+
+    line_is_not_empty || parse_empty_string || return 0
+    while  is_not_empty "${LINE:-}"
+    do
+          get_indent || break
+        parse_indent || return 0
+        LINE="${LINE#"${INDENT:-}"}"
+        CHAR_NUM="$((CHAR_NUM + INDENT_LENGTH))"
+        case "$LINE" in
+            [_]*)
+                print_horizontal_rule "_" || open_string_block
+                return
+                ;;
+            [#]*)
+                print_heading_atx || open_string_block
+                return
+                ;;
+            [=]*)
+                print_heading_setext "=" || open_string_block
+                return
+                ;;
+            [-]*)
+                print_heading_setext  "-" ||
+                print_horizontal_rule "-" && return ||
+                open_unordered_list   "-" || {
+                    open_string_block
+                    return
+                }
+                ;;
+            [*]*)
+                print_horizontal_rule "*" && return ||
+                [[ "$LINE" =~ ^"*"[[:blank:]]+[![:blank:]] ]] ||
+                current_depth_string_block_is_empty &&
+                open_unordered_list "*" || {
+                    open_string_block
+                    return
+                }
+                ;;
+            [+]*)
+                is_not_empty "${NESTING_DEPTH[$((LEVEL+1))]:-}" ||
+                [[ "$LINE" =~ ^"+"[[:blank:]]+[![:blank:]] ]] ||
+                current_depth_string_block_is_empty  &&
+                open_unordered_list "+" || {
+                    open_string_block
+                    return
+                }
+                ;;
+             \>*)
+                open_block_quote
+                ;;
+               *)
+                [[ "$LINE" =~ ^[0-9]{1,9}[\).]([[:blank:]]|$) ]] && {
+                [[ "$LINE" =~ ^[0-9]{1,9}[\).][[:blank:]]+[![:blank:]] ]] ||
+                    current_depth_string_block_is_empty && {
+                        [[ "$LINE" =~ ^[0-9]{1,9}\) ]] && open_ordered_list ")" || {
+                        [[ "$LINE" =~ ^[0-9]{1,9}\. ]] && open_ordered_list "."  ; }
+                        LINE="${LINE:"$LENGTH_ORDERED_LIST_NUM"}"
+                    }
+                } || {
+                    add_to_code_block || open_string_block
+                    return
+                }
+                ;;
+        esac
+        LINE="${LINE:1}"
+        trim_indent 1 "$CHAR_NUM" && CHAR_NUM="$((CHAR_NUM + 1))" || true
+    done
+    no_open_blocks || {
+        is_not_empty "${BLOCK_QUOTE:-}" ||
+            NESTING_DEPTH[-1]="${NESTING_DEPTH[-1]}:$(( CHAR_NUM - BULLET_CHAR_NUM ))"
+        LINE=
+        open_string_block
+    }
+}
+
+preparing_input ()
+{
+                        # replace NUL characters for security
+    cat "${INPUT:--}" | sed 's%\x00%\xef\xbf\xbd%g'
+}
+
+open_block ()
+{
+    while IFS= read -r LINE || is_not_empty "${LINE:-}"
+    do
+        parse_block_structure
+    done < <(preparing_input)
+    no_open_blocks || {
+        LEVEL="0"
+        case "${BLOCK_TYPE[-1]}" in
+            "code_block" | "indent_code_block")
+                close_code_block
+                die
+        esac
+    }
+    finalize
+}
+
 prepare_code ()
 {
     #       ┌────> sequence of incoming strings <────┐
@@ -510,7 +1570,7 @@ prepare_paragraph ()
     #                               ├─ ˆ]</li> ─ 7 ─┤                       ├─ ˆ]</p>
     #                               └─ </ul> ─── 8 ─┘                       ├─ ˆ]</li>
     #                                                                       └─ </ul>
- 
+
     sed '
         # The following tasks are solved here:
         # - starting from the first `PARAGRAPH_MARKER` marker found to the next,
@@ -1103,1024 +2163,6 @@ split ()
     '
 }
 
-get_tag_indent ()
-{
-    case "$1" in
-        -) TAG_INDENT="$(printf "%$((${#TAG_INDENT} - ${2:-"${TAG_INDENT_WIDTH:="2"}"}))s" '')" ;;
-        +) TAG_INDENT="$(printf "%$((${#TAG_INDENT} + ${2:-"${TAG_INDENT_WIDTH:="2"}"}))s" '')" ;;
-    esac
-}
-
-get_code_block_tag_with_class ()
-{
-    OPENING_TAG="<pre><code class=\"${CLASS:+fenced-code-block language-}${CLASS:-indented-code-block}\">$MERGE_START_MARKER"
-}
-
-get_code_block_tag ()
-{
-    OPENING_TAG="<pre><code${CLASS:+ class=\"language-$CLASS\"}>$MERGE_START_MARKER"
-}
-
-get_heading_id ()
-{
-    #             ┌─> sequence of incoming strings
-    #
-    # Line ────── 1 ─┬─> get_heading_id ─> line-header-h2
-    # header h2 ─ 2 ─┘
-    # -------
-
-    sed '
-        # The following tasks are solved here:
-        # - merge lines of a multi-line header by replacing the newline
-        #   character with '-' to create the header ID;
-
-        # List of symbols used:
-        #       `\x0a` - `newline`
-
-        : add_next_line
-        $!N
-        s%\x0a%-%
-        t add_next_line
-
-        # replace spaces with the '-' character
-        s%[[:blank:]]%-%g
-
-        # remove punctuation characters
-        s%[^a-zA-Z0-9_-]%%g
-
-        # replace duplicate '-' characters with one
-        s%-\+%-%g
-
-        # remove the '-' character at the beginning and end
-        s%\(^-\|-$\)%%g
-
-        # all in lowercase
-        s%.*%\L&%g
-    '
-}
-
-is_new_id ()
-{
-    is_empty "${ID_BASE:-}" || {
-        for i in $ID_BASE
-        do
-            is_diff "$ID" "$i" || return
-        done
-    }
-}
-
-get_heading_tag_with_class ()
-{
-    ID="$(get_heading_id <<< "${LINE:-}")"
-    is_empty "${ID:-}" || {
-        is_new_id || ID="$ID-$(( ${ID_NUM:=0} + 1 ))"
-        ID_BASE="${ID_BASE:+"$ID_BASE$NEW_LINE"}$ID"
-    }
-    OPENING_TAG="<$1 class=\"${CLASS:-atx}\" id=\"${ID:-}\">$MERGE_START_MARKER"
-}
-
-get_heading_tag ()
-{
-    OPENING_TAG="<$1>$MERGE_START_MARKER"
-}
-
-get_tag ()
-{
-    case "$1" in
-        blockquote|ul)
-            OPENING_TAG="<$1>"
-            CLOSING_TAG="</$1>"
-            OPENING_TAG_INDENT="${TAG_INDENT:-}"
-            CLOSING_TAG_INDENT="${TAG_INDENT:-}"
-            get_tag_indent +
-            ;;
-        ol)
-            OPENING_TAG="<$1${OL_START:+ start=\"$OL_START\"}>"
-            CLOSING_TAG="</$1>"
-            OPENING_TAG_INDENT="${TAG_INDENT:-}"
-            CLOSING_TAG_INDENT="${TAG_INDENT:-}"
-            OL_START=
-            get_tag_indent +
-            ;;
-        li)
-            OPENING_TAG="<$1>$MERGE_START_MARKER"
-            CLOSING_TAG="$MERGE_STOP_MARKER</$1>"
-            OPENING_TAG_INDENT="${TAG_INDENT:-}"
-            CLOSING_TAG_INDENT="${TAG_INDENT:-}"
-            get_tag_indent +
-            ;;
-        paragraph)
-            OPENING_TAG="<p>$MERGE_START_MARKER"
-            CLOSING_TAG="$MERGE_STOP_MARKER</p>"
-            OPENING_TAG_INDENT="${TAG_INDENT:-}"
-            CLOSING_TAG_INDENT=
-            ;;
-        code_block)
-            $GET_CODE_BLOCK_TAG
-            CLOSING_TAG="$MERGE_STOP_MARKER${CANONICAL_PRE_CODE:-}</code></pre>"
-            OPENING_TAG_INDENT="${TAG_INDENT:-}"
-            CLOSING_TAG_INDENT="${CANONICAL_PRE_CODE:+"${TAG_INDENT:-}"}"
-            CLASS=
-            get_tag_indent +
-            ;;
-        h[1-6])
-            $GET_HEADING_TAG "$1"
-            CLOSING_TAG="$MERGE_STOP_MARKER</$1>"
-            OPENING_TAG_INDENT="${TAG_INDENT:-}"
-            CLOSING_TAG_INDENT=
-            CLASS=
-            ;;
-    esac
-}
-
-put_in_tag_block ()
-{
-    OPENING_INDENT_BLOCK["$LEVEL"]="${OPENING_TAG_INDENT:-}"
-    CLOSING_INDENT_BLOCK["$LEVEL"]="${CLOSING_TAG_INDENT:-}"
-
-    OPENING_TAG_BLOCK["$LEVEL"]="$OPENING_TAG"
-    CLOSING_TAG_BLOCK["$LEVEL"]="$CLOSING_TAG"
-
-    OPENING_TAG=
-    CLOSING_TAG=
-}
-
-put_tag_in_sub_block ()
-{
-    OPENING_INDENT_SUB_BLOCK["$LEVEL"]="${OPENING_TAG_INDENT:-}"
-    CLOSING_INDENT_SUB_BLOCK["$LEVEL"]="${CLOSING_TAG_INDENT:-}"
-
-    OPENING_TAG_SUB_BLOCK["$LEVEL"]="$OPENING_TAG"
-    CLOSING_TAG_SUB_BLOCK["$LEVEL"]="$CLOSING_TAG"
-
-    OPENING_TAG=
-    CLOSING_TAG=
-}
-
-string_block_is_empty ()
-{
-    is_empty "${!STRING_BLOCK[@]}"
-}
-
-current_depth_string_block_is_empty ()
-{
-    is_empty "${STRING_BLOCK["$LEVEL"]:-}"
-}
-
-current_depth_string_block_is_not_empty ()
-{
-    current_depth_string_block_is_empty && return 1 || return 0
-}
-
-remove_last_empty_lines ()
-{
-    STRING_BLOCK[-1]="${STRING_BLOCK[-1]%"${STRING_BLOCK[-1]##*[!$NEW_LINE]}"}"
-}
-
-mark_a_string_block ()
-{
-    STRING_BLOCK[-1]="${STRING_BLOCK[-1]:+"$PARAGRAPH_MARKER${STRING_BLOCK[-1]}$PARAGRAPH_MARKER"}"
-}
-
-get_paragraph ()
-{
-    get_tag "paragraph"
-    put_in_tag_block
-    remove_last_empty_lines
-    BLOCK_TYPE["${LEVEL:-0}"]="paragraph"
-    NESTING_DEPTH["${LEVEL:-0}"]=
-}
-
-get_string_block ()
-{
-    string_block_is_empty || {
-        if no_open_blocks
-        then
-            get_paragraph
-            mark_a_string_block
-        else
-            case "${BLOCK_TYPE[-1]}" in
-                "indent_code_block")
-                    remove_last_empty_lines
-                    STRING_BLOCK[-1]="$CODE_MARKER${STRING_BLOCK[-1]}$CODE_MARKER"
-                    ;;
-                "code_block")
-                    STRING_BLOCK[-1]="$CODE_MARKER${STRING_BLOCK[-1]}$CODE_MARKER"
-                    ;;
-                "block_quote")
-                    remove_last_empty_lines
-                    is_empty "${STRING_BLOCK[-1]:-}" || {
-                        [[ "${STRING_BLOCK[-1]}" =~ "$NEW_LINE$NEW_LINE" ]] || {
-                            SAVED_DEPTH="$LEVEL"
-                            LEVEL="${#BLOCK_TYPE[@]}"
-                            get_paragraph
-                            LEVEL="$SAVED_DEPTH"
-                        }
-                        mark_a_string_block
-                    }
-                    ;;
-                *)
-                    test "$LEVEL" -ge "${!STRING_BLOCK[@]}" || remove_last_empty_lines
-                    mark_a_string_block
-            esac
-        fi
-        STRING_BLOCK[-1]="${STRING_BLOCK[-1]:+"${STRING_BLOCK[-1]}$NEW_LINE"}"
-    }
-}
-
-print_opening_tags ()
-{
-    no_open_blocks || {
-        TAG=
-        for i in "${!NESTING_DEPTH[@]}"
-        do
-            is_empty "${OPENING_TAG_BLOCK[$i]:-}" ||
-                TAG="${TAG:+$TAG$NEW_LINE}${OPENING_INDENT_BLOCK[$i]:-}${OPENING_TAG_BLOCK[$i]}"
-            is_empty "${OPENING_TAG_SUB_BLOCK[$i]:-}" ||
-                TAG="${TAG:+$TAG$NEW_LINE}${OPENING_INDENT_SUB_BLOCK[$i]:-}${OPENING_TAG_SUB_BLOCK[$i]}"
-        done
-        OPENING_INDENT_BLOCK=()
-        OPENING_INDENT_SUB_BLOCK=()
-        OPENING_TAG_BLOCK=()
-        OPENING_TAG_SUB_BLOCK=()
-        is_empty "${TAG:-}" || echo "$TAG"
-    }
-}
-
-print_closing_tags ()
-{
-    no_open_blocks || {
-        case "${1:-}" in
-            "without closing tags")
-                return
-                ;;
-        esac
-        TAG=
-        # get tags starting from the last one added
-        for ((i=$((${#NESTING_DEPTH[@]} - 1)); i>=0; i--))
-        do
-            if test "$i" -ge "$LEVEL"
-            then
-                is_empty "${CLOSING_TAG_SUB_BLOCK[$i]:-}" || {
-                    TAG="${TAG:+$TAG$NEW_LINE}${CLOSING_INDENT_SUB_BLOCK[$i]:-}${CLOSING_TAG_SUB_BLOCK[$i]}"
-                    unset -v "CLOSING_TAG_SUB_BLOCK[-1]" "CLOSING_INDENT_SUB_BLOCK[-1]"
-                    is_empty "${1:-}" || is_diff "$i" "$LEVEL" || break
-                }
-
-                TAG="${TAG:+$TAG$NEW_LINE}${CLOSING_INDENT_BLOCK[-1]:-}${CLOSING_TAG_BLOCK[-1]}"
-                unset -v "BLOCK_TYPE[-1]" "NESTING_DEPTH[-1]" "CLOSING_TAG_BLOCK[-1]" "CLOSING_INDENT_BLOCK[-1]"
-            else
-                break
-            fi
-        done
-        # TAG_INDENT="${TAG_INDENT%"$(printf "%$((TAG_INDENT_WIDTH*LEVEL+2))s" '')"}"
-        is_empty "${TAG:-}" || echo "$TAG"
-    }
-}
-
-finalize ()
-{
-    get_string_block
-    print_opening_tags
-    echo -n "${STRING_BLOCK[@]:-}"
-    print_closing_tags "${1:-}"
-    STRING_BLOCK=()
-}
-
-no_open_blocks ()
-{
-    is_empty "${!BLOCK_TYPE[@]}"
-}
-
-is_new_block ()
-{
-    is_empty "${NESTING_DEPTH["$LEVEL"]:-}"
-}
-
-block_quote_is_closed ()
-{
-    is_empty "${BLOCK_QUOTE:-}"
-}
-
-list_is_open ()
-{
-    [[ "${BLOCK_TYPE["$LEVEL"]}" =~ [\).*+-] ]]
-}
-
-code_block_is_closed ()
-{
-    is_diff "${CODE_BLOCK:-"${INDENT_CODE_BLOCK:-}"}" "open"
-}
-
-line_is_empty ()
-{
-    case "${LINE:-}" in
-        *[![:blank:]]*)
-            return 1
-    esac
-}
-
-line_is_not_empty ()
-{
-    line_is_empty && return 1 || return 0
-}
-
-parse_empty_string ()
-{
-    if no_open_blocks
-    then
-        # print a paragraph
-        string_block_is_empty || finalize
-    else
-        if list_is_open
-        then
-            LINE=
-            string_block_is_empty && open_string_block || put_in_string_block
-        else
-            if block_quote_is_closed
-            then
-                code_block_is_closed || {
-                    # add an empty string to the code block
-                    trim_indent "$EXCESS_INDENT"
-                    string_block_is_empty && open_string_block || put_in_string_block
-                }
-            else
-                close_block_quote
-            fi
-        fi
-    fi
-    return 1
-}
-
-trim_indent ()
-{
-    is_not_empty "${LINE:-}" || return 0
-    SAVED_STRING="$LINE"
-    TRIM_SPACE="${1:-4}"
-    CHARACTER_POSITION="${2:-0}"
-    test "$CHARACTER_POSITION" -le 4 ||
-    CHARACTER_POSITION=$(( CHARACTER_POSITION - $(( $(( CHARACTER_POSITION / 4 )) * 4 )) ))
-
-    while is_not_empty "${LINE:-}"
-    do
-        is_diff "$TRIM_SPACE" 0 || break
-        is_diff "$CHARACTER_POSITION" 4 &&
-            CHARACTER_POSITION="$((CHARACTER_POSITION + 1))" ||
-            CHARACTER_POSITION="1"
-        case "$LINE" in
-            $SPACE*)
-                LINE="${LINE:1}"
-                TRIM_SPACE="$((TRIM_SPACE - 1))"
-                ;;
-            $TAB*)
-                TAB_LENGTH="$((4 -  $((CHARACTER_POSITION - 1))))"
-                CHARACTER_POSITION="$((CHARACTER_POSITION - 1 + TAB_LENGTH))"
-                if is_equal "$TRIM_SPACE" "$TAB_LENGTH"
-                then
-                    LINE="${LINE:1}"
-                    break
-                elif test "$TRIM_SPACE" -lt "$TAB_LENGTH"
-                then
-                    LINE="$(printf "%$((TAB_LENGTH - TRIM_SPACE))s")${LINE:1}"
-                    break
-                else
-                    LINE="${LINE:1}"
-                    TRIM_SPACE="$((TRIM_SPACE - TAB_LENGTH))"
-                fi
-                ;;
-            *)
-                break
-        esac
-    done
-    is_diff "$SAVED_STRING" "${LINE:-}"
-}
-
-expand_indent ()
-{
-    LINE="$1"
-    CHARACTER_POSITION="${2:-0}"
-    test "$CHARACTER_POSITION" -le 4 ||
-    CHARACTER_POSITION=$(( CHARACTER_POSITION - $(( $(( CHARACTER_POSITION / 4 )) * 4 )) ))
-    INDENT=
-    while is_not_empty "${LINE:-}"
-    do
-        is_diff "$CHARACTER_POSITION" 4 &&
-            CHARACTER_POSITION="$((CHARACTER_POSITION + 1))" ||
-            CHARACTER_POSITION="1"
-        case "$LINE" in
-            $SPACE*)
-                INDENT="${INDENT:-} "
-                LINE="${LINE:1}"
-                ;;
-            $TAB*)
-                TAB_LENGTH="$((4 -  $((CHARACTER_POSITION - 1))))"
-                CHARACTER_POSITION="$((CHARACTER_POSITION - 1 + TAB_LENGTH))"
-                INDENT="${INDENT:-}$(printf "%${TAB_LENGTH}s")"
-                LINE="${LINE:1}"
-                ;;
-            *)
-                break
-        esac
-    done
-    echo "${INDENT:-}${LINE:-}"
-}
-
-get_indent ()
-{
-    line_is_not_empty || return
-    INDENT="${LINE%%[![:blank:]]*}"
-    INDENT_LENGTH="$(expand_indent "${LINE:-}" "$CHAR_NUM")"
-    INDENT_LENGTH="${INDENT_LENGTH%%[![:blank:]]*}"
-    INDENT_LENGTH="${#INDENT_LENGTH}"
-}
-
-parse_indent ()
-{
-    #    ┌>┌─────────────> LEVEL="0" BLOCK_TYPE[0]="-"                 NESTING_DEPTH[0]="3:6"
-    #    │ │┌────────────> LEVEL="1" BLOCK_TYPE[1]="block_quote"       NESTING_DEPTH[1]="6:0"
-    #    │ ││  ┌>--┌─────> LEVEL="2" BLOCK_TYPE[2]="*"                 NESTING_DEPTH[2]="3:5"
-    #    │ ││  │   │┌>-┌─> LEVEL="3" BLOCK_TYPE[3]=")"                 NESTING_DEPTH[3]="5:4"
-    #    │ ││  │   ││  │┌> LEVEL="4" BLOCK_TYPE[4]="indent_code_block" NESTING_DEPTH[4]="4:4"
-    # ◦◦◦-◦◦>◦◦*◦◦◦◦12)◦◦◦◦◦foo
-    if is_empty "${!BLOCK_TYPE[@]}"
-    then
-        #   ┌> the indent length is less than or equal to 4
-        # ◦◦◦-◦◦>◦◦*◦◦◦◦12)◦◦◦◦◦foo
-        test "$INDENT_LENGTH" -lt 4 || {
-            # ┌───┬─> indent length greater than 4
-            # ◦◦◦◦◦foo
-            if current_depth_string_block_is_empty
-            then
-                open_indent_code_block
-            else
-                open_string_block
-            fi
-            return 1
-        }
-        PRIMARY_INDENT="$INDENT_LENGTH"
-        return
-    elif is_empty "${BLOCK_TYPE["$LEVEL"]:-}"
-    then
-        #     ┌┬─> the indent length is less than or equal to 4
-        # ◦◦◦-◦◦>◦◦*◦◦◦◦12)◦◦◦◦◦foo
-        if test "$INDENT_LENGTH" -le 3
-        then
-            if is_equal "${BLOCK_TYPE[-1]}" "block_quote"
-            then
-                #        ┌┬─> the indent is not added to "block_quote"
-                # ◦◦◦-◦◦>◦◦*◦◦◦◦12)◦◦◦◦◦foo
-                PRIMARY_INDENT="$INDENT_LENGTH"
-                NESTING_DEPTH[-1]="${NESTING_DEPTH[-1]}:0"
-            else
-                #           ┌──┬─> the indent length is less than or equal to 4
-                # ◦◦◦-◦◦>◦◦*◦◦◦◦12)◦◦◦◦◦foo
-                # ◦-◦◦◦-◦◦◦foo
-                NESTING_DEPTH[-1]="${NESTING_DEPTH[-1]}:$(( $(( CHAR_NUM + INDENT_LENGTH )) - BULLET_CHAR_NUM + PRIMARY_INDENT ))"
-                PRIMARY_INDENT="0"
-            fi
-            return
-        else
-            #                  ┌───┬─> indent length greater than 4
-            # ◦◦◦-◦◦>◦◦*◦◦◦◦12)◦◦◦◦◦foo
-            NESTING_DEPTH[-1]="${NESTING_DEPTH[-1]}:$CHAR_NUM"
-            if current_depth_string_block_is_empty
-            then
-                open_indent_code_block
-            else
-                open_string_block
-            fi
-            return 1
-        fi
-    else
-        while true
-        do
-            case "${BLOCK_TYPE["$LEVEL"]}" in
-                "code_block")
-                    trim_indent "$EXCESS_INDENT"
-                    if test "$INDENT_LENGTH" -lt 4
-                    then
-                        add_to_code_block
-                    else
-                        open_string_block
-                    fi
-                    return 1
-                    ;;
-                "indent_code_block")
-                    if test "$INDENT_LENGTH" -lt 4
-                    then
-                        finalize
-                        return
-                    else
-                        trim_indent "$EXCESS_INDENT"
-                        put_in_string_block
-                        return 1
-                    fi
-                    ;;
-                "block_quote")
-                    test "$INDENT_LENGTH" -lt 4 || {
-                        if  string_block_is_empty ||
-                            is_equal "${BLOCK_TYPE[-1]}" "indent_code_block"
-                        then
-                            finalize
-                            open_indent_code_block
-                        else
-                            open_string_block
-                        fi
-                        return 1
-                    }
-                    return
-            esac
-
-            if test "$INDENT_LENGTH" -lt "${NESTING_DEPTH["$LEVEL"]#*:}"
-            then
-                test "$INDENT_LENGTH" -ge 4 || {
-                    if is_equal "$LEVEL" 0
-                    then
-                        PRIMARY_INDENT="$INDENT_LENGTH"
-                    else
-                        NESTING_DEPTH[-1]="${NESTING_DEPTH[-1]}:$(( $(( CHAR_NUM + INDENT_LENGTH )) - BULLET_CHAR_NUM + PRIMARY_INDENT ))"
-                        PRIMARY_INDENT="0"
-                    fi
-                    return 0
-                }
-                if string_block_is_empty
-                then
-                    # ┌───┬─> LEVEL="0" BLOCK_TYPE[0]="-" NESTING_DEPTH[0]="3:5" <┐
-                    # ◦◦◦-                                                      │
-                    # ┌──┬─> the current indent is less than the next nesting level
-                    # ◦◦◦◦-◦◦◦◦bar (current string)
-                    finalize
-                    open_indent_code_block
-                else
-                    # ┌───┬─> LEVEL="0" BLOCK_TYPE[0]="-" NESTING_DEPTH[0]="3:5" <┐
-                    # ◦◦◦-◦foo                                                  │
-                    # ┌──┬─> the current indent is less than the next nesting level
-                    # ◦◦◦◦-◦◦◦◦bar (current string)
-                    if [[ "${STRING_BLOCK[-1]}" =~ "$NEW_LINE"$ ]]
-                    then
-                        finalize
-                        open_indent_code_block
-                    else
-                        open_string_block
-                    fi
-                fi
-                return 1
-            elif test "$INDENT_LENGTH" -eq "${NESTING_DEPTH["$LEVEL"]#*:}"
-            then
-                # ┌───┬─> LEVEL="0" BLOCK_TYPE[0]="-" NESTING_DEPTH[0]="3:5" <┐
-                # ◦◦◦-◦foo                                                  │
-                # ┌───┬─> the current indent is equal to the next nesting level
-                # ◦◦◦◦◦-◦◦◦◦bar (current string)
-                LEVEL="$((LEVEL + 1))"
-                return
-            else
-                if is_empty "${BLOCK_TYPE["$((LEVEL + 1))"]:-}"
-                then
-                    # ┌───┬─> LEVEL="0" BLOCK_TYPE[0]="-" NESTING_DEPTH[0]="3:5" <┐
-                    # ◦◦◦-◦foo                                                  │
-                    # ┌─────┬─> the current indent is no more than 3 spaces larger than the last nesting level
-                    # ◦◦◦◦◦◦◦-◦◦◦◦bar (current string)
-                    test "$INDENT_LENGTH" -le "$(( ${NESTING_DEPTH["$LEVEL"]#*:} + 3))" || {
-                        if string_block_is_empty
-                        then
-                            is_diff "${BLOCK_TYPE["$LEVEL"]}" "block_quote" || finalize
-                            LEVEL="$((LEVEL + 1))"
-                            open_indent_code_block "$(( ${NESTING_DEPTH["$((LEVEL - 1))"]#*:} + 4))"
-                        else
-                            if [[ "${STRING_BLOCK[-1]}" =~ "$NEW_LINE"$ ]]
-                            then
-                                LEVEL="$((LEVEL + 1))"
-                                case "${STRING_BLOCK[-1]}" in
-                                    *[!$NEW_LINE]*)
-                                        get_paragraph
-                                        finalize
-                                        ;;
-                                    *)  STRING_BLOCK=()
-                                esac
-                                trim_indent  "${NESTING_DEPTH["$((LEVEL - 1))"]#*:}" "$CHAR_NUM"
-                                CHAR_NUM="$(( ${NESTING_DEPTH["$((LEVEL - 1))"]#*:} +  CHAR_NUM ))"
-                                get_indent
-                                echo EX:${NESTING_DEPTH["$((LEVEL - 1))"]#*:} >&2
-                                open_indent_code_block
-                            else
-                                put_in_string_block
-                            fi
-                        fi
-                        return 1
-                    }
-                    LEVEL="$((LEVEL + 1))"
-                    return
-                else
-                    #    ┌>--┌───────> LEVEL="0" BLOCK_TYPE[0]="*" NESTING_DEPTH[0]="3:8" <┐
-                    #    │   │┌>-┌───> LEVEL="1" BLOCK_TYPE[1]="+" NESTING_DEPTH[1]="8:4"  │
-                    #    │   ││  │┌>┌> LEVEL="2" BLOCK_TYPE[2]="-" NESTING_DEPTH[2]="4:3"  │
-                    # ◦◦◦*◦◦◦◦+◦◦◦-◦◦foo                                                 │
-                    # ┌──────────────┬─> the current indent is greater than the indent at the 0th nesting level
-                    # ◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦-◦◦◦◦bar (current string)
-                    LEVEL="$((LEVEL + 1))"
-                    trim_indent  "${NESTING_DEPTH["$LEVEL"]%:*}" "$CHAR_NUM"
-                    CHAR_NUM="$(( ${NESTING_DEPTH["$LEVEL"]%:*} +  CHAR_NUM ))"
-                    get_indent
-                    #    ┌>--┌───────> LEVEL="0" BLOCK_TYPE[0]="*" NESTING_DEPTH[0]="3:8" <┐
-                    #    │   │┌>-┌───> LEVEL="1" BLOCK_TYPE[1]="+" NESTING_DEPTH[1]="8:4"  │
-                    #    │   ││  │┌>┌> LEVEL="2" BLOCK_TYPE[2]="-" NESTING_DEPTH[2]="4:3"  │
-                    # ◦◦◦*◦◦◦◦+◦◦◦-◦◦foo                                                 │
-                    #         ┌──────┬─> the current indent is greater than the indent at the 1th nesting level
-                    #         ◦◦◦◦◦◦◦◦-◦◦◦◦bar (LEVEL="1")
-                    #             ┌──┬─> the current indent is greater than the indent at the 2th nesting level
-                    #             ◦◦◦◦-◦◦◦◦bar (LEVEL="2")
-                fi
-            fi
-        done
-    fi
-}
-
-parse_block_structure ()
-{
-    LEVEL="0"
-    CHAR_NUM="0"
-    BULLET_CHAR_NUM="0"
-    INDENT_LENGTH="0"
-    PRIMARY_INDENT="0"
-    TAG_INDENT="${MAIN_TAG_INDENT:-}"
-
-    line_is_not_empty || parse_empty_string || return 0
-    while  is_not_empty "${LINE:-}"
-    do
-          get_indent || break
-        parse_indent || return 0
-        LINE="${LINE#"${INDENT:-}"}"
-        CHAR_NUM="$((CHAR_NUM + INDENT_LENGTH))"
-        case "$LINE" in
-            [_]*)
-                print_horizontal_rule "_" || open_string_block
-                return
-                ;;
-            [#]*)
-                print_heading_atx || open_string_block
-                return
-                ;;
-            [=]*)
-                print_heading_setext "=" || open_string_block
-                return
-                ;;
-            [-]*)
-                print_heading_setext  "-" ||
-                print_horizontal_rule "-" && return ||
-                open_unordered_list   "-" || {
-                    open_string_block
-                    return
-                }
-                ;;
-            [*]*)
-                print_horizontal_rule "*" && return ||
-                [[ "$LINE" =~ ^"*"[[:blank:]]+[![:blank:]] ]] ||
-                current_depth_string_block_is_empty &&
-                open_unordered_list "*" || {
-                    open_string_block
-                    return
-                }
-                ;;
-            [+]*)
-                is_not_empty "${NESTING_DEPTH[$((LEVEL+1))]:-}" ||
-                [[ "$LINE" =~ ^"+"[[:blank:]]+[![:blank:]] ]] ||
-                current_depth_string_block_is_empty  &&
-                open_unordered_list "+" || {
-                    open_string_block
-                    return
-                }
-                ;;
-             \>*)
-                open_block_quote
-                ;;
-               *)
-                [[ "$LINE" =~ ^[0-9]{1,9}[\).]([[:blank:]]|$) ]] && {
-                [[ "$LINE" =~ ^[0-9]{1,9}[\).][[:blank:]]+[![:blank:]] ]] ||
-                    current_depth_string_block_is_empty && {
-                        [[ "$LINE" =~ ^[0-9]{1,9}\) ]] && open_ordered_list ")" || {
-                        [[ "$LINE" =~ ^[0-9]{1,9}\. ]] && open_ordered_list "."  ; }
-                        LINE="${LINE:"$LENGTH_ORDERED_LIST_NUM"}"
-                    }
-                } || {
-                    add_to_code_block || open_string_block
-                    return
-                }
-                ;;
-        esac
-        LINE="${LINE:1}"
-        trim_indent 1 "$CHAR_NUM" && CHAR_NUM="$((CHAR_NUM + 1))" || true
-    done
-    no_open_blocks || {
-        is_not_empty "${BLOCK_QUOTE:-}" ||
-            NESTING_DEPTH[-1]="${NESTING_DEPTH[-1]}:$(( CHAR_NUM - BULLET_CHAR_NUM ))"
-        LINE=
-        open_string_block
-    }
-}
-
-serialize_pre_code_language ()
-{
-    sed '
-        # get the first word
-        s%^[[:blank:]]*\([^[:blank:]]\+\).*$%\1%g
-
-        # all in lowercase
-        s%.*%\L&%g
-
-        # mask ampersand
-        s%\([^\\]\?\)&%\1\x03%g
-
-        # remove backslash-escaped
-        s%\\\([][!"#$%&\x27()*+,./:;<=>?@\\^_`{|}~-]\)%\1%g
-
-        s%&%\&amp;%g
-        s%"%\&quot;%g
-        s%<%\&lt;%g
-        s%>%\&gt;%g
-
-        # unmask ampersand
-        s%\x03%\&%g'
-}
-
-is_code_block ()
-{
-    if is_empty "${FENCE_CHAR:-}"
-    then
-        [[ "${LINE:-}" =~ ^[[:blank:]]*\`{3,}[^\`]*$ ]] ||
-        [[ "${LINE:-}" =~ ^[[:blank:]]*~{3,} ]] && {
-            FENCE_CHAR="${LINE%%[!~\`]*}"
-            FENCE_LENGTH="${#FENCE_CHAR}"
-            CLASS="${LINE#"$FENCE_CHAR"}"
-            is_empty "${CLASS:-}" ||
-                CLASS="$(serialize_pre_code_language <<< "$CLASS")"
-            FENCE_CHAR="${FENCE_CHAR:0:1}"
-        }
-    else
-        [[ "${LINE:-}" =~ ^[[:blank:]]*$FENCE_CHAR{$FENCE_LENGTH,}[[:blank:]]*$ ]]
-    fi
-}
-
-open_indent_code_block ()
-{
-    EXCESS_INDENT="${1:-4}"
-    trim_indent "$EXCESS_INDENT" "$CHAR_NUM"
-    get_tag "code_block"
-    put_in_tag_block
-    INDENT_CODE_BLOCK="open"
-    BLOCK_TYPE["$LEVEL"]="indent_code_block"
-    NESTING_DEPTH["$LEVEL"]="$CHAR_NUM:$EXCESS_INDENT"
-    LEVEL="$((LEVEL + 1))"
-    open_string_block
-}
-
-close_indent_code_block ()
-{
-    is_empty "${INDENT_CODE_BLOCK:-}" || finalize
-}
-
-open_code_block ()
-{
-    get_tag "code_block"
-    put_in_tag_block
-    EXCESS_INDENT="${#INDENT}"
-    CODE_BLOCK="open"
-    BLOCK_TYPE["$LEVEL"]="code_block"
-    NESTING_DEPTH["$LEVEL"]=
-}
-
-close_code_block ()
-{
-    finalize
-    FENCE_CHAR=
-    INDENTED_CODE_BLOCK="closed"
-             CODE_BLOCK="closed"
-}
-
-add_to_code_block ()
-{
-    if is_equal "${BLOCK_TYPE["$LEVEL"]:-}" "code_block"
-    then
-        is_code_block && close_code_block "$LEVEL" || open_string_block
-    else
-        is_code_block && {
-            is_empty "${BLOCK_TYPE["$LEVEL"]:-"${STRING_BLOCK["$LEVEL"]:-}"}" || finalize
-            open_code_block
-        }
-    fi
-}
-
-open_list_item ()
-{
-    get_tag "li"
-    put_tag_in_sub_block
-}
-
-open_unordered_list ()
-{
-    [[ "$LINE" =~ ^"$1"([[:blank:]]|$) ]] && {
-        if is_equal "${BLOCK_TYPE["$LEVEL"]:-}" "$1"
-        then
-            finalize "close tags to the current list item"
-        else
-            string_block_is_empty || finalize
-            BLOCK_TYPE["$LEVEL"]="$1"
-
-            get_tag "ul"
-            put_in_tag_block
-        fi
-        open_list_item
-        BULLET_CHAR_NUM="$CHAR_NUM"
-        if is_equal "$LEVEL" 0
-        then
-            NESTING_DEPTH["$LEVEL"]="$CHAR_NUM"
-        else
-            NESTING_DEPTH["$LEVEL"]="${NESTING_DEPTH["$((LEVEL - 1))"]#*:}"
-        fi
-        CHAR_NUM="$((CHAR_NUM + 1))"
-        LEVEL="$((LEVEL + 1))"
-    }
-}
-
-open_ordered_list ()
-{
-    if is_equal "${BLOCK_TYPE["$LEVEL"]:-}" "$1"
-    then
-        finalize "close tags to the current list item"
-    else
-        string_block_is_empty || finalize
-        BLOCK_TYPE["$LEVEL"]="$1"
-
-        OL_START="${LINE%%[!0-9]*}"
-        LENGTH_ORDERED_LIST_NUM="${#OL_START}"
-        is_equal "$LENGTH_ORDERED_LIST_NUM" 1 || OL_START="${OL_START#"${OL_START%%[!0]*}"}"
-        is_diff "$OL_START" 1 || OL_START=
-
-        get_tag "ol"
-        put_in_tag_block
-    fi
-    open_list_item
-    BULLET_CHAR_NUM="$CHAR_NUM"
-    if is_equal "$LEVEL" 0
-    then
-        NESTING_DEPTH["$LEVEL"]="$CHAR_NUM"
-    else
-        NESTING_DEPTH["$LEVEL"]="${NESTING_DEPTH["$((LEVEL - 1))"]#*:}"
-    fi
-    CHAR_NUM="$((CHAR_NUM + 1 + LENGTH_ORDERED_LIST_NUM))"
-    LEVEL="$((LEVEL + 1))"
-}
-
-open_block_quote ()
-{
-    # remember the first nesting depth of the block to close all tags,
-    # including this block, when an empty string or other block occurs.
-    BLOCK_QUOTE="${BLOCK_QUOTE:-"$LEVEL"}"
-    is_equal "${BLOCK_TYPE["$LEVEL"]:-}" "block_quote" || {
-        string_block_is_empty || finalize
-        BLOCK_TYPE["$LEVEL"]="block_quote"
-
-        get_tag "blockquote"
-        put_in_tag_block
-    }
-    if is_equal "$LEVEL" 0
-    then
-        NESTING_DEPTH["$LEVEL"]="$CHAR_NUM"
-    else
-        NESTING_DEPTH["$LEVEL"]="${NESTING_DEPTH["$((LEVEL - 1))"]#*:}"
-    fi
-    CHAR_NUM="$((CHAR_NUM + 1))"
-    LEVEL="$((LEVEL + 1))"
-}
-
-close_block_quote ()
-{
-    LEVEL="$BLOCK_QUOTE"
-    finalize
-    BLOCK_QUOTE=
-    PRIMARY_INDENT="0"
-}
-
-trim_white_space ()
-{
-    LINE="${LINE#"${LINE%%[![:blank:]]*}"}"
-    LINE="${LINE%"${LINE##*[![:blank:]]}"}"
-}
-
-print_heading ()
-{
-    finalize
-    BLOCK_TYPE["$LEVEL"]="heading"
-    NESTING_DEPTH["$LEVEL"]=
-    trim_white_space
-    get_tag "$1"
-    put_in_tag_block
-    LEVEL="$((LEVEL + 1))"
-    is_empty "${LINE:-}" || open_string_block
-    LEVEL="$((LEVEL - 1))"
-    finalize
-}
-
-print_heading_atx ()
-{
-    [[ "${LINE:-}" =~ ^#{1,6}([[:blank:]].*|$) ]] && {
-        HEADER="${LINE%%[[:blank:]]*}"
-        LINE="$(sed 's%\(^#\+\|[[:blank:]]\+#*[[:blank:]]*$\)%%g' <<< "$LINE")"
-        CLASS="atx"
-        print_heading "h${#HEADER}"
-    }
-}
-
-print_heading_setext ()
-{
-    current_depth_string_block_is_not_empty &&
-    [[ "$LINE" =~ ^"$1"+[[:blank:]]*$ ]] && {
-        LINE="${STRING_BLOCK[-1]}"
-        unset -v "STRING_BLOCK[-1]"
-        CLASS="setext"
-        case "$1" in
-            =) print_heading "h1" ;;
-            -) print_heading "h2" ;;
-        esac
-    }
-}
-
-print_horizontal_rule ()
-{
-    [[ "${LINE//[[:blank:]]}" =~ ^"$1"{3,}$ ]] && {
-        LINE="${TAG_INDENT:-}<hr />"
-        is_equal "$LEVEL" 0  &&
-                finalize || finalize "without closing tags"
-        echo "$LINE"
-    }
-}
-
-put_in_string_block ()
-{
-    STRING_BLOCK[-1]="${STRING_BLOCK[-1]:-}$NEW_LINE${BUFFER_INDENT:-}${LINE:-}"
-}
-
-open_string_block ()
-{
-    string_block_is_empty && {
-        is_empty "${BLOCK_TYPE["$LEVEL"]:-}" || finalize
-        is_empty "${!CLOSING_INDENT_BLOCK[@]}" || TAG_INDENT="${CLOSING_INDENT_BLOCK[-1]}"
-        BUFFER_INDENT="${TAG_INDENT:-}"
-        STRING_BLOCK["$LEVEL"]="${LINE:-}"
-    } || {
-        if [[ "${STRING_BLOCK[-1]}" =~ "$NEW_LINE"$ ]]
-        then
-            if is_empty "${BLOCK_TYPE["$LEVEL"]:-}"
-            then
-                if [[ "${STRING_BLOCK[-1]}" =~ ^"$NEW_LINE" ]]
-                then
-                    LEVEL="$((LEVEL - 1))"
-                    finalize
-                    STRING_BLOCK["$LEVEL"]="$LINE"
-                elif [[ "${STRING_BLOCK[-1]}" =~ ^"$NEW_LINE" ]]
-                then
-                    STRING_BLOCK[-1]="${STRING_BLOCK[-1]#"$NEW_LINE"}$LINE"
-                else
-                    put_in_string_block
-                fi
-            else
-                finalize
-                STRING_BLOCK["$LEVEL"]="$LINE"
-            fi
-        else
-            if is_empty "${STRING_BLOCK[-1]:-}"
-            then
-                STRING_BLOCK[-1]="$LINE"
-            else
-                put_in_string_block
-            fi
-        fi
-    }
-    LINE=
-}
-
-preparing_input ()
-{
-                        # replace NUL characters for security
-    cat "${INPUT:--}" | sed 's%\x00%\xef\xbf\xbd%g'
-}
-
-open_block ()
-{
-    while IFS= read -r LINE || is_not_empty "${LINE:-}"
-    do
-        parse_block_structure
-    done < <(preparing_input)
-    no_open_blocks || {
-        LEVEL="0"
-        case "${BLOCK_TYPE[-1]}" in
-            "code_block" | "indent_code_block")
-                close_code_block
-                die
-        esac
-    }
-    finalize
-}
-
 # The main parsing function.  Returns a parsed document HTML.
 parse ()
 {
@@ -2179,59 +2221,6 @@ parse ()
     # open_block | prepare_code | prepare_paragraph | combine_with_tag | split
     # open_block | prepare_code | prepare_paragraph | format_paragraph | split | cat -vT
     # open_block | prepare_code | prepare_paragraph | format_paragraph | split
-}
-
-open_html ()
-{
-    echo "\
-<!DOCTYPE html>
-<html lang=\"en\">"
-}
-
-add_title ()
-{
-    echo "<title>${PAGE_TITLE:-}</title>"
-}
-
-open_head ()
-{
-    echo "\
-<head>
-<meta charset=\"UTF-8\">
-<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
-}
-
-add_style ()
-{
-    is_empty "${PAGE_STYLE:-}" || {
-        echo "<style>"
-        cat "$PAGE_STYLE" || die "$STATUS"
-        echo "</style>"
-    }
-}
-
-close_head ()
-{
-    echo "</head>"
-}
-
-open_body ()
-{
-    echo "\
-<body>
-<article class=\"markdown-body\">"
-}
-
-close_body ()
-{
-    echo "\
-</article>
-</body>"
-}
-
-close_html ()
-{
-    echo "</html>"
 }
 
 create_document ()
