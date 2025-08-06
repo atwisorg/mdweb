@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.38} - (C) 06.08.2025
+    echo "${0##*/} ${1:-0.6.39} - (C) 06.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1218,6 +1218,43 @@ get_indent ()
     INDENT_LENGTH="$(expand_indent "${LINE:-}" "$CHAR_NUM")"
     INDENT_LENGTH="${INDENT_LENGTH%%[![:blank:]]*}"
     INDENT_LENGTH="${#INDENT_LENGTH}"
+}
+
+parse_indent ()
+{
+    #    ┌>┌─────────────> LEVEL="0" BLOCK_TYPE[0]="-"                 NESTING_DEPTH[0]="3:6"
+    #    │ │┌────────────> LEVEL="1" BLOCK_TYPE[1]="block_quote"       NESTING_DEPTH[1]="6:0"
+    #    │ ││  ┌>--┌─────> LEVEL="2" BLOCK_TYPE[2]="*"                 NESTING_DEPTH[2]="3:5"
+    #    │ ││  │   │┌>-┌─> LEVEL="3" BLOCK_TYPE[3]=")"                 NESTING_DEPTH[3]="5:4"
+    #    │ ││  │   ││  │┌> LEVEL="4" BLOCK_TYPE[4]="indent_code_block" NESTING_DEPTH[4]="4:4"
+    # ◦◦◦-◦◦>◦◦*◦◦◦◦12)◦◦◦◦◦foo
+    if has_no_open_block
+    then
+        #   ┌> the indent length is less than or equal to 4
+        # ◦◦◦-◦◦>◦◦*◦◦◦◦12)◦◦◦◦◦foo
+        INDEX="0"
+        test "$INDENT_LENGTH" -lt 4 || {
+            # ┌───┬─> indent length greater than 4
+            # ◦◦◦◦◦foo
+            open_indent_code_block
+            return 1
+        }
+        PRIMARY_INDENT="$INDENT_LENGTH"
+        return
+    else
+        while true
+        do
+            case "${BLOCK_TYPE["$LEVEL"]}" in
+                "code_block")
+                    test "$INDENT_LENGTH" -lt 4 || {
+                        trim_indent "$EXCESS_INDENT"
+                        append_to_block "$CURRENT_BLOCK" "$LINE"
+                        return 1
+                    }
+                    return
+            esac
+        done
+    fi
 }
 
 parse_indent ()
