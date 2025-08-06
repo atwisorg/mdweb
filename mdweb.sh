@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.31} - (C) 06.08.2025
+    echo "${0##*/} ${1:-0.6.32} - (C) 06.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1493,42 +1493,42 @@ parse_block_structure ()
 reset_container ()
 {
     unset   -v  EMPTY_STRING_IN_LIST \
-                CONTAINER \
-                CONTAINER_TREE \
+                BLOCK \
+                BLOCK_TREE \
                 LIST_ITEM_INDEX
 
     declare -gA EMPTY_STRING_IN_LIST \
-                CONTAINER
+                BLOCK
 
-                CONTAINER_TREE=()
+                BLOCK_TREE=()
                 LIST_ITEM_INDEX=()
 }
 
 container_is_empty ()
 {
-    is_empty "${!CONTAINER[@]}"
+    is_empty "${!BLOCK[@]}"
 }
 
 container_element_is_empty ()
 {
-    is_empty "${CONTAINER["$1"]:-}"
+    is_empty "${BLOCK["$1"]:-}"
 }
 
 append_to_container ()
 {
-    CONTAINER["$1"]="${2:-}"
-    CONTAINER_TREE+=( "${1:-}" )
+    BLOCK["$1"]="${2:-}"
+    BLOCK_TREE+=( "${1:-}" )
 }
 
 append_to_container_element ()
 {
-    CONTAINER["$1"]="${CONTAINER["$1"]:+"${CONTAINER["$1"]}$NEW_LINE"}${2:-}"
+    BLOCK["$1"]="${BLOCK["$1"]:+"${BLOCK["$1"]}$NEW_LINE"}${2:-}"
 }
 
 rename_container_element ()
 {
-    CONTAINER["$2"]="${CONTAINER["$1"]}"
-    unset -v CONTAINER["$1"]
+    BLOCK["$2"]="${BLOCK["$1"]}"
+    unset -v BLOCK["$1"]
 }
 
 has_no_empty_strings_in_list ()
@@ -1549,7 +1549,6 @@ add_paragraph_to_list_item ()
         done
     done
 }
-
 
 parse_blocks ()
 {
