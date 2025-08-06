@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.32} - (C) 06.08.2025
+    echo "${0##*/} ${1:-0.6.31} - (C) 06.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1548,6 +1548,95 @@ add_paragraph_to_list_item ()
             fi
         done
     done
+}
+
+
+parse_blocks ()
+{
+    while is_not_empty "${LINE:-}"
+    do
+          get_indent || break
+        parse_indent || return 0
+        LINE="${LINE#"${INDENT:-}"}"
+        CHAR_NUM="$((CHAR_NUM + INDENT_LENGTH))"
+        case "$LINE" in
+            [_]*)
+                print_horizontal_rule "_" || open_string_block
+                return
+                ;;
+            [#]*)
+                print_heading_atx || open_string_block
+                return
+                ;;
+            [=]*)
+                print_heading_setext "=" || open_string_block
+                return
+                ;;
+            [-]*)
+                print_heading_setext  "-" ||
+                print_horizontal_rule "-" && return ||
+                open_unordered_list   "-" || {
+                    open_string_block
+                    return
+                }
+                ;;
+            [*]*)
+                print_horizontal_rule "*" && return ||
+                [[ "$LINE" =~ ^"*"[[:blank:]]+[![:blank:]] ]] ||
+                current_depth_string_block_is_empty &&
+                open_unordered_list "*" || {
+                    open_string_block
+                    return
+                }
+                ;;
+            [+]*)
+                is_not_empty "${NESTING_DEPTH[$((LEVEL+1))]:-}" ||
+                [[ "$LINE" =~ ^"+"[[:blank:]]+[![:blank:]] ]] ||
+                current_depth_string_block_is_empty  &&
+                open_unordered_list "+" || {
+                    open_string_block
+                    return
+                }
+                ;;
+             \>*)
+                open_block_quote
+                ;;
+               *)
+                [[ "$LINE" =~ ^[0-9]{1,9}[\).]([[:blank:]]|$) ]] && {
+                [[ "$LINE" =~ ^[0-9]{1,9}[\).][[:blank:]]+[![:blank:]] ]] ||
+                    current_depth_string_block_is_empty && {
+                        [[ "$LINE" =~ ^[0-9]{1,9}\) ]] && open_ordered_list ")" || {
+                        [[ "$LINE" =~ ^[0-9]{1,9}\. ]] && open_ordered_list "."  ; }
+                        LINE="${LINE:"$LENGTH_ORDERED_LIST_NUM"}"
+                    }
+                } || {
+                    add_to_code_block || open_string_block
+                    return
+                }
+                ;;
+        esac
+        LINE="${LINE:1}"
+        trim_indent 1 "$CHAR_NUM" && CHAR_NUM="$((CHAR_NUM + 1))" || true
+    done
+}
+
+parse_string ()
+{
+    LEVEL="0"
+    CHAR_NUM="0"
+    BULLET_CHAR_NUM="0"
+    INDENT_LENGTH="0"
+    PRIMARY_INDENT="0"
+    TAG_INDENT="${MAIN_TAG_INDENT:-}"
+
+    line_is_not_empty || parse_empty_string || return 0
+    parse_blocks
+    no_open_blocks || {
+        is_not_empty "${BLOCK_QUOTE:-}" ||
+            NESTING_DEPTH[-1]="${NESTING_DEPTH[-1]}:$(( CHAR_NUM - BULLET_CHAR_NUM ))"
+        LINE=
+        open_string_block
+    }
 }
 
 preparing_input ()
