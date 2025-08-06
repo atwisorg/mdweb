@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.35} - (C) 06.08.2025
+    echo "${0##*/} ${1:-0.6.36} - (C) 06.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1504,7 +1504,7 @@ reset_container ()
                 LIST_ITEM_INDEX=()
 }
 
-container_is_empty ()
+has_no_open_block ()
 {
     is_empty "${!BLOCK[@]}"
 }
