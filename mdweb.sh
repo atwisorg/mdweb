@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.41} - (C) 07.08.2025
+    echo "${0##*/} ${1:-0.6.42} - (C) 07.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -508,12 +508,12 @@ close_html ()
 
 get_code_block_tag_with_class ()
 {
-    OPENING_TAG="<pre><code class=\"${CLASS:+fenced-code-block language-}${CLASS:-indented-code-block}\">$MERGE_START_MARKER"
+    OPENING_TAG="${TAG_INDENT:-}<pre><code class=\"${CLASS:+fenced-code-block language-}${CLASS:-indented-code-block}\">$MERGE_START_MARKER"
 }
 
 get_code_block_tag ()
 {
-    OPENING_TAG="<pre><code${CLASS:+ class=\"language-$CLASS\"}>$MERGE_START_MARKER"
+    OPENING_TAG="${TAG_INDENT:-}<pre><code${CLASS:+ class=\"language-$CLASS\"}>$MERGE_START_MARKER"
 }
 
 get_heading_id ()
@@ -571,12 +571,12 @@ get_heading_tag_with_class ()
         is_new_id || ID="$ID-$(( ${ID_NUM:=0} + 1 ))"
         ID_BASE="${ID_BASE:+"$ID_BASE$NEW_LINE"}$ID"
     }
-    OPENING_TAG="<$1 class=\"${CLASS:-atx}\" id=\"${ID:-}\">$MERGE_START_MARKER"
+    OPENING_TAG="${TAG_INDENT:-}<$1 class=\"${CLASS:-atx}\" id=\"${ID:-}\">$MERGE_START_MARKER"
 }
 
 get_heading_tag ()
 {
-    OPENING_TAG="<$1>$MERGE_START_MARKER"
+    OPENING_TAG="${TAG_INDENT:-}<$1>$MERGE_START_MARKER"
 }
 
 get_tag_indent ()
@@ -585,6 +585,62 @@ get_tag_indent ()
         -) TAG_INDENT="$(printf "%$((${#TAG_INDENT} - ${2:-"${TAG_INDENT_WIDTH:="2"}"}))s" '')" ;;
         +) TAG_INDENT="$(printf "%$((${#TAG_INDENT} + ${2:-"${TAG_INDENT_WIDTH:="2"}"}))s" '')" ;;
     esac
+}
+
+add_tag_to_buffer ()
+{
+    BUFFER="${BUFFER:+"$BUFFER$NEW_LINE"}$OPENING_TAG"
+    CLOSING_TAG_BUFFER+=( "$CLOSING_TAG" )
+}
+
+add_paragraph_to_buffer ()
+{
+    BUFFER="$BUFFER$NEW_LINE${BLOCK["$INDEX"]}"
+}
+
+get_tag ()
+{
+    case "${INDEX##*:}" in
+        blockquote|ul)
+            OPENING_TAG="${TAG_INDENT:-}<$1>"
+            CLOSING_TAG="${TAG_INDENT:-}</$1>"
+            get_tag_indent +
+            ;;
+        ol)
+            OPENING_TAG="${TAG_INDENT:-}<$1${OL_START:+ start=\"$OL_START\"}>"
+            CLOSING_TAG="${TAG_INDENT:-}</$1>"
+            OL_START=
+            get_tag_indent +
+            ;;
+        li)
+            OPENING_TAG="<$1>$MERGE_START_MARKER"
+            CLOSING_TAG="$MERGE_STOP_MARKER${TAG_INDENT:-}</$1>"
+            get_tag_indent +
+            ;;
+        paragraph)
+            OPENING_TAG="${TAG_INDENT:-}<p>$MERGE_START_MARKER"
+            CLOSING_TAG="$MERGE_STOP_MARKER</p>"
+            add_tag_to_buffer
+            add_paragraph_to_buffer
+            return
+            ;;
+        code_block)
+            $GET_CODE_BLOCK_TAG
+            CLOSING_TAG="$MERGE_STOP_MARKER${CANONICAL_PRE_CODE:-}</code></pre>"
+            CLASS=
+            get_tag_indent +
+            ;;
+        h[1-6])
+            $GET_HEADING_TAG "$1"
+            CLOSING_TAG="$MERGE_STOP_MARKER${TAG_INDENT:-}</$1>"
+            CLASS=
+            ;;
+        *)
+            add_paragraph_to_buffer
+            return
+            ;;
+    esac
+    add_tag_to_buffer
 }
 
 get_tag ()
@@ -634,6 +690,47 @@ get_tag ()
             CLASS=
             ;;
     esac
+}
+
+push_buffer ()
+{
+    echo "$BUFFER"
+    BUFFER=
+}
+
+push_closing_tag ()
+{
+    echo   "${CLOSING_TAG_BUFFER[-1]}"
+    unset -v "CLOSING_TAG_BUFFER[-1]"
+    get_tag_indent -
+}
+
+push_remaining_closing_tag ()
+{
+    for i in "${CLOSING_TAG_BUFFER[@]}"
+    do
+        push_closing_tag
+    done
+}
+
+finalize ()
+{
+    PREV_DEPTH=
+    for INDEX in "${BLOCK_TREE[@]}"
+    do
+        DEPTH="${INDEX%:*}:"
+        test "${#DEPTH}" -ge "${PREV_DEPTH:="${#DEPTH}"}" || {
+            push_buffer
+            while test "${#DEPTH}" -lt "$PREV_DEPTH"
+            do
+                PREV_DEPTH="$((PREV_DEPTH - 2))"
+                push_closing_tag
+            done
+        }
+        get_tag
+    done
+    push_remaining_closing_tag
+    reset_block
 }
 
 put_in_tag_block ()
@@ -2348,7 +2445,7 @@ combine_with_tag ()
         # Waiting for the closing tag with `MERGE_STOP_MARKER` at the beginning
         /\x0a\x1d/ {
             # If the `list item` or `code block` is empty:
-            s%\x1b\x0a\x1d\x0e\?%%g
+            s%\x1b\x0a\x1d\x0e\?[[:blank:]]*%%g
             t exit
 
             # If the `list item` or `code block` is not empty:
