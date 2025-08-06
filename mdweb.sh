@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.39} - (C) 06.08.2025
+    echo "${0##*/} ${1:-0.6.40} - (C) 07.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -876,9 +876,9 @@ open_indent_code_block ()
 {
     BLOCK_TYPE["$LEVEL"]="code_block"
     create_block "$INDEX:${BLOCK_TYPE["$LEVEL"]}" "indented"
-    CURRENT_BLOCK="$INDEX:0:code"
 
     EXCESS_INDENT="${1:-4}"
+    CURRENT_BLOCK="$INDEX:0:code"
     trim_indent "$EXCESS_INDENT" "$CHAR_NUM"
     create_block "$CURRENT_BLOCK" "$LINE"
 
@@ -969,6 +969,36 @@ add_to_code_block ()
             open_code_block
         }
     fi
+}
+
+open_list_item ()
+{
+    CURRENT_BLOCK="$INDEX:item"
+    create_block "$CURRENT_BLOCK" "$LINE"
+}
+
+open_unordered_list ()
+{
+    [[ "$LINE" =~ ^"$1"([[:blank:]]|$) ]] && {
+        if is_equal "${BLOCK_TYPE["$LEVEL"]:-}" "$1"
+        then
+            INDEX="$INDEX:$((${INDEX##*:} + 1))"
+        else
+            BLOCK_TYPE["$LEVEL"]="$1"
+            create_block "$INDEX:list"
+            INDEX="$INDEX:0"
+        fi
+        open_list_item
+        BULLET_CHAR_NUM="$CHAR_NUM"
+        if is_equal "$LEVEL" 0
+        then
+            NESTING_DEPTH["$LEVEL"]="$CHAR_NUM"
+        else
+            NESTING_DEPTH["$LEVEL"]="${NESTING_DEPTH["$((LEVEL - 1))"]#*:}"
+        fi
+        CHAR_NUM="$((CHAR_NUM + 1))"
+        LEVEL="$((LEVEL + 1))"
+    }
 }
 
 open_list_item ()
