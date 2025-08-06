@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.37} - (C) 06.08.2025
+    echo "${0##*/} ${1:-0.6.38} - (C) 06.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -870,6 +870,19 @@ trim_indent ()
         esac
     done
     is_diff "$SAVED_STRING" "${LINE:-}"
+}
+
+open_indent_code_block ()
+{
+    BLOCK_TYPE["$LEVEL"]="code_block"
+    create_block "$INDEX:${BLOCK_TYPE["$LEVEL"]}" "indented"
+    CURRENT_BLOCK="$INDEX:0:code"
+
+    EXCESS_INDENT="${1:-4}"
+    trim_indent "$EXCESS_INDENT" "$CHAR_NUM"
+    create_block "$CURRENT_BLOCK" "$LINE"
+
+    NESTING_DEPTH["$LEVEL"]="$CHAR_NUM:$EXCESS_INDENT"
 }
 
 open_indent_code_block ()
