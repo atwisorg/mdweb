@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.34} - (C) 06.08.2025
+    echo "${0##*/} ${1:-0.6.35} - (C) 06.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1525,7 +1525,7 @@ append_to_block ()
     BLOCK["$1"]="${BLOCK["$1"]:+"${BLOCK["$1"]}$NEW_LINE"}${2:-}"
 }
 
-rename_container_element ()
+rename_block ()
 {
     BLOCK["$2"]="${BLOCK["$1"]}"
     unset -v BLOCK["$1"]
@@ -1544,7 +1544,7 @@ add_paragraph_to_list_item ()
         do
             if [[ "$INDEX" =~ "$LIST_INDEX":[0-9]+:[0-9]+:text ]]
             then
-                rename_container_element "$INDEX" "${INDEX%:*}:paragraph"
+                rename_block "$INDEX" "${INDEX%:*}:paragraph"
             fi
         done
     done
