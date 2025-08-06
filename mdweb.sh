@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.30} - (C) 05.08.2025
+    echo "${0##*/} ${1:-0.6.31} - (C) 06.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1492,8 +1492,8 @@ parse_block_structure ()
 
 reset_container ()
 {
-    unset -v CONTAINER CONTAINER_TREE
-    declare -A CONTAINER
+    unset   -v EMPTY_STRING_IN_LIST CONTAINER CONTAINER_TREE
+    declare -A EMPTY_STRING_IN_LIST CONTAINER
     CONTAINER_TREE=()
 }
 
@@ -1522,6 +1522,11 @@ rename_container_element ()
 {
     CONTAINER["$2"]="${CONTAINER["$1"]}"
     unset -v CONTAINER["$1"]
+}
+
+has_no_empty_strings_in_list ()
+{
+    is_empty "${!EMPTY_STRING_IN_LIST[@]}"
 }
 
 preparing_input ()
