@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.31} - (C) 06.08.2025
+    echo "${0##*/} ${1:-0.6.32} - (C) 06.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1492,9 +1492,16 @@ parse_block_structure ()
 
 reset_container ()
 {
-    unset   -v EMPTY_STRING_IN_LIST CONTAINER CONTAINER_TREE
-    declare -A EMPTY_STRING_IN_LIST CONTAINER
-    CONTAINER_TREE=()
+    unset   -v  EMPTY_STRING_IN_LIST \
+                CONTAINER \
+                CONTAINER_TREE \
+                LIST_ITEM_INDEX
+
+    declare -gA EMPTY_STRING_IN_LIST \
+                CONTAINER
+
+                CONTAINER_TREE=()
+                LIST_ITEM_INDEX=()
 }
 
 container_is_empty ()
@@ -1527,6 +1534,20 @@ rename_container_element ()
 has_no_empty_strings_in_list ()
 {
     is_empty "${!EMPTY_STRING_IN_LIST[@]}"
+}
+
+add_paragraph_to_list_item ()
+{
+    for INDEX in "${LIST_ITEM_INDEX[@]}"
+    do
+        for LIST_INDEX in "${!EMPTY_STRING_IN_LIST[@]}"
+        do
+            if [[ "$INDEX" =~ "$LIST_INDEX":[0-9]+:[0-9]+:text ]]
+            then
+                rename_container_element "$INDEX" "${INDEX%:*}:paragraph"
+            fi
+        done
+    done
 }
 
 preparing_input ()
