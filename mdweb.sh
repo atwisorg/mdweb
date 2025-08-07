@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.44} - (C) 07.08.2025
+    echo "${0##*/} ${1:-0.6.45} - (C) 07.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -624,7 +624,7 @@ get_tag ()
             add_paragraph_to_buffer
             return
             ;;
-        code_block)
+        code_block|indent_code_block)
             $GET_CODE_BLOCK_TAG
             CLOSING_TAG="$MERGE_STOP_MARKER${CANONICAL_PRE_CODE:-}</code></pre>"
             CLASS=
@@ -970,7 +970,7 @@ trim_indent ()
 
 open_indent_code_block ()
 {
-    BLOCK_TYPE["$LEVEL"]="code_block"
+    BLOCK_TYPE["$LEVEL"]="indent_code_block"
     create_block "$INDEX:${BLOCK_TYPE["$LEVEL"]}" "indented"
 
     EXCESS_INDENT="${1:-4}"
@@ -1069,8 +1069,8 @@ add_to_code_block ()
 
 open_list_item ()
 {
-    CURRENT_BLOCK="$INDEX:item"
-    create_block "$CURRENT_BLOCK" "$LINE"
+    CURRENT_BLOCK="$INDEX:li"
+    create_block "$CURRENT_BLOCK"
 }
 
 open_unordered_list ()
@@ -1081,7 +1081,7 @@ open_unordered_list ()
             INDEX="$INDEX:$((${INDEX##*:} + 1))"
         else
             BLOCK_TYPE["$LEVEL"]="$1"
-            create_block "$INDEX:list"
+            create_block "$INDEX:ul"
             INDEX="$INDEX:0"
         fi
         open_list_item
