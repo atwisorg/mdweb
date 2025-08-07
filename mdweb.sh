@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.45} - (C) 07.08.2025
+    echo "${0##*/} ${1:-0.6.46} - (C) 07.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1346,6 +1346,11 @@ get_indent ()
     INDENT_LENGTH="${#INDENT_LENGTH}"
 }
 
+has_no_open_block ()
+{
+    is_empty "${!TAG_TREE[@]}"
+}
+
 parse_indent ()
 {
     #    ┌>┌─────────────> LEVEL="0" BLOCK_TYPE[0]="-"                 NESTING_DEPTH[0]="3:6"
@@ -1677,11 +1682,6 @@ reset_block ()
                 LIST_ITEM_INDEX=()
                 PREV_DEPTH=
                 TAG_TREE=()
-}
-
-has_no_open_block ()
-{
-    is_empty "${!BLOCK[@]}"
 }
 
 block_is_empty ()
