@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.43} - (C) 07.08.2025
+    echo "${0##*/} ${1:-0.6.44} - (C) 07.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -715,7 +715,6 @@ push_remaining_closing_tag ()
 
 finalize ()
 {
-    PREV_DEPTH=
     for INDEX in "${TAG_TREE[@]}"
     do
         DEPTH="${INDEX%:*}:"
@@ -1669,16 +1668,15 @@ parse_block_structure ()
 
 reset_block ()
 {
-    unset   -v  EMPTY_STRING_IN_LIST \
-                BLOCK \
-                TAG_TREE \
-                LIST_ITEM_INDEX
+    unset   -v  BLOCK EMPTY_STRING_IN_LIST
 
-    declare -gA EMPTY_STRING_IN_LIST \
-                BLOCK
+    declare -gA BLOCK EMPTY_STRING_IN_LIST
 
-                TAG_TREE=()
+                BUFFER=
+                CLOSING_TAG_BUFFER=()
                 LIST_ITEM_INDEX=()
+                PREV_DEPTH=
+                TAG_TREE=()
 }
 
 has_no_open_block ()
