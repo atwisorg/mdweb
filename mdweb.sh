@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.50} - (C) 09.08.2025
+    echo "${0##*/} ${1:-0.6.51} - (C) 09.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1249,6 +1249,23 @@ open_ordered_list ()
         NESTING_DEPTH["$LEVEL"]="${NESTING_DEPTH["$((LEVEL - 1))"]#*:}"
     fi
     CHAR_NUM="$((CHAR_NUM + 1 + LENGTH_ORDERED_LIST_NUM))"
+    LEVEL="$((LEVEL + 1))"
+}
+
+open_block_quote ()
+{
+    block_type_is_equal "block_quote" || {
+        create_block "block_quote"
+        save_tag "blockquote"
+    }
+
+    if is_equal "$LEVEL" 0
+    then
+        NESTING_DEPTH["$LEVEL"]="$CHAR_NUM"
+    else
+        NESTING_DEPTH["$LEVEL"]="${NESTING_DEPTH["$((LEVEL - 1))"]#*:}"
+    fi
+    CHAR_NUM="$((CHAR_NUM + 1))"
     LEVEL="$((LEVEL + 1))"
 }
 
