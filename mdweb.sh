@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.52} - (C) 09.08.2025
+    echo "${0##*/} ${1:-0.6.53} - (C) 09.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -595,7 +595,7 @@ add_tag_to_buffer ()
 
 add_paragraph_to_buffer ()
 {
-    BUFFER="$BUFFER$NEW_LINE${BLOCK["$INDEX"]}"
+    BUFFER="$BUFFER$NEW_LINE${CONTENT["$INDEX"]}"
 }
 
 get_tag ()
@@ -1386,6 +1386,14 @@ print_heading_setext ()
             =) print_heading "h1" ;;
             -) print_heading "h2" ;;
         esac
+    }
+}
+
+save_horizontal_rule ()
+{
+    [[ "${LINE//[[:blank:]]}" =~ ^"$1"{3,}$ ]] && {
+        LINE="${TAG_INDENT:-}<hr />"
+        open_content_block
     }
 }
 
