@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.47} - (C) 07.08.2025
+    echo "${0##*/} ${1:-0.6.48} - (C) 09.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -628,7 +628,6 @@ get_tag ()
             $GET_CODE_BLOCK_TAG
             CLOSING_TAG="$MERGE_STOP_MARKER${CANONICAL_PRE_CODE:-}</code></pre>"
             CLASS=
-            get_tag_indent +
             ;;
         h[1-6])
             $GET_HEADING_TAG "$1"
@@ -730,6 +729,43 @@ finalize ()
     done
     push_remaining_closing_tag
     reset_block
+}
+
+create_block ()
+{
+     ITEM="${BLOCK_NUM["$LEVEL"]:+"${BLOCK_NUM["$LEVEL"]##*:}"}"
+    DEPTH="${BLOCK_NUM["$LEVEL"]:+"${BLOCK_NUM["$LEVEL"]%:*}"}:$(("${ITEM:--1}" + 1))"
+    BLOCK_NUM["$LEVEL"]="$DEPTH"
+    BLOCK_TYPE["$LEVEL"]="$1"
+}
+
+append_depth ()
+{
+    DEPTH="$DEPTH:0"
+}
+
+increment_list_item ()
+{
+    ITEM="${INDEX#"${BLOCK_NUM["$LEVEL"]}:"}"
+    DEPTH="${BLOCK_NUM["$LEVEL"]}:$(("${ITEM%%:*}" + 1))"
+}
+
+save_tag ()
+{
+    NUM_TAG="$(("${NUM_TAG:--1}" + 1))"
+    INDEX="$DEPTH:$1"
+    TAG_TREE["$NUM_TAG"]="$INDEX"
+}
+
+save_content ()
+{
+    save_tag "content"
+    CONTENT["$INDEX"]="$LINE"
+}
+
+append_to_content ()
+{
+    CONTENT["$INDEX"]="${CONTENT["$INDEX"]}$NEW_LINE${LINE:-}"
 }
 
 put_in_tag_block ()
@@ -886,6 +922,17 @@ put_in_string_block ()
     STRING_BLOCK[-1]="${STRING_BLOCK[-1]:-}$NEW_LINE${BUFFER_INDENT:-}${LINE:-}"
 }
 
+open_content_block ()
+{
+    if is_equal "${BLOCK_TYPE["$LEVEL"]:-}" "content"
+    then
+        append_to_content
+    else
+        create_block "content"
+        save_content
+    fi
+}
+
 open_string_block ()
 {
     string_block_is_empty && {
@@ -970,13 +1017,13 @@ trim_indent ()
 
 open_indent_code_block ()
 {
-    BLOCK_TYPE["$LEVEL"]="indent_code_block"
-    create_block "$INDEX:${BLOCK_TYPE["$LEVEL"]}" "indented"
+    create_block "indent_code_block"
+    save_tag "indent_code_block"
 
     EXCESS_INDENT="${1:-4}"
-    CURRENT_BLOCK="$INDEX:0:code"
     trim_indent "$EXCESS_INDENT" "$CHAR_NUM"
-    create_block "$CURRENT_BLOCK" "$LINE"
+    append_depth
+    save_content
 
     NESTING_DEPTH["$LEVEL"]="$CHAR_NUM:$EXCESS_INDENT"
 }
@@ -1067,10 +1114,12 @@ add_to_code_block ()
     fi
 }
 
-open_list_item ()
+trim_block ()
 {
-    CURRENT_BLOCK="$INDEX:li"
-    create_block "$CURRENT_BLOCK"
+    for (( i="$((${#BLOCK_TYPE[@]} - 1))"; i>"$LEVEL"; i-- ))
+    do
+        unset -v "BLOCK_TYPE[-1]"
+    done
 }
 
 open_unordered_list ()
@@ -1078,13 +1127,19 @@ open_unordered_list ()
     [[ "$LINE" =~ ^"$1"([[:blank:]]|$) ]] && {
         if is_equal "${BLOCK_TYPE["$LEVEL"]:-}" "$1"
         then
-            INDEX="$INDEX:$((${INDEX##*:} + 1))"
+            trim_block
+            is_empty "${BLANK:-}" || {
+                EMPTY_STRING_IN_LIST["${BLANK%:*:*:content}"]=""
+                BLANK=
+            }
+            increment_list_item
         else
-            BLOCK_TYPE["$LEVEL"]="$1"
-            create_block "$INDEX:ul"
-            INDEX="$INDEX:0"
+            create_block "$1"
+            save_tag "ul"
+            append_depth
         fi
-        open_list_item
+        save_tag "li"
+
         BULLET_CHAR_NUM="$CHAR_NUM"
         if is_equal "$LEVEL" 0
         then
@@ -1363,7 +1418,6 @@ parse_indent ()
     then
         #   ┌> the indent length is less than or equal to 4
         # ◦◦◦-◦◦>◦◦*◦◦◦◦12)◦◦◦◦◦foo
-        INDEX="0"
         test "$INDENT_LENGTH" -lt 4 || {
             # ┌───┬─> indent length greater than 4
             # ◦◦◦◦◦foo
@@ -1376,12 +1430,15 @@ parse_indent ()
         while true
         do
             case "${BLOCK_TYPE["$LEVEL"]}" in
-                "code_block")
-                    test "$INDENT_LENGTH" -lt 4 || {
+                "indent_code_block")
+                    if test "$INDENT_LENGTH" -lt 4
+                    then
+                        INDEX="$(( INDEX + 1 ))"
+                    else
                         trim_indent "$EXCESS_INDENT"
-                        append_to_block "$CURRENT_BLOCK" "$LINE"
+                        append_to_content "$CURRENT_BLOCK" "$LINE"
                         return 1
-                    }
+                    fi
                     return
             esac
         done
@@ -1673,42 +1730,24 @@ parse_block_structure ()
 
 reset_block ()
 {
-    unset   -v  BLOCK EMPTY_STRING_IN_LIST
+    unset   -v  BLOCK CONTENT EMPTY_STRING_IN_LIST
 
-    declare -gA BLOCK EMPTY_STRING_IN_LIST
+    declare -gA BLOCK CONTENT EMPTY_STRING_IN_LIST
 
+                BLOCK_NUM=()
+                BLOCK_TYPE=()
                 BUFFER=
                 CLOSING_TAG_BUFFER=()
-                LIST_ITEM_INDEX=()
+                LIST_ITEM_CONTENT_INDEX=()
                 PREV_DEPTH=
                 TAG_TREE=()
 }
 
-block_is_empty ()
+change_tag ()
 {
-    is_empty "${BLOCK["$1"]:-}"
-}
-
-create_tag ()
-{
-    TAG_TREE+=( "${1:-}" )
-}
-
-create_block ()
-{
-    BLOCK["$1"]="${2:-}"
-    create_tag "${1:-}"
-}
-
-append_to_block ()
-{
-    BLOCK["$1"]="${BLOCK["$1"]:+"${BLOCK["$1"]}$NEW_LINE"}${2:-}"
-}
-
-rename_block ()
-{
-    BLOCK["$2"]="${BLOCK["$1"]}"
-    unset -v BLOCK["$1"]
+    TAG_TREE["$1"]="$3"
+    CONTENT["$3"]="${CONTENT["$2"]}"
+    unset -v CONTENT["$2"]
 }
 
 has_no_empty_strings_in_list ()
@@ -1718,13 +1757,15 @@ has_no_empty_strings_in_list ()
 
 add_paragraph_to_list_item ()
 {
-    for INDEX in "${LIST_ITEM_INDEX[@]}"
+    for NUM_TAG in "${!LIST_ITEM_CONTENT_INDEX[@]}"
     do
+        CONTENT_INDEX="${LIST_ITEM_CONTENT_INDEX["$NUM_TAG"]}"
+
         for LIST_INDEX in "${!EMPTY_STRING_IN_LIST[@]}"
         do
-            if [[ "$INDEX" =~ "$LIST_INDEX":[0-9]+:[0-9]+:text ]]
+            if [[ "$CONTENT_INDEX" =~ "$LIST_INDEX":[0-9]+:[0-9]+:content ]]
             then
-                rename_block "$INDEX" "${INDEX%:*}:paragraph"
+                change_tag "$NUM_TAG" "$CONTENT_INDEX" "${CONTENT_INDEX%:*}:paragraph"
             fi
         done
     done
@@ -1789,7 +1830,7 @@ parse_blocks ()
                         LINE="${LINE:"$LENGTH_ORDERED_LIST_NUM"}"
                     }
                 } || {
-                    add_to_code_block || open_string_block
+                    add_to_code_block || open_content_block
                     return
                 }
                 ;;
