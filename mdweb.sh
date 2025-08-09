@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.48} - (C) 09.08.2025
+    echo "${0##*/} ${1:-0.6.49} - (C) 09.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -768,6 +768,11 @@ append_to_content ()
     CONTENT["$INDEX"]="${CONTENT["$INDEX"]}$NEW_LINE${LINE:-}"
 }
 
+block_type_is_equal ()
+{
+    is_equal "${BLOCK_TYPE["$LEVEL"]:-}" "${1:-}"
+}
+
 put_in_tag_block ()
 {
     OPENING_INDENT_BLOCK["$LEVEL"]="${OPENING_TAG_INDENT:-}"
@@ -924,7 +929,7 @@ put_in_string_block ()
 
 open_content_block ()
 {
-    if is_equal "${BLOCK_TYPE["$LEVEL"]:-}" "content"
+    if block_type_is_equal "content"
     then
         append_to_content
     else
@@ -1103,7 +1108,7 @@ is_code_block ()
 
 add_to_code_block ()
 {
-    if is_equal "${BLOCK_TYPE["$LEVEL"]:-}" "code_block"
+    if block_type_is_equal "code_block"
     then
         is_code_block && close_code_block "$LEVEL" || open_string_block
     else
@@ -1125,7 +1130,7 @@ trim_block ()
 open_unordered_list ()
 {
     [[ "$LINE" =~ ^"$1"([[:blank:]]|$) ]] && {
-        if is_equal "${BLOCK_TYPE["$LEVEL"]:-}" "$1"
+        if block_type_is_equal "$1"
         then
             trim_block
             is_empty "${BLANK:-}" || {
@@ -1161,7 +1166,7 @@ open_list_item ()
 open_unordered_list ()
 {
     [[ "$LINE" =~ ^"$1"([[:blank:]]|$) ]] && {
-        if is_equal "${BLOCK_TYPE["$LEVEL"]:-}" "$1"
+        if block_type_is_equal "$1"
         then
             finalize "close tags to the current list item"
         else
@@ -1186,7 +1191,7 @@ open_unordered_list ()
 
 open_ordered_list ()
 {
-    if is_equal "${BLOCK_TYPE["$LEVEL"]:-}" "$1"
+    if block_type_is_equal "$1"
     then
         finalize "close tags to the current list item"
     else
@@ -1218,7 +1223,7 @@ open_block_quote ()
     # remember the first nesting depth of the block to close all tags,
     # including this block, when an empty string or other block occurs.
     BLOCK_QUOTE="${BLOCK_QUOTE:-"$LEVEL"}"
-    is_equal "${BLOCK_TYPE["$LEVEL"]:-}" "block_quote" || {
+    block_type_is_equal "block_quote" || {
         string_block_is_empty || finalize
         BLOCK_TYPE["$LEVEL"]="block_quote"
 
