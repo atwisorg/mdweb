@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.55} - (C) 09.08.2025
+    echo "${0##*/} ${1:-0.6.56} - (C) 10.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -814,6 +814,12 @@ block_type_is_equal ()
 {
     is_equal "${BLOCK_TYPE["$LEVEL"]:-}" "${1:-}"
 }
+
+block_type_is_not_equal ()
+{
+    block_type_is_equal "$1" && return 1 || return 0
+}
+
 # TODO: remove the function
 put_in_tag_block ()
 {
@@ -1941,7 +1947,7 @@ parse_blocks ()
             [*]*)
                 save_horizontal_rule "*" && return ||
                 [[ "$LINE" =~ ^"*"[[:blank:]]+[![:blank:]] ]] ||
-                current_depth_string_block_is_empty &&
+                block_type_is_not_equal "content" &&
                 open_unordered_list "*" || {
                     open_content_block
                     return
@@ -1950,7 +1956,7 @@ parse_blocks ()
             [+]*)
                 is_not_empty "${NESTING_DEPTH[$((LEVEL+1))]:-}" ||
                 [[ "$LINE" =~ ^"+"[[:blank:]]+[![:blank:]] ]] ||
-                current_depth_string_block_is_empty  &&
+                block_type_is_not_equal "content"  &&
                 open_unordered_list "+" || {
                     open_content_block
                     return
@@ -1962,7 +1968,7 @@ parse_blocks ()
                *)
                 [[ "$LINE" =~ ^[0-9]{1,9}[\).]([[:blank:]]|$) ]] && {
                 [[ "$LINE" =~ ^[0-9]{1,9}[\).][[:blank:]]+[![:blank:]] ]] ||
-                    current_depth_string_block_is_empty && {
+                    block_type_is_not_equal "content" && {
                         [[ "$LINE" =~ ^[0-9]{1,9}\) ]] && open_ordered_list ")" || {
                         [[ "$LINE" =~ ^[0-9]{1,9}\. ]] && open_ordered_list "."  ; }
                         LINE="${LINE:"$LENGTH_ORDERED_LIST_NUM"}"
