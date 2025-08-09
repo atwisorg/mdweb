@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.56} - (C) 10.08.2025
+    echo "${0##*/} ${1:-0.6.57} - (C) 10.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -797,17 +797,22 @@ save_tag ()
 
 save_content ()
 {
-    CONTENT["$INDEX"]="$LINE"
+    CONTENT["$INDEX"]="${LINE:-}"
+}
+
+append_to_content ()
+{
+    CONTENT["$INDEX"]="${CONTENT["$INDEX"]:-}$NEW_LINE${LINE:-}"
+}
+
+content_is_empty ()
+{
+    is_equal "${CONTENT["$INDEX"]-"empty"}" "empty"
 }
 
 save_tag_class ()
 {
     TAG_CLASS["$INDEX"]="${1:-}"
-}
-
-append_to_content ()
-{
-    CONTENT["$INDEX"]="${CONTENT["$INDEX"]}$NEW_LINE${LINE:-}"
 }
 
 block_type_is_equal ()
@@ -1077,8 +1082,6 @@ open_indent_code_block ()
     EXCESS_INDENT="${1:-4}"
     trim_indent "$EXCESS_INDENT" "$CHAR_NUM"
     save_content
-
-    NESTING_DEPTH["$LEVEL"]="$CHAR_NUM:$EXCESS_INDENT"
 }
 # TODO: remove the function
 open_indent_code_block ()
@@ -1094,25 +1097,7 @@ open_indent_code_block ()
     open_string_block
 }
 
-open_code_block ()
-{
-    get_tag "code_block"
-    put_in_tag_block
-    EXCESS_INDENT="${#INDENT}"
-    CODE_BLOCK="open"
-    BLOCK_TYPE["$LEVEL"]="code_block"
-    NESTING_DEPTH["$LEVEL"]=
-}
-
-close_code_block ()
-{
-    finalize
-    FENCE_CHAR=
-    INDENTED_CODE_BLOCK="closed"
-             CODE_BLOCK="closed"
-}
-
-serialize_pre_code_language ()
+serialize_code_language ()
 {
     sed '
         # get the first word
@@ -1144,6 +1129,90 @@ is_code_block ()
         [[ "${LINE:-}" =~ ^[[:blank:]]*~{3,} ]] && {
             FENCE_CHAR="${LINE%%[!~\`]*}"
             FENCE_LENGTH="${#FENCE_CHAR}"
+            FENCE_LANGUAGE="${LINE#"$FENCE_CHAR"}"
+            FENCE_CHAR="${FENCE_CHAR:0:1}"
+        }
+    else
+        [[ "${LINE:-}" =~ ^[[:blank:]]*$FENCE_CHAR{$FENCE_LENGTH,}[[:blank:]]*$ ]]
+    fi
+}
+
+open_code_block ()
+{
+    is_code_block && {
+        EXCESS_INDENT="${#INDENT}"
+        CODE_BLOCK="open"
+        create_block "code_block"
+        save_tag "code_block"
+        is_empty "${FENCE_LANGUAGE:-}" ||
+            save_tag_class "$(serialize_code_language <<< "$FENCE_LANGUAGE")"
+    }
+}
+
+append_to_code_block ()
+{
+    is_code_block || {
+        trim_indent "$EXCESS_INDENT" "$CHAR_NUM"
+        if content_is_empty
+        then
+            save_content
+        else
+            append_to_content
+        fi
+    }
+}
+
+# TODO: remove the function
+open_code_block ()
+{
+    get_tag "code_block"
+    put_in_tag_block
+    EXCESS_INDENT="${#INDENT}"
+    CODE_BLOCK="open"
+    BLOCK_TYPE["$LEVEL"]="code_block"
+    NESTING_DEPTH["$LEVEL"]=
+}
+
+close_code_block ()
+{
+    finalize
+    FENCE_CHAR=
+    INDENTED_CODE_BLOCK="closed"
+             CODE_BLOCK="closed"
+}
+# TODO: remove the function
+serialize_pre_code_language ()
+{
+    sed '
+        # get the first word
+        s%^[[:blank:]]*\([^[:blank:]]\+\).*$%\1%g
+
+        # all in lowercase
+        s%.*%\L&%g
+
+        # mask ampersand
+        s%\([^\\]\?\)&%\1\x03%g
+
+        # remove backslash-escaped
+        s%\\\([][!"#$%&\x27()*+,./:;<=>?@\\^_`{|}~-]\)%\1%g
+
+        s%&%\&amp;%g
+        s%"%\&quot;%g
+        s%<%\&lt;%g
+        s%>%\&gt;%g
+
+        # unmask ampersand
+        s%\x03%\&%g'
+}
+# TODO: remove the function
+is_code_block ()
+{
+    if is_empty "${FENCE_CHAR:-}"
+    then
+        [[ "${LINE:-}" =~ ^[[:blank:]]*\`{3,}[^\`]*$ ]] ||
+        [[ "${LINE:-}" =~ ^[[:blank:]]*~{3,} ]] && {
+            FENCE_CHAR="${LINE%%[!~\`]*}"
+            FENCE_LENGTH="${#FENCE_CHAR}"
             CLASS="${LINE#"$FENCE_CHAR"}"
             is_empty "${CLASS:-}" ||
                 CLASS="$(serialize_pre_code_language <<< "$CLASS")"
@@ -1153,7 +1222,7 @@ is_code_block ()
         [[ "${LINE:-}" =~ ^[[:blank:]]*$FENCE_CHAR{$FENCE_LENGTH,}[[:blank:]]*$ ]]
     fi
 }
-
+# TODO: remove the function
 add_to_code_block ()
 {
     if block_type_is_equal "code_block"
@@ -1974,7 +2043,7 @@ parse_blocks ()
                         LINE="${LINE:"$LENGTH_ORDERED_LIST_NUM"}"
                     }
                 } || {
-                    add_to_code_block || open_content_block
+                    open_code_block || open_content_block
                     return
                 }
                 ;;
