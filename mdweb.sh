@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.51} - (C) 09.08.2025
+    echo "${0##*/} ${1:-0.6.52} - (C) 09.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -752,15 +752,19 @@ increment_list_item ()
 
 save_tag ()
 {
-    NUM_TAG="$(("${NUM_TAG:--1}" + 1))"
+    TAG_NUM="$(("${TAG_NUM:--1}" + 1))"
     INDEX="$DEPTH:$1"
-    TAG_TREE["$NUM_TAG"]="$INDEX"
+    TAG_TREE["$TAG_NUM"]="$INDEX"
 }
 
 save_content ()
 {
-    save_tag "content"
     CONTENT["$INDEX"]="$LINE"
+}
+
+save_tag_class ()
+{
+    TAG_CLASS["$INDEX"]="${1:-}"
 }
 
 append_to_content ()
@@ -934,6 +938,7 @@ open_content_block ()
         append_to_content
     else
         create_block "content"
+        save_tag "content"
         save_content
     fi
 }
@@ -1027,7 +1032,6 @@ open_indent_code_block ()
 
     EXCESS_INDENT="${1:-4}"
     trim_indent "$EXCESS_INDENT" "$CHAR_NUM"
-    append_depth
     save_content
 
     NESTING_DEPTH["$LEVEL"]="$CHAR_NUM:$EXCESS_INDENT"
@@ -1207,7 +1211,7 @@ open_ordered_list ()
         OL_START="${LINE%%[!0-9]*}"
         LENGTH_ORDERED_LIST_NUM="${#OL_START}"
         is_equal "$LENGTH_ORDERED_LIST_NUM" 1 || OL_START="${OL_START#"${OL_START%%[!0]*}"}"
-        is_equal "$OL_START" 1 || TAG_CLASS["$INDEX"]="$OL_START"
+        is_equal "$OL_START" 1 || save_tag_class "$OL_START"
         OL_START=
     fi
     save_tag "li"
@@ -1303,6 +1307,38 @@ trim_white_space ()
 {
     LINE="${LINE#"${LINE%%[![:blank:]]*}"}"
     LINE="${LINE%"${LINE##*[![:blank:]]}"}"
+}
+
+open_heading ()
+{
+    create_block "$1"
+    save_tag "$1"
+    trim_white_space
+}
+
+open_heading_atx ()
+{
+    [[ "${LINE:-}" =~ ^#{1,6}([[:blank:]].*|$) ]] && {
+        HEADER="${LINE%%[[:blank:]]*}"
+        LINE="$(sed 's%\(^#\+\|[[:blank:]]\+#*[[:blank:]]*$\)%%g' <<< "$LINE")"
+        open_heading "h${#HEADER}"
+        save_content
+        save_tag_class "atx"
+    }
+}
+
+open_heading_setext ()
+{
+    [[ "$LINE" =~ ^"$1"+[[:blank:]]*$ ]] &&
+    block_type_is_equal "content" && {
+        case "$1" in
+            =) TAG="h1" ;;
+            -) TAG="h2" ;;
+        esac
+        change_tag "$TAG_NUM" "$INDEX" "${INDEX%:*}:$TAG"
+        open_heading "$TAG"
+        save_tag_class "setext"
+    }
 }
 
 print_heading ()
@@ -1813,15 +1849,15 @@ has_no_empty_strings_in_list ()
 
 add_paragraph_to_list_item ()
 {
-    for NUM_TAG in "${!LIST_ITEM_CONTENT_INDEX[@]}"
+    for TAG_NUM in "${!LIST_ITEM_CONTENT_INDEX[@]}"
     do
-        CONTENT_INDEX="${LIST_ITEM_CONTENT_INDEX["$NUM_TAG"]}"
+        CONTENT_INDEX="${LIST_ITEM_CONTENT_INDEX["$TAG_NUM"]}"
 
         for LIST_INDEX in "${!EMPTY_STRING_IN_LIST[@]}"
         do
             if [[ "$CONTENT_INDEX" =~ "$LIST_INDEX":[0-9]+:[0-9]+:content ]]
             then
-                change_tag "$NUM_TAG" "$CONTENT_INDEX" "${CONTENT_INDEX%:*}:paragraph"
+                change_tag "$TAG_NUM" "$CONTENT_INDEX" "${CONTENT_INDEX%:*}:paragraph"
             fi
         done
     done
