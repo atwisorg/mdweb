@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.53} - (C) 09.08.2025
+    echo "${0##*/} ${1:-0.6.54} - (C) 09.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -399,6 +399,8 @@ argparse ()
 check_args ()
 {
     is_empty "${PAGE_STYLE:-}" && {
+        GET_OPENING_CODE_BLOCK_TAG="get_opening_code_block_tag"
+        GET_OPENING_HEADING_TAG="get_opening_heading_tag"
         GET_CODE_BLOCK_TAG="get_code_block_tag"
         GET_HEADING_TAG="get_heading_tag"
     } || {
@@ -406,6 +408,8 @@ check_args ()
             is_file "$PKG_DIR/style/${PAGE_STYLE%.css}.css" &&
             PAGE_STYLE="$PKG_DIR/style/${PAGE_STYLE%.css}.css"
         } || die 2 "no such file: -- '$PAGE_STYLE'"
+        GET_OPENING_CODE_BLOCK_TAG="get_opening_code_block_tag_with_class"
+        GET_OPENING_HEADING_TAG="get_opening_heading_tag_with_class"
         GET_CODE_BLOCK_TAG="get_code_block_tag_with_class"
         GET_HEADING_TAG="get_heading_tag_with_class"
     }
@@ -506,6 +510,21 @@ close_html ()
     echo "</html>"
 }
 
+get_opening_code_block_tag_with_class ()
+{
+    OPENING_TAG="${TAG_INDENT:-}<pre><code class=\"${TAG_CLASS["$INDEX"]:+fenced-code-block language-}${TAG_CLASS["$INDEX"]:-indented-code-block}\">$MERGE_START_MARKER"
+}
+
+get_opening_code_block_tag ()
+{
+    OPENING_TAG="${TAG_INDENT:-}<pre><code${TAG_CLASS["$INDEX"]:+ class=\"language-${TAG_CLASS["$INDEX"]}\"}>$MERGE_START_MARKER"
+}
+
+get_opening_code_block ()
+{
+    "$GET_OPENING_CODE_BLOCK_TAG"
+}
+
 get_code_block_tag_with_class ()
 {
     OPENING_TAG="${TAG_INDENT:-}<pre><code class=\"${CLASS:+fenced-code-block language-}${CLASS:-indented-code-block}\">$MERGE_START_MARKER"
@@ -564,6 +583,26 @@ is_new_id ()
     }
 }
 
+get_opening_heading_tag_with_class ()
+{
+    ID="$(get_heading_id <<< "${LINE:-}")"
+    is_empty "${ID:-}" || {
+        is_new_id || ID="$ID-$(( ${ID_NUM:=0} + 1 ))"
+        ID_BASE="${ID_BASE:+"$ID_BASE$NEW_LINE"}$ID"
+    }
+    OPENING_TAG="${TAG_INDENT:-}<$1 class=\"${TAG_CLASS["$INDEX"]}\" id=\"${ID:-}\">$MERGE_START_MARKER"
+}
+
+get_opening_heading_tag ()
+{
+    OPENING_TAG="${TAG_INDENT:-}<$1>$MERGE_START_MARKER"
+}
+
+get_opening_heading ()
+{
+    "$GET_OPENING_HEADING_TAG" "$1"
+}
+
 get_heading_tag_with_class ()
 {
     ID="$(get_heading_id <<< "${LINE:-}")"
@@ -607,9 +646,8 @@ get_tag ()
             get_tag_indent +
             ;;
         ol)
-            OPENING_TAG="${TAG_INDENT:-}<$1${OL_START:+ start=\"$OL_START\"}>"
+            OPENING_TAG="${TAG_INDENT:-}<$1${TAG_CLASS["$INDEX"]:+ start=\"${TAG_CLASS["$INDEX"]}\"}>"
             CLOSING_TAG="${TAG_INDENT:-}</$1>"
-            OL_START=
             get_tag_indent +
             ;;
         li)
@@ -625,14 +663,12 @@ get_tag ()
             return
             ;;
         code_block|indent_code_block)
-            $GET_CODE_BLOCK_TAG
+            get_opening_code_block
             CLOSING_TAG="$MERGE_STOP_MARKER${CANONICAL_PRE_CODE:-}</code></pre>"
-            CLASS=
             ;;
         h[1-6])
-            $GET_HEADING_TAG "$1"
+            get_opening_heading "$1"
             CLOSING_TAG="$MERGE_STOP_MARKER${TAG_INDENT:-}</$1>"
-            CLASS=
             ;;
         *)
             add_paragraph_to_buffer
