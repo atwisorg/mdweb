@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.54} - (C) 09.08.2025
+    echo "${0##*/} ${1:-0.6.55} - (C) 09.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -401,6 +401,7 @@ check_args ()
     is_empty "${PAGE_STYLE:-}" && {
         GET_OPENING_CODE_BLOCK_TAG="get_opening_code_block_tag"
         GET_OPENING_HEADING_TAG="get_opening_heading_tag"
+        # TODO: remove variables: GET_CODE_BLOCK_TAG, GET_HEADING_TAG
         GET_CODE_BLOCK_TAG="get_code_block_tag"
         GET_HEADING_TAG="get_heading_tag"
     } || {
@@ -410,6 +411,7 @@ check_args ()
         } || die 2 "no such file: -- '$PAGE_STYLE'"
         GET_OPENING_CODE_BLOCK_TAG="get_opening_code_block_tag_with_class"
         GET_OPENING_HEADING_TAG="get_opening_heading_tag_with_class"
+        # TODO: remove variables: GET_CODE_BLOCK_TAG, GET_HEADING_TAG
         GET_CODE_BLOCK_TAG="get_code_block_tag_with_class"
         GET_HEADING_TAG="get_heading_tag_with_class"
     }
@@ -524,12 +526,12 @@ get_opening_code_block ()
 {
     "$GET_OPENING_CODE_BLOCK_TAG"
 }
-
+# TODO: remove the function
 get_code_block_tag_with_class ()
 {
     OPENING_TAG="${TAG_INDENT:-}<pre><code class=\"${CLASS:+fenced-code-block language-}${CLASS:-indented-code-block}\">$MERGE_START_MARKER"
 }
-
+# TODO: remove the function
 get_code_block_tag ()
 {
     OPENING_TAG="${TAG_INDENT:-}<pre><code${CLASS:+ class=\"language-$CLASS\"}>$MERGE_START_MARKER"
@@ -602,7 +604,7 @@ get_opening_heading ()
 {
     "$GET_OPENING_HEADING_TAG" "$1"
 }
-
+# TODO: remove the function
 get_heading_tag_with_class ()
 {
     ID="$(get_heading_id <<< "${LINE:-}")"
@@ -612,7 +614,7 @@ get_heading_tag_with_class ()
     }
     OPENING_TAG="${TAG_INDENT:-}<$1 class=\"${CLASS:-atx}\" id=\"${ID:-}\">$MERGE_START_MARKER"
 }
-
+# TODO: remove the function
 get_heading_tag ()
 {
     OPENING_TAG="${TAG_INDENT:-}<$1>$MERGE_START_MARKER"
@@ -677,7 +679,7 @@ get_tag ()
     esac
     add_tag_to_buffer
 }
-
+# TODO: remove the function
 get_tag ()
 {
     case "$1" in
@@ -812,7 +814,7 @@ block_type_is_equal ()
 {
     is_equal "${BLOCK_TYPE["$LEVEL"]:-}" "${1:-}"
 }
-
+# TODO: remove the function
 put_in_tag_block ()
 {
     OPENING_INDENT_BLOCK["$LEVEL"]="${OPENING_TAG_INDENT:-}"
@@ -824,7 +826,7 @@ put_in_tag_block ()
     OPENING_TAG=
     CLOSING_TAG=
 }
-
+# TODO: remove the function
 put_tag_in_sub_block ()
 {
     OPENING_INDENT_SUB_BLOCK["$LEVEL"]="${OPENING_TAG_INDENT:-}"
@@ -846,7 +848,7 @@ mark_a_string_block ()
 {
     STRING_BLOCK[-1]="${STRING_BLOCK[-1]:+"$PARAGRAPH_MARKER${STRING_BLOCK[-1]}$PARAGRAPH_MARKER"}"
 }
-
+# TODO: remove the function
 get_paragraph ()
 {
     get_tag "paragraph"
@@ -855,17 +857,17 @@ get_paragraph ()
     BLOCK_TYPE["${LEVEL:-0}"]="paragraph"
     NESTING_DEPTH["${LEVEL:-0}"]=
 }
-
+# TODO: remove the function
 string_block_is_empty ()
 {
     is_empty "${!STRING_BLOCK[@]}"
 }
-
+# TODO: remove the function
 no_open_blocks ()
 {
     is_empty "${!BLOCK_TYPE[@]}"
 }
-
+# TODO: remove the function
 get_string_block ()
 {
     string_block_is_empty || {
@@ -902,7 +904,7 @@ get_string_block ()
         STRING_BLOCK[-1]="${STRING_BLOCK[-1]:+"${STRING_BLOCK[-1]}$NEW_LINE"}"
     }
 }
-
+# TODO: remove the function
 print_opening_tags ()
 {
     no_open_blocks || {
@@ -921,7 +923,7 @@ print_opening_tags ()
         is_empty "${TAG:-}" || echo "$TAG"
     }
 }
-
+# TODO: remove the function
 print_closing_tags ()
 {
     no_open_blocks || {
@@ -952,7 +954,7 @@ print_closing_tags ()
         is_empty "${TAG:-}" || echo "$TAG"
     }
 }
-
+# TODO: remove the function
 finalize ()
 {
     get_string_block
@@ -961,7 +963,7 @@ finalize ()
     print_closing_tags "${1:-}"
     STRING_BLOCK=()
 }
-
+# TODO: remove the function
 put_in_string_block ()
 {
     STRING_BLOCK[-1]="${STRING_BLOCK[-1]:-}$NEW_LINE${BUFFER_INDENT:-}${LINE:-}"
@@ -978,7 +980,7 @@ open_content_block ()
         save_content
     fi
 }
-
+# TODO: remove the function
 open_string_block ()
 {
     string_block_is_empty && {
@@ -1072,7 +1074,7 @@ open_indent_code_block ()
 
     NESTING_DEPTH["$LEVEL"]="$CHAR_NUM:$EXCESS_INDENT"
 }
-
+# TODO: remove the function
 open_indent_code_block ()
 {
     EXCESS_INDENT="${1:-4}"
@@ -1196,13 +1198,13 @@ open_unordered_list ()
         LEVEL="$((LEVEL + 1))"
     }
 }
-
+# TODO: remove the function
 open_list_item ()
 {
     get_tag "li"
     put_tag_in_sub_block
 }
-
+# TODO: remove the function
 open_unordered_list ()
 {
     [[ "$LINE" =~ ^"$1"([[:blank:]]|$) ]] && {
@@ -1262,7 +1264,7 @@ open_ordered_list ()
     CHAR_NUM="$((CHAR_NUM + 1 + LENGTH_ORDERED_LIST_NUM))"
     LEVEL="$((LEVEL + 1))"
 }
-
+# TODO: remove the function
 open_ordered_list ()
 {
     if block_type_is_equal "$1"
@@ -1308,7 +1310,7 @@ open_block_quote ()
     CHAR_NUM="$((CHAR_NUM + 1))"
     LEVEL="$((LEVEL + 1))"
 }
-
+# TODO: remove the function
 open_block_quote ()
 {
     # remember the first nesting depth of the block to close all tags,
@@ -1376,7 +1378,7 @@ open_heading_setext ()
         save_tag_class "setext"
     }
 }
-
+# TODO: remove the function
 print_heading ()
 {
     finalize
@@ -1390,7 +1392,7 @@ print_heading ()
     LEVEL="$((LEVEL - 1))"
     finalize
 }
-
+# TODO: remove the function
 print_heading_atx ()
 {
     [[ "${LINE:-}" =~ ^#{1,6}([[:blank:]].*|$) ]] && {
@@ -1400,17 +1402,17 @@ print_heading_atx ()
         print_heading "h${#HEADER}"
     }
 }
-
+# TODO: remove the function
 current_depth_string_block_is_empty ()
 {
     is_empty "${STRING_BLOCK["$LEVEL"]:-}"
 }
-
+# TODO: remove the function
 current_depth_string_block_is_not_empty ()
 {
     current_depth_string_block_is_empty && return 1 || return 0
 }
-
+# TODO: remove the function
 print_heading_setext ()
 {
     current_depth_string_block_is_not_empty &&
@@ -1432,7 +1434,7 @@ save_horizontal_rule ()
         open_content_block
     }
 }
-
+# TODO: remove the function
 print_horizontal_rule ()
 {
     [[ "${LINE//[[:blank:]]}" =~ ^"$1"{3,}$ ]] && {
@@ -1580,7 +1582,7 @@ parse_indent ()
         done
     fi
 }
-
+# TODO: remove the function
 parse_indent ()
 {
     #    ┌>┌─────────────> LEVEL="0" BLOCK_TYPE[0]="-"                 NESTING_DEPTH[0]="3:6"
@@ -1780,7 +1782,7 @@ parse_indent ()
         done
     fi
 }
-
+# TODO: remove the function
 parse_block_structure ()
 {
     LEVEL="0"
@@ -1917,31 +1919,31 @@ parse_blocks ()
         CHAR_NUM="$((CHAR_NUM + INDENT_LENGTH))"
         case "$LINE" in
             [_]*)
-                print_horizontal_rule "_" || open_string_block
+                save_horizontal_rule "_" || open_content_block
                 return
                 ;;
             [#]*)
-                print_heading_atx || open_string_block
+                open_heading_atx || open_content_block
                 return
                 ;;
             [=]*)
-                print_heading_setext "=" || open_string_block
+                open_heading_setext "=" || open_content_block
                 return
                 ;;
             [-]*)
-                print_heading_setext  "-" ||
-                print_horizontal_rule "-" && return ||
-                open_unordered_list   "-" || {
-                    open_string_block
+                open_heading_setext  "-" ||
+                save_horizontal_rule "-" && return ||
+                open_unordered_list  "-" || {
+                    open_content_block
                     return
                 }
                 ;;
             [*]*)
-                print_horizontal_rule "*" && return ||
+                save_horizontal_rule "*" && return ||
                 [[ "$LINE" =~ ^"*"[[:blank:]]+[![:blank:]] ]] ||
                 current_depth_string_block_is_empty &&
                 open_unordered_list "*" || {
-                    open_string_block
+                    open_content_block
                     return
                 }
                 ;;
@@ -1950,7 +1952,7 @@ parse_blocks ()
                 [[ "$LINE" =~ ^"+"[[:blank:]]+[![:blank:]] ]] ||
                 current_depth_string_block_is_empty  &&
                 open_unordered_list "+" || {
-                    open_string_block
+                    open_content_block
                     return
                 }
                 ;;
@@ -1991,7 +1993,7 @@ parse_string ()
         is_not_empty "${BLOCK_QUOTE:-}" ||
             NESTING_DEPTH[-1]="${NESTING_DEPTH[-1]}:$(( CHAR_NUM - BULLET_CHAR_NUM ))"
         LINE=
-        open_string_block
+        open_content_block
     }
 }
 
