@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.49} - (C) 09.08.2025
+    echo "${0##*/} ${1:-0.6.50} - (C) 09.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1193,6 +1193,40 @@ open_ordered_list ()
 {
     if block_type_is_equal "$1"
     then
+        trim_block
+        is_empty "${BLANK:-}" || {
+            EMPTY_STRING_IN_LIST["${BLANK%:*:*:content}"]=""
+            BLANK=
+        }
+        increment_list_item
+    else
+        create_block "$1"
+        save_tag "ol"
+        append_depth
+
+        OL_START="${LINE%%[!0-9]*}"
+        LENGTH_ORDERED_LIST_NUM="${#OL_START}"
+        is_equal "$LENGTH_ORDERED_LIST_NUM" 1 || OL_START="${OL_START#"${OL_START%%[!0]*}"}"
+        is_equal "$OL_START" 1 || TAG_CLASS["$INDEX"]="$OL_START"
+        OL_START=
+    fi
+    save_tag "li"
+
+    BULLET_CHAR_NUM="$CHAR_NUM"
+    if is_equal "$LEVEL" 0
+    then
+        NESTING_DEPTH["$LEVEL"]="$CHAR_NUM"
+    else
+        NESTING_DEPTH["$LEVEL"]="${NESTING_DEPTH["$((LEVEL - 1))"]#*:}"
+    fi
+    CHAR_NUM="$((CHAR_NUM + 1 + LENGTH_ORDERED_LIST_NUM))"
+    LEVEL="$((LEVEL + 1))"
+}
+
+open_ordered_list ()
+{
+    if block_type_is_equal "$1"
+    then
         finalize "close tags to the current list item"
     else
         string_block_is_empty || finalize
@@ -1735,9 +1769,9 @@ parse_block_structure ()
 
 reset_block ()
 {
-    unset   -v  BLOCK CONTENT EMPTY_STRING_IN_LIST
+    unset   -v  BLOCK CONTENT EMPTY_STRING_IN_LIST TAG_CLASS
 
-    declare -gA BLOCK CONTENT EMPTY_STRING_IN_LIST
+    declare -gA BLOCK CONTENT EMPTY_STRING_IN_LIST TAG_CLASS
 
                 BLOCK_NUM=()
                 BLOCK_TYPE=()
