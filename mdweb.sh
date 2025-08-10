@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.57} - (C) 10.08.2025
+    echo "${0##*/} ${1:-0.6.58} - (C) 10.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1152,7 +1152,7 @@ open_code_block ()
 append_to_code_block ()
 {
     is_code_block || {
-        trim_indent "$EXCESS_INDENT" "$CHAR_NUM"
+        list_is_open && LINE= || trim_indent "$EXCESS_INDENT" "$CHAR_NUM"
         if content_is_empty
         then
             save_content
@@ -1251,7 +1251,7 @@ open_unordered_list ()
         then
             trim_block
             is_empty "${BLANK:-}" || {
-                EMPTY_STRING_IN_LIST["${BLANK%:*:*:content}"]=""
+                EMPTY_STRING_IN_LIST["$BLANK"]=""
                 BLANK=
             }
             increment_list_item
@@ -1312,7 +1312,7 @@ open_ordered_list ()
     then
         trim_block
         is_empty "${BLANK:-}" || {
-            EMPTY_STRING_IN_LIST["${BLANK%:*:*:content}"]=""
+            EMPTY_STRING_IN_LIST["$BLANK"]=""
             BLANK=
         }
         increment_list_item
@@ -1533,6 +1533,24 @@ code_block_is_closed ()
 list_is_open ()
 {
     [[ "${BLOCK_TYPE["$LEVEL"]}" =~ [\).*+-] ]]
+}
+
+parse_empty_string ()
+{
+    has_no_open_block || {
+
+        if block_type_is_equal "block_quote"
+        then
+            unset -v BLOCK_TYPE["$LEVEL"]
+        elif is_equal "${INDEX##*:}" "code_block"
+        then
+            append_to_code_block
+        elif list_is_open
+        then
+            BLANK="${BLOCK_NUM["$LEVEL"]}"
+        fi
+    }
+    return 1
 }
 
 parse_empty_string ()
