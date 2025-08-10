@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.59} - (C) 10.08.2025
+    echo "${0##*/} ${1:-0.6.60} - (C) 10.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -634,6 +634,11 @@ add_tag_to_buffer ()
     CLOSING_TAG_BUFFER+=( "$CLOSING_TAG" )
 }
 
+add_void_element_to_buffer ()
+{
+    BUFFER="${BUFFER:+"$BUFFER$NEW_LINE"}$VOID_ELEMENT"
+}
+
 remove_trailing_empty_lines ()
 {
     CONTENT["$INDEX"]="${CONTENT["$INDEX"]%"${CONTENT["$INDEX"]##*[!$NEW_LINE]}"}"
@@ -661,16 +666,19 @@ get_tag ()
             OPENING_TAG="${TAG_INDENT:-}<$1>"
             CLOSING_TAG="${TAG_INDENT:-}</$1>"
             get_tag_indent +
+            add_tag_to_buffer
             ;;
         ol)
             OPENING_TAG="${TAG_INDENT:-}<$1${TAG_CLASS["$INDEX"]:+ start=\"${TAG_CLASS["$INDEX"]}\"}>"
             CLOSING_TAG="${TAG_INDENT:-}</$1>"
             get_tag_indent +
+            add_tag_to_buffer
             ;;
         li)
             OPENING_TAG="<$1>$MERGE_START_MARKER"
             CLOSING_TAG="$MERGE_STOP_MARKER${TAG_INDENT:-}</$1>"
             get_tag_indent +
+            add_tag_to_buffer
             ;;
         code_block)
             get_opening_code_block
@@ -678,7 +686,6 @@ get_tag ()
             add_tag_to_buffer
             wrap_content_with_code_marker
             add_content_to_buffer
-            return
             ;;
         h[1-6])
             get_opening_heading "$1"
@@ -687,7 +694,10 @@ get_tag ()
             remove_trailing_empty_lines
             wrap_content_with_paragraph_marker
             add_content_to_buffer
-            return
+            ;;
+        hr)
+            VOID_ELEMENT="${TAG_INDENT:-}<hr />"
+            add_void_element_to_buffer
             ;;
         indent_code_block)
             get_opening_code_block
@@ -696,7 +706,6 @@ get_tag ()
             remove_trailing_empty_lines
             wrap_content_with_code_marker
             add_content_to_buffer
-            return
             ;;
         paragraph)
             OPENING_TAG="${TAG_INDENT:-}<p>$MERGE_START_MARKER"
@@ -704,14 +713,11 @@ get_tag ()
             add_tag_to_buffer
             wrap_content_with_paragraph_marker
             add_content_to_buffer
-            return
             ;;
         *)
             add_content_to_buffer
-            return
             ;;
     esac
-    add_tag_to_buffer
 }
 # TODO: remove the function
 get_tag ()
@@ -1539,8 +1545,8 @@ print_heading_setext ()
 save_horizontal_rule ()
 {
     [[ "${LINE//[[:blank:]]}" =~ ^"$1"{3,}$ ]] && {
-        LINE="${TAG_INDENT:-}<hr />"
-        open_content_block
+        create_block "hr"
+        save_tag "hr"
     }
 }
 # TODO: remove the function
