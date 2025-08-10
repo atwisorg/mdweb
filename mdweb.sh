@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.60} - (C) 10.08.2025
+    echo "${0##*/} ${1:-0.6.61} - (C) 11.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1181,7 +1181,6 @@ open_code_block ()
 {
     is_code_block && {
         EXCESS_INDENT="${#INDENT}"
-        CODE_BLOCK="open"
         create_block "code_block"
         save_tag "code_block"
         is_empty "${FENCE_LANGUAGE:-}" ||
@@ -1191,15 +1190,13 @@ open_code_block ()
 
 append_to_code_block ()
 {
-    is_code_block || {
-        list_is_open && LINE= || trim_indent "$EXCESS_INDENT" "$CHAR_NUM"
-        if content_is_empty
-        then
-            save_content
-        else
-            append_to_content
-        fi
-    }
+    list_is_open && LINE= || trim_indent "$EXCESS_INDENT" "$CHAR_NUM"
+    if content_is_empty
+    then
+        save_content
+    else
+        append_to_content
+    fi
 }
 
 # TODO: remove the function
@@ -1414,6 +1411,7 @@ open_block_quote ()
     block_type_is_equal "block_quote" || {
         create_block "block_quote"
         save_tag "blockquote"
+        BLOCK_QUOTE="$LEVEL"
     }
 
     if is_equal "$LEVEL" 0
@@ -1570,6 +1568,20 @@ code_block_is_closed ()
     is_diff "${CODE_BLOCK:-"${INDENT_CODE_BLOCK:-}"}" "open"
 }
 
+block_quote_is_open ()
+{
+    is_not_empty "${BLOCK_QUOTE:-}"
+}
+
+code_block_is_open ()
+{
+    case "${INDEX##*:}" in
+        "code_block"|"indent_code_block")
+            return 0
+    esac
+    return 1
+}
+
 list_is_open ()
 {
     [[ "${BLOCK_TYPE["$LEVEL"]}" =~ [\).*+-] ]]
@@ -1578,11 +1590,14 @@ list_is_open ()
 parse_empty_string ()
 {
     has_no_open_block || {
-
-        if block_type_is_equal "block_quote"
+        if block_quote_is_open
         then
-            unset -v BLOCK_TYPE["$LEVEL"]
-        elif is_equal "${INDEX##*:}" "code_block"
+            unset -v BLOCK_TYPE["$BLOCK_QUOTE"]
+            if list_is_open
+            then
+                BLANK="${BLOCK_NUM["$LEVEL"]}"
+            fi
+        elif code_block_is_open
         then
             append_to_code_block
         elif list_is_open
