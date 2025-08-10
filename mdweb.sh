@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.58} - (C) 10.08.2025
+    echo "${0##*/} ${1:-0.6.59} - (C) 10.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -634,7 +634,22 @@ add_tag_to_buffer ()
     CLOSING_TAG_BUFFER+=( "$CLOSING_TAG" )
 }
 
-add_paragraph_to_buffer ()
+remove_trailing_empty_lines ()
+{
+    CONTENT["$INDEX"]="${CONTENT["$INDEX"]%"${CONTENT["$INDEX"]##*[!$NEW_LINE]}"}"
+}
+
+wrap_content_with_code_marker ()
+{
+    CONTENT["$INDEX"]="${CONTENT["$INDEX"]:+"$CODE_MARKER${CONTENT["$INDEX"]}$CODE_MARKER"}"
+}
+
+wrap_content_with_paragraph_marker ()
+{
+    CONTENT["$INDEX"]="${CONTENT["$INDEX"]:+"$PARAGRAPH_MARKER${CONTENT["$INDEX"]}$PARAGRAPH_MARKER"}"
+}
+
+add_content_to_buffer ()
 {
     BUFFER="$BUFFER$NEW_LINE${CONTENT["$INDEX"]}"
 }
@@ -657,23 +672,42 @@ get_tag ()
             CLOSING_TAG="$MERGE_STOP_MARKER${TAG_INDENT:-}</$1>"
             get_tag_indent +
             ;;
-        paragraph)
-            OPENING_TAG="${TAG_INDENT:-}<p>$MERGE_START_MARKER"
-            CLOSING_TAG="$MERGE_STOP_MARKER</p>"
-            add_tag_to_buffer
-            add_paragraph_to_buffer
-            return
-            ;;
-        code_block|indent_code_block)
+        code_block)
             get_opening_code_block
             CLOSING_TAG="$MERGE_STOP_MARKER${CANONICAL_PRE_CODE:-}</code></pre>"
+            add_tag_to_buffer
+            wrap_content_with_code_marker
+            add_content_to_buffer
+            return
             ;;
         h[1-6])
             get_opening_heading "$1"
             CLOSING_TAG="$MERGE_STOP_MARKER${TAG_INDENT:-}</$1>"
+            add_tag_to_buffer
+            remove_trailing_empty_lines
+            wrap_content_with_paragraph_marker
+            add_content_to_buffer
+            return
+            ;;
+        indent_code_block)
+            get_opening_code_block
+            CLOSING_TAG="$MERGE_STOP_MARKER${CANONICAL_PRE_CODE:-}</code></pre>"
+            add_tag_to_buffer
+            remove_trailing_empty_lines
+            wrap_content_with_code_marker
+            add_content_to_buffer
+            return
+            ;;
+        paragraph)
+            OPENING_TAG="${TAG_INDENT:-}<p>$MERGE_START_MARKER"
+            CLOSING_TAG="$MERGE_STOP_MARKER</p>"
+            add_tag_to_buffer
+            wrap_content_with_paragraph_marker
+            add_content_to_buffer
+            return
             ;;
         *)
-            add_paragraph_to_buffer
+            add_content_to_buffer
             return
             ;;
     esac
@@ -849,12 +883,12 @@ put_tag_in_sub_block ()
     OPENING_TAG=
     CLOSING_TAG=
 }
-
+# TODO: remove the function
 remove_last_empty_lines ()
 {
     STRING_BLOCK[-1]="${STRING_BLOCK[-1]%"${STRING_BLOCK[-1]##*[!$NEW_LINE]}"}"
 }
-
+# TODO: remove the function
 mark_a_string_block ()
 {
     STRING_BLOCK[-1]="${STRING_BLOCK[-1]:+"$PARAGRAPH_MARKER${STRING_BLOCK[-1]}$PARAGRAPH_MARKER"}"
