@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.61} - (C) 11.08.2025
+    echo "${0##*/} ${1:-0.6.62} - (C) 11.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1607,7 +1607,7 @@ parse_empty_string ()
     }
     return 1
 }
-
+# TODO: remove the function
 parse_empty_string ()
 {
     if no_open_blocks
@@ -2137,12 +2137,8 @@ parse_string ()
 
     line_is_not_empty || parse_empty_string || return 0
     parse_blocks
-    no_open_blocks || {
-        is_not_empty "${BLOCK_QUOTE:-}" ||
-            NESTING_DEPTH[-1]="${NESTING_DEPTH[-1]}:$(( CHAR_NUM - BULLET_CHAR_NUM ))"
-        LINE=
-        open_content_block
-    }
+    is_not_empty "${BLOCK_QUOTE:-}" ||
+        NESTING_DEPTH[-1]="${NESTING_DEPTH[-1]}:$(( CHAR_NUM - BULLET_CHAR_NUM ))"
 }
 
 preparing_input ()
