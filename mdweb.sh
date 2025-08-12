@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.69} - (C) 12.08.2025
+    echo "${0##*/} ${1:-0.6.70} - (C) 12.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1782,7 +1782,7 @@ remove_indent ()
 }
 
 # TODO: remove the function
-parse_indent ()
+parse_indent_old ()
 {
     #    ┌>┌─────────────> LEVEL="0" BLOCK_TYPE[0]="-"                 NESTING_DEPTH[0]="3:6"
     #    │ │┌────────────> LEVEL="1" BLOCK_TYPE[1]="block_quote"       NESTING_DEPTH[1]="6:0"
@@ -1994,8 +1994,8 @@ parse_block_structure ()
     line_is_not_empty || parse_empty_string || return 0
     while  is_not_empty "${LINE:-}"
     do
-          get_indent || break
-        parse_indent || return 0
+          get_indent     || break
+        parse_indent_old || return 0
         LINE="${LINE#"${INDENT:-}"}"
         CHAR_NUM="$((CHAR_NUM + INDENT_LENGTH))"
         case "$LINE" in
