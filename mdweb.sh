@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.78} - (C) 12.08.2025
+    echo "${0##*/} ${1:-0.6.79} - (C) 12.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1288,7 +1288,7 @@ add_to_code_block ()
     fi
 }
 
-trim_block ()
+reset_tag_branch ()
 {
     for (( i="$((${#BLOCK_TYPE[@]} - 1))"; i>"$LEVEL"; i-- ))
     do
@@ -1301,7 +1301,7 @@ open_unordered_list ()
     [[ "$LINE" =~ ^"$1"([[:blank:]]|$) ]] && {
         if block_type_is_equal "$1"
         then
-            trim_block
+            reset_tag_branch
             is_empty "${BLANK:-}" || {
                 EMPTY_STRING_IN_LIST["$BLANK"]=""
                 BLANK=
@@ -1360,7 +1360,7 @@ open_ordered_list ()
 {
     if block_type_is_equal "$1"
     then
-        trim_block
+        reset_tag_branch
         is_empty "${BLANK:-}" || {
             EMPTY_STRING_IN_LIST["$BLANK"]=""
             BLANK=
