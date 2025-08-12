@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.71} - (C) 12.08.2025
+    echo "${0##*/} ${1:-0.6.72} - (C) 12.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1200,7 +1200,7 @@ append_to_code_block ()
 }
 
 # TODO: remove the function
-open_code_block ()
+open_code_block_old ()
 {
     get_tag_old "code_block"
     put_in_tag_block
@@ -1274,7 +1274,7 @@ add_to_code_block ()
     else
         is_code_block && {
             is_empty "${BLOCK_TYPE["$LEVEL"]:-"${STRING_BLOCK["$LEVEL"]:-}"}" || finalize_old
-            open_code_block
+            open_code_block_old
         }
     fi
 }
