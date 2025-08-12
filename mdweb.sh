@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.65} - (C) 12.08.2025
+    echo "${0##*/} ${1:-0.6.66} - (C) 12.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1209,6 +1209,12 @@ open_code_block ()
     NESTING_DEPTH["$LEVEL"]=
 }
 
+close_code_block ()
+{
+    finalize
+}
+
+# TODO: remove the function
 close_code_block_old ()
 {
     finalize_old
