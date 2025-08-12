@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.79} - (C) 12.08.2025
+    echo "${0##*/} ${1:-0.6.80} - (C) 12.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1292,8 +1292,9 @@ reset_tag_branch ()
 {
     for (( i="$((${#BLOCK_TYPE[@]} - 1))"; i>"$LEVEL"; i-- ))
     do
-        unset -v "BLOCK_TYPE[-1]"
+        unset -v "BLOCK_TYPE[-1]" "BLOCK_NUM[-1]"
     done
+    DEPTH=
 }
 
 open_unordered_list ()
