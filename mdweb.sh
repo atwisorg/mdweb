@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.66} - (C) 12.08.2025
+    echo "${0##*/} ${1:-0.6.67} - (C) 12.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1585,6 +1585,11 @@ list_is_open ()
     [[ "${BLOCK_TYPE["$LEVEL"]}" =~ [\).*+-] ]]
 }
 
+has_no_open_block ()
+{
+    is_empty "${!TAG_TREE[@]}"
+}
+
 parse_empty_string ()
 {
     has_no_open_block || {
@@ -1684,11 +1689,6 @@ get_indent ()
     INDENT_LENGTH="$(expand_indent "${LINE:-}" "$CHAR_NUM")"
     INDENT_LENGTH="${INDENT_LENGTH%%[![:blank:]]*}"
     INDENT_LENGTH="${#INDENT_LENGTH}"
-}
-
-has_no_open_block ()
-{
-    is_empty "${!TAG_TREE[@]}"
 }
 
 parse_indent ()
@@ -2199,9 +2199,9 @@ preparing_input ()
     cat "${INPUT:--}" | sed 's%\x00%\xef\xbf\xbd%g'
 }
 
-open_block ()
+# TODO: remove the function
+open_block_old ()
 {
-    reset_block
     while IFS= read -r LINE || is_not_empty "${LINE:-}"
     do
         parse_block_structure
@@ -2215,6 +2215,30 @@ open_block ()
         esac
     }
     finalize_old
+}
+
+open_block_new ()
+{
+    reset_block
+    while IFS= read -r LINE || is_not_empty "${LINE:-}"
+    do
+        parse_string
+    done < <(preparing_input)
+    has_no_open_block || {
+        case "${BLOCK_TYPE[-1]}" in
+            "code_block" | "indent_code_block")
+                close_code_block
+                ;;
+            *)
+                finalize
+        esac
+    }
+}
+
+open_block ()
+{
+    # open_block_new
+    open_block_old
 }
 
 prepare_code ()
