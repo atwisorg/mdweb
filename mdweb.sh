@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.70} - (C) 12.08.2025
+    echo "${0##*/} ${1:-0.6.71} - (C) 12.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -2186,12 +2186,13 @@ parse_string ()
     line_is_not_empty || parse_empty_string || return 0
     parse_blocks
     # TODO: reset the BLOCK_QUOTE variable when changing the block at level 0
-    block_quote_is_open && {
+    if block_quote_is_open
+    then
         content_is_empty || {
             LINE=
             append_to_content
         }
-    } || NESTING_DEPTH[-1]="${NESTING_DEPTH[-1]}:$(( CHAR_NUM - BULLET_CHAR_NUM ))"
+    fi
 }
 
 preparing_input ()
