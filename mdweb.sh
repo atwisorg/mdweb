@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.76} - (C) 12.08.2025
+    echo "${0##*/} ${1:-0.6.77} - (C) 12.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -796,14 +796,15 @@ finalize ()
     for INDEX in "${TAG_TREE[@]}"
     do
         DEPTH="${INDEX%:*}:"
-        test "${#DEPTH}" -ge "${PREV_DEPTH:="${#DEPTH}"}" || {
+        test "${#DEPTH}" -ge "${PARENT_DEPTH:="${#DEPTH}"}" || {
             push_buffer
-            while test "${#DEPTH}" -lt "$PREV_DEPTH"
+            while test "${#DEPTH}" -lt "$PARENT_DEPTH"
             do
-                PREV_DEPTH="$((PREV_DEPTH - 2))"
+                PARENT_DEPTH="$((PARENT_DEPTH - 2))"
                 push_closing_tag
             done
         }
+        PARENT_DEPTH="${#DEPTH}"
         get_tag
     done
     push_buffer
@@ -2080,7 +2081,7 @@ reset_block ()
                 BUFFER=
                 CLOSING_TAG_BUFFER=()
                 LIST_ITEM_CONTENT_INDEX=()
-                PREV_DEPTH=
+                PARENT_DEPTH=
                 TAG_TREE=()
 }
 
