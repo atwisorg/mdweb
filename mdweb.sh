@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.67} - (C) 12.08.2025
+    echo "${0##*/} ${1:-0.6.68} - (C) 12.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -661,22 +661,23 @@ add_content_to_buffer ()
 
 get_tag ()
 {
-    case "${INDEX##*:}" in
+    TAG=${INDEX##*:}
+    case "$TAG" in
         blockquote|ul)
-            OPENING_TAG="${TAG_INDENT:-}<$1>"
-            CLOSING_TAG="${TAG_INDENT:-}</$1>"
+            OPENING_TAG="${TAG_INDENT:-}<$TAG>"
+            CLOSING_TAG="${TAG_INDENT:-}</$TAG>"
             get_tag_indent +
             add_tag_to_buffer
             ;;
         ol)
-            OPENING_TAG="${TAG_INDENT:-}<$1${TAG_CLASS["$INDEX"]:+ start=\"${TAG_CLASS["$INDEX"]}\"}>"
-            CLOSING_TAG="${TAG_INDENT:-}</$1>"
+            OPENING_TAG="${TAG_INDENT:-}<$TAG${TAG_CLASS["$INDEX"]:+ start=\"${TAG_CLASS["$INDEX"]}\"}>"
+            CLOSING_TAG="${TAG_INDENT:-}</$TAG>"
             get_tag_indent +
             add_tag_to_buffer
             ;;
         li)
-            OPENING_TAG="<$1>$MERGE_START_MARKER"
-            CLOSING_TAG="$MERGE_STOP_MARKER${TAG_INDENT:-}</$1>"
+            OPENING_TAG="<$TAG>$MERGE_START_MARKER"
+            CLOSING_TAG="$MERGE_STOP_MARKER${TAG_INDENT:-}</$TAG>"
             get_tag_indent +
             add_tag_to_buffer
             ;;
@@ -688,8 +689,8 @@ get_tag ()
             add_content_to_buffer
             ;;
         h[1-6])
-            get_opening_heading "$1"
-            CLOSING_TAG="$MERGE_STOP_MARKER${TAG_INDENT:-}</$1>"
+            get_opening_heading "$TAG"
+            CLOSING_TAG="$MERGE_STOP_MARKER${TAG_INDENT:-}</$TAG>"
             add_tag_to_buffer
             remove_trailing_empty_lines
             wrap_content_with_paragraph_marker
