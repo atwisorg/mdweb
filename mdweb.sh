@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.84} - (C) 12.08.2025
+    echo "${0##*/} ${1:-0.6.85} - (C) 13.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -811,6 +811,17 @@ finalize ()
     push_remaining_closing_tag
 }
 
+reset_tag_branch ()
+{
+    is_diff "$LEVEL" 0 || {
+        for (( i="$((${#BLOCK_TYPE[@]} - 1))"; i>"$LEVEL"; i-- ))
+        do
+            unset -v "BLOCK_TYPE[-1]" "BLOCK_NUM[-1]"
+        done
+        DEPTH= BLOCK_QUOTE=
+    }
+}
+
 create_block ()
 {
     reset_tag_branch
@@ -1287,17 +1298,6 @@ add_to_code_block ()
             open_code_block_old
         }
     fi
-}
-
-reset_tag_branch ()
-{
-    is_diff "$LEVEL" 0 || {
-        for (( i="$((${#BLOCK_TYPE[@]} - 1))"; i>"$LEVEL"; i-- ))
-        do
-            unset -v "BLOCK_TYPE[-1]" "BLOCK_NUM[-1]"
-        done
-        DEPTH=
-    }
 }
 
 open_unordered_list ()
@@ -2193,7 +2193,6 @@ parse_string ()
 
     string_has_significant_content || parse_empty_string || return 0
     parse_blocks
-    # TODO: reset the BLOCK_QUOTE variable when changing the block at level 0
     if block_quote_is_open
     then
         content_is_empty || {
