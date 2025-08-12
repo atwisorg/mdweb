@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.74} - (C) 12.08.2025
+    echo "${0##*/} ${1:-0.6.75} - (C) 12.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1072,16 +1072,24 @@ open_string_block ()
     LINE=
 }
 
+string_has_content ()
+{
+    case "${LINE:-}" in
+        "")
+            return 1
+    esac
+}
+
 trim_indent ()
 {
-    is_not_empty "${LINE:-}" || return 0
+    string_has_content || return 0
     SAVED_STRING="$LINE"
     TRIM_SPACE="${1:-4}"
     CHARACTER_POSITION="${2:-0}"
     test "$CHARACTER_POSITION" -le 4 ||
     CHARACTER_POSITION=$(( CHARACTER_POSITION - $(( $(( CHARACTER_POSITION / 4 )) * 4 )) ))
 
-    while is_not_empty "${LINE:-}"
+    while string_has_content
     do
         is_diff "$TRIM_SPACE" 0 || break
         is_diff "$CHARACTER_POSITION" 4 &&
@@ -1640,23 +1648,6 @@ parse_empty_string ()
     return 1
 }
 
-line_is_empty ()
-{
-    case "${LINE:-}" in
-        *[![:blank:]]*)
-            return 1
-    esac
-}
-
-string_has_significant_content ()
-{
-    case "${LINE:-}" in
-        *[![:blank:]]*)
-            return 0
-    esac
-    return 1
-}
-
 expand_indent ()
 {
     LINE="$1"
@@ -1664,7 +1655,7 @@ expand_indent ()
     test "$CHARACTER_POSITION" -le 4 ||
     CHARACTER_POSITION=$(( CHARACTER_POSITION - $(( $(( CHARACTER_POSITION / 4 )) * 4 )) ))
     INDENT=
-    while is_not_empty "${LINE:-}"
+    while string_has_content
     do
         is_diff "$CHARACTER_POSITION" 4 &&
             CHARACTER_POSITION="$((CHARACTER_POSITION + 1))" ||
@@ -1685,6 +1676,15 @@ expand_indent ()
         esac
     done
     echo "${INDENT:-}${LINE:-}"
+}
+
+string_has_significant_content ()
+{
+    case "${LINE:-}" in
+        *[![:blank:]]*)
+            return 0
+    esac
+    return 1
 }
 
 get_indent ()
@@ -1996,7 +1996,7 @@ parse_block_structure ()
     TAG_INDENT="${MAIN_TAG_INDENT:-}"
 
     string_has_significant_content || parse_empty_string || return 0
-    while  is_not_empty "${LINE:-}"
+    while  string_has_content
     do
           get_indent     || break
         parse_indent_old || return 0
@@ -2114,7 +2114,7 @@ add_paragraph_to_list_item ()
 
 parse_blocks ()
 {
-    while is_not_empty "${LINE:-}"
+    while string_has_content
     do
            get_indent || break
          parse_indent || return 0
@@ -2208,7 +2208,7 @@ preparing_input ()
 # TODO: remove the function
 open_block_old ()
 {
-    while IFS= read -r LINE || is_not_empty "${LINE:-}"
+    while IFS= read -r LINE || string_has_content
     do
         parse_block_structure
     done < <(preparing_input)
@@ -2226,7 +2226,7 @@ open_block_old ()
 open_block_new ()
 {
     reset_block
-    while IFS= read -r LINE || is_not_empty "${LINE:-}"
+    while IFS= read -r LINE || string_has_content
     do
         parse_string
     done < <(preparing_input)
