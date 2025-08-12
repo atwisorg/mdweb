@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.73} - (C) 12.08.2025
+    echo "${0##*/} ${1:-0.6.74} - (C) 12.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1648,9 +1648,13 @@ line_is_empty ()
     esac
 }
 
-line_is_not_empty ()
+string_has_significant_content ()
 {
-    line_is_empty && return 1 || return 0
+    case "${LINE:-}" in
+        *[![:blank:]]*)
+            return 0
+    esac
+    return 1
 }
 
 expand_indent ()
@@ -1685,7 +1689,7 @@ expand_indent ()
 
 get_indent ()
 {
-    line_is_not_empty || return
+    string_has_significant_content || return
     INDENT="${LINE%%[![:blank:]]*}"
     INDENT_LENGTH="$(expand_indent "${LINE:-}" "$CHAR_NUM")"
     INDENT_LENGTH="${INDENT_LENGTH%%[![:blank:]]*}"
@@ -1991,7 +1995,7 @@ parse_block_structure ()
     PRIMARY_INDENT="0"
     TAG_INDENT="${MAIN_TAG_INDENT:-}"
 
-    line_is_not_empty || parse_empty_string || return 0
+    string_has_significant_content || parse_empty_string || return 0
     while  is_not_empty "${LINE:-}"
     do
           get_indent     || break
@@ -2183,7 +2187,7 @@ parse_string ()
     INDENT_LENGTH="0"
     TAG_INDENT="${MAIN_TAG_INDENT:-}"
 
-    line_is_not_empty || parse_empty_string || return 0
+    string_has_significant_content || parse_empty_string || return 0
     parse_blocks
     # TODO: reset the BLOCK_QUOTE variable when changing the block at level 0
     if block_quote_is_open
