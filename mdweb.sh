@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.68} - (C) 12.08.2025
+    echo "${0##*/} ${1:-0.6.69} - (C) 12.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -806,8 +806,8 @@ finalize ()
         }
         get_tag
     done
+    push_buffer
     push_remaining_closing_tag
-    reset_block
 }
 
 create_block ()
