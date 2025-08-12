@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.83} - (C) 12.08.2025
+    echo "${0##*/} ${1:-0.6.84} - (C) 12.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1499,7 +1499,6 @@ open_heading_setext ()
             -) TAG="h2" ;;
         esac
         change_tag "$TAG_NUM" "$INDEX" "${INDEX%:*}:$TAG"
-        open_heading "$TAG"
         save_tag_class "setext"
     }
 }
