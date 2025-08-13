@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.88} - (C) 13.08.2025
+    echo "${0##*/} ${1:-0.6.89} - (C) 13.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -791,8 +791,37 @@ push_remaining_closing_tag ()
     done
 }
 
+has_no_empty_strings_in_list ()
+{
+    is_empty "${!LIST_NUM_WITH_EMPTY_STRING[@]}"
+}
+
+change_tag ()
+{
+    TAG_TREE["$1"]="$3"
+    CONTENT["$3"]="${CONTENT["$2"]}"
+    unset -v CONTENT["$2"]
+}
+
+add_paragraph_to_list_item ()
+{
+    for TAG_NUM in "${!LIST_ITEM_CONTENT_INDEX[@]}"
+    do
+        CONTENT_INDEX="${LIST_ITEM_CONTENT_INDEX["$TAG_NUM"]}"
+
+        for LIST_INDEX in "${!LIST_NUM_WITH_EMPTY_STRING[@]}"
+        do
+            if [[ "$CONTENT_INDEX" =~ "$LIST_INDEX":[0-9]+:[0-9]+:content ]]
+            then
+                change_tag "$TAG_NUM" "$CONTENT_INDEX" "${CONTENT_INDEX%:*}:paragraph"
+            fi
+        done
+    done
+}
+
 finalize ()
 {
+    has_no_empty_strings_in_list || add_paragraph_to_list_item
     for INDEX in "${TAG_TREE[@]}"
     do
         DEPTH="${INDEX%:*}:"
@@ -2112,34 +2141,6 @@ init_tag_tree ()
                 LIST_ITEM_CONTENT_INDEX=()
                 PARENT_DEPTH=
                 TAG_TREE=()
-}
-
-change_tag ()
-{
-    TAG_TREE["$1"]="$3"
-    CONTENT["$3"]="${CONTENT["$2"]}"
-    unset -v CONTENT["$2"]
-}
-
-has_no_empty_strings_in_list ()
-{
-    is_empty "${!LIST_NUM_WITH_EMPTY_STRING[@]}"
-}
-
-add_paragraph_to_list_item ()
-{
-    for TAG_NUM in "${!LIST_ITEM_CONTENT_INDEX[@]}"
-    do
-        CONTENT_INDEX="${LIST_ITEM_CONTENT_INDEX["$TAG_NUM"]}"
-
-        for LIST_INDEX in "${!LIST_NUM_WITH_EMPTY_STRING[@]}"
-        do
-            if [[ "$CONTENT_INDEX" =~ "$LIST_INDEX":[0-9]+:[0-9]+:content ]]
-            then
-                change_tag "$TAG_NUM" "$CONTENT_INDEX" "${CONTENT_INDEX%:*}:paragraph"
-            fi
-        done
-    done
 }
 
 parse_blocks ()
