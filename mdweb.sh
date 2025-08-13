@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.99} - (C) 14.08.2025
+    echo "${0##*/} ${1:-0.6.100} - (C) 14.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -826,7 +826,7 @@ finalize ()
     has_no_empty_strings_in_list || add_paragraph_to_list_item
     for INDEX in "${TAG_TREE[@]}"
     do
-        DEPTH="${INDEX%:*}:"
+        DEPTH="${INDEX%:*}"
         test "${#DEPTH}" -ge "${PARENT_DEPTH:="${#DEPTH}"}" || {
             push_buffer
             while test "${#DEPTH}" -lt "$PARENT_DEPTH"
