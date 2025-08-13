@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.101} - (C) 14.08.2025
+    echo "${0##*/} ${1:-0.6.102} - (C) 14.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1593,7 +1593,7 @@ print_heading_setext ()
     }
 }
 
-save_horizontal_rule ()
+open_horizontal_rule ()
 {
     [[ "${LINE//[[:blank:]]}" =~ ^"$1"{3,}$ ]] && {
         create_block "hr"
@@ -2140,7 +2140,7 @@ parse_blocks ()
         remove_indent
         case "$LINE" in
             [_]*)
-                save_horizontal_rule "_" || open_paragraph_block
+                open_horizontal_rule "_" || open_paragraph_block
                 return
                 ;;
             [#]*)
@@ -2153,14 +2153,14 @@ parse_blocks ()
                 ;;
             [-]*)
                 open_heading_setext  "-" ||
-                save_horizontal_rule "-" && return ||
+                open_horizontal_rule "-" && return ||
                 open_unordered_list  "-" || {
                     open_paragraph_block
                     return
                 }
                 ;;
             [*]*)
-                save_horizontal_rule "*" && return ||
+                open_horizontal_rule "*" && return ||
                 [[ "$LINE" =~ ^"*"[[:blank:]]+[^[:blank:]] ]] ||
                 block_type_is_not_equal "content" &&
                 open_unordered_list "*" || {
