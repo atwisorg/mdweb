@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.97} - (C) 13.08.2025
+    echo "${0##*/} ${1:-0.6.98} - (C) 13.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1351,10 +1351,7 @@ open_unordered_list ()
     [[ "$LINE" =~ ^"$1"([[:blank:]]|$) ]] && {
         if block_type_is_equal "$1"
         then
-            is_empty "${BLANK:-}" || {
-                LIST_NUM_WITH_EMPTY_STRING["$BLANK"]=""
-                BLANK=
-            }
+            is_empty "${BLANK:-}" || LIST_NUM_WITH_EMPTY_STRING["$BLANK"]=""
             reset_tag_branch
             increment_list_item
         else
@@ -1410,10 +1407,7 @@ open_ordered_list ()
 {
     if block_type_is_equal "$1"
     then
-        is_empty "${BLANK:-}" || {
-            LIST_NUM_WITH_EMPTY_STRING["$BLANK"]=""
-            BLANK=
-        }
+        is_empty "${BLANK:-}" || LIST_NUM_WITH_EMPTY_STRING["$BLANK"]=""
         reset_tag_branch
         increment_list_item
     else
