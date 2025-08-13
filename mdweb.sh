@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.85} - (C) 13.08.2025
+    echo "${0##*/} ${1:-0.6.86} - (C) 13.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1307,7 +1307,7 @@ open_unordered_list ()
         then
             reset_tag_branch
             is_empty "${BLANK:-}" || {
-                EMPTY_STRING_IN_LIST["$BLANK"]=""
+                LIST_NUM_WITH_EMPTY_STRING["$BLANK"]=""
                 BLANK=
             }
             increment_list_item
@@ -1366,7 +1366,7 @@ open_ordered_list ()
     then
         reset_tag_branch
         is_empty "${BLANK:-}" || {
-            EMPTY_STRING_IN_LIST["$BLANK"]=""
+            LIST_NUM_WITH_EMPTY_STRING["$BLANK"]=""
             BLANK=
         }
         increment_list_item
@@ -2075,9 +2075,9 @@ parse_block_structure ()
 
 init_tag_tree ()
 {
-    unset   -v  BLOCK CONTENT EMPTY_STRING_IN_LIST TAG_CLASS
+    unset   -v  BLOCK CONTENT LIST_NUM_WITH_EMPTY_STRING TAG_CLASS
 
-    declare -gA BLOCK CONTENT EMPTY_STRING_IN_LIST TAG_CLASS
+    declare -gA BLOCK CONTENT LIST_NUM_WITH_EMPTY_STRING TAG_CLASS
 
                 BLOCK_NUM=()
                 BLOCK_TYPE=()
@@ -2097,7 +2097,7 @@ change_tag ()
 
 has_no_empty_strings_in_list ()
 {
-    is_empty "${!EMPTY_STRING_IN_LIST[@]}"
+    is_empty "${!LIST_NUM_WITH_EMPTY_STRING[@]}"
 }
 
 add_paragraph_to_list_item ()
@@ -2106,7 +2106,7 @@ add_paragraph_to_list_item ()
     do
         CONTENT_INDEX="${LIST_ITEM_CONTENT_INDEX["$TAG_NUM"]}"
 
-        for LIST_INDEX in "${!EMPTY_STRING_IN_LIST[@]}"
+        for LIST_INDEX in "${!LIST_NUM_WITH_EMPTY_STRING[@]}"
         do
             if [[ "$CONTENT_INDEX" =~ "$LIST_INDEX":[0-9]+:[0-9]+:content ]]
             then
