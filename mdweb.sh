@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.93} - (C) 13.08.2025
+    echo "${0##*/} ${1:-0.6.94} - (C) 13.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1538,7 +1538,8 @@ open_heading_atx ()
 open_heading_setext ()
 {
     [[ "$LINE" =~ ^"$1"+[[:blank:]]*$ ]] &&
-    block_type_is_equal "paragraph" && {
+    block_type_is_equal "paragraph" ||
+    block_type_is_equal "content"   && {
         case "$1" in
             =) TAG="h1" ;;
             -) TAG="h2" ;;
