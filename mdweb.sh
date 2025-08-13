@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.98} - (C) 13.08.2025
+    echo "${0##*/} ${1:-0.6.99} - (C) 14.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -879,7 +879,7 @@ save_content ()
     CONTENT["$INDEX"]="${LINE:-}"
 }
 
-append_to_content ()
+append_to_paragraph ()
 {
     CONTENT["$INDEX"]="${CONTENT["$INDEX"]:-}$NEW_LINE${LINE:-}"
 }
@@ -1256,7 +1256,7 @@ append_to_code_block ()
     then
         save_content
     else
-        append_to_content
+        append_to_paragraph
     fi
 }
 
@@ -1763,16 +1763,16 @@ parse_indent ()
                 }
                 return
                 ;;
-            "content")
+            "paragraph")
                 test "$INDENT_LENGTH" -lt 4 || {
-                    append_to_content
+                    append_to_paragraph
                     return 1
                 }
                 return
                 ;;
             "block_quote")
                 test "$INDENT_LENGTH" -lt 4 || {
-                    content_is_empty && open_indent_code_block || append_to_content
+                    content_is_empty && open_indent_code_block || append_to_paragraph
                     return 1
                 }
                 return
@@ -1785,7 +1785,7 @@ parse_indent ()
             "indent_code_block")
                 test "$INDENT_LENGTH" -lt 4 || {
                     trim_indent "$EXCESS_INDENT" "$CHAR_NUM"
-                    append_to_content
+                    append_to_paragraph
                     return 1
                 }
                 return
@@ -1802,7 +1802,7 @@ parse_indent ()
                 then
                     open_indent_code_block
                 else
-                    append_to_content
+                    append_to_paragraph
                 fi
             fi
             return 1
@@ -2210,7 +2210,7 @@ parse_string ()
     then
         content_is_empty || {
             LINE=
-            append_to_content
+            append_to_paragraph
         }
     fi
 }
