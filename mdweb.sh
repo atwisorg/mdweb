@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.94} - (C) 13.08.2025
+    echo "${0##*/} ${1:-0.6.95} - (C) 13.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -867,12 +867,6 @@ append_depth ()
     DEPTH="$DEPTH:0"
 }
 
-increment_list_item ()
-{
-    ITEM="${INDEX#"${BLOCK_NUM["$LEVEL"]}:"}"
-    DEPTH="${BLOCK_NUM["$LEVEL"]}:$(("${ITEM%%:*}" + 1))"
-}
-
 save_tag ()
 {
     TAG_NUM="$(("${TAG_NUM:--1}" + 1))"
@@ -1343,6 +1337,12 @@ add_to_code_block ()
             open_code_block_old
         }
     fi
+}
+
+increment_list_item ()
+{
+    ITEM="${INDEX#"${BLOCK_NUM["$LEVEL"]}:"}"
+    DEPTH="${BLOCK_NUM["$LEVEL"]}:$(("${ITEM%%:*}" + 1))"
 }
 
 open_unordered_list ()
