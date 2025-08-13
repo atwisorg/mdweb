@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.89} - (C) 13.08.2025
+    echo "${0##*/} ${1:-0.6.90} - (C) 13.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1063,18 +1063,6 @@ put_in_string_block ()
     STRING_BLOCK[-1]="${STRING_BLOCK[-1]:-}$NEW_LINE${BUFFER_INDENT:-}${LINE:-}"
 }
 
-open_content_block ()
-{
-    if block_type_is_equal "content"
-    then
-        append_to_content
-    else
-        create_block "content"
-        save_tag "content"
-        save_content
-    fi
-}
-
 parent_block_is_list ()
 {
     PARENT_BLOCK="${BLOCK_TYPE["$((LEVEL - 1))"]:-}"
@@ -1548,7 +1536,7 @@ open_heading_atx ()
 open_heading_setext ()
 {
     [[ "$LINE" =~ ^"$1"+[[:blank:]]*$ ]] &&
-    block_type_is_equal "content" && {
+    block_type_is_equal "paragraph" && {
         case "$1" in
             =) TAG="h1" ;;
             -) TAG="h2" ;;
@@ -2153,22 +2141,22 @@ parse_blocks ()
         remove_indent
         case "$LINE" in
             [_]*)
-                save_horizontal_rule "_" || open_content_block
+                save_horizontal_rule "_" || open_paragraph_block
                 return
                 ;;
             [#]*)
-                open_heading_atx || open_content_block
+                open_heading_atx || open_paragraph_block
                 return
                 ;;
             [=]*)
-                open_heading_setext "=" || open_content_block
+                open_heading_setext "=" || open_paragraph_block
                 return
                 ;;
             [-]*)
                 open_heading_setext  "-" ||
                 save_horizontal_rule "-" && return ||
                 open_unordered_list  "-" || {
-                    open_content_block
+                    open_paragraph_block
                     return
                 }
                 ;;
@@ -2177,7 +2165,7 @@ parse_blocks ()
                 [[ "$LINE" =~ ^"*"[[:blank:]]+[^[:blank:]] ]] ||
                 block_type_is_not_equal "content" &&
                 open_unordered_list "*" || {
-                    open_content_block
+                    open_paragraph_block
                     return
                 }
                 ;;
@@ -2186,7 +2174,7 @@ parse_blocks ()
                 [[ "$LINE" =~ ^"+"[[:blank:]]+[^[:blank:]] ]] ||
                 block_type_is_not_equal "content"  &&
                 open_unordered_list "+" || {
-                    open_content_block
+                    open_paragraph_block
                     return
                 }
                 ;;
@@ -2201,7 +2189,7 @@ parse_blocks ()
                         [[ "$LINE" =~ ^[0-9]{1,9}\. ]] && open_ordered_list "."  ; }
                     }
                 } || {
-                    open_code_block || open_content_block
+                    open_code_block || open_paragraph_block
                     return
                 }
                 ;;
