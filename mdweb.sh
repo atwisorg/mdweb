@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.102} - (C) 14.08.2025
+    echo "${0##*/} ${1:-0.6.103} - (C) 14.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1070,21 +1070,22 @@ parent_block_is_list ()
 
 open_paragraph_block ()
 {
-    if block_type_is_equal "paragraph"
-    then
-        append_to_paragraph
-    else
-        if parent_block_is_list
-        then
-            create_block "content"
-            save_tag "content"
-            LIST_ITEM_CONTENT_INDEX["$TAG_NUM"]="$INDEX"
-        else
-            create_block "paragraph"
-            save_tag "paragraph"
-        fi
-        save_content
-    fi
+    case "${BLOCK_TYPE["$LEVEL"]:-}" in
+        [\).*+-]|"block_quote"|"content"|"paragraph")
+            append_to_paragraph
+            ;;
+        *)
+            if parent_block_is_list
+            then
+                create_block "content"
+                save_tag "content"
+                LIST_ITEM_CONTENT_INDEX["$TAG_NUM"]="$INDEX"
+            else
+                create_block "paragraph"
+                save_tag "paragraph"
+            fi
+            save_content
+    esac
 }
 # TODO: remove the function
 open_string_block ()
