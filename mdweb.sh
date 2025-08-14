@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.121} - (C) 15.08.2025
+    echo "${0##*/} ${1:-0.6.122} - (C) 15.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1688,6 +1688,7 @@ parse_empty_string ()
             append_to_code_block
         elif list_is_open
         then
+            reset_tag_branch
             BLANK="${BLOCK_NUM["$LEVEL"]}"
         else
             unset -v "BLOCK_TYPE["$LEVEL"]"
