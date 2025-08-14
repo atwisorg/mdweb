@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.117} - (C) 14.08.2025
+    echo "${0##*/} ${1:-0.6.118} - (C) 14.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -783,9 +783,11 @@ push_buffer ()
 
 push_closing_tag ()
 {
-    echo   "${CLOSING_TAG_BUFFER[-1]}"
-    unset -v "CLOSING_TAG_BUFFER[-1]"
-    get_tag_indent -
+    is_empty "${!CLOSING_TAG_BUFFER[@]}" || {
+        echo   "${CLOSING_TAG_BUFFER[-1]}"
+        unset -v "CLOSING_TAG_BUFFER[-1]"
+        get_tag_indent -
+    }
 }
 
 push_remaining_closing_tag ()
