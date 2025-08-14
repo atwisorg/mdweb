@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.106} - (C) 14.08.2025
+    echo "${0##*/} ${1:-0.6.107} - (C) 14.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1198,7 +1198,7 @@ open_indent_code_block ()
     save_content
 }
 # TODO: remove the function
-open_indent_code_block ()
+open_indent_code_block_old ()
 {
     EXCESS_INDENT="${1:-4}"
     trim_indent "$EXCESS_INDENT" "$CHAR_NUM"
@@ -1861,7 +1861,7 @@ parse_indent_old ()
             # ◦◦◦◦◦foo
             if current_depth_string_block_is_empty
             then
-                open_indent_code_block
+                open_indent_code_block_old
             else
                 open_string_block
             fi
@@ -1895,7 +1895,7 @@ parse_indent_old ()
             NESTING_DEPTH[-1]="${NESTING_DEPTH[-1]}:$CHAR_NUM"
             if current_depth_string_block_is_empty
             then
-                open_indent_code_block
+                open_indent_code_block_old
             else
                 open_string_block
             fi
@@ -1932,7 +1932,7 @@ parse_indent_old ()
                             is_equal "${BLOCK_TYPE[-1]}" "indent_code_block"
                         then
                             finalize_old
-                            open_indent_code_block
+                            open_indent_code_block_old
                         else
                             open_string_block
                         fi
@@ -1960,7 +1960,7 @@ parse_indent_old ()
                     # ┌──┬─> the current indent is less than the next nesting level
                     # ◦◦◦◦-◦◦◦◦bar (current string)
                     finalize_old
-                    open_indent_code_block
+                    open_indent_code_block_old
                 else
                     # ┌───┬─> LEVEL="0" BLOCK_TYPE[0]="-" NESTING_DEPTH[0]="3:5" <┐
                     # ◦◦◦-◦foo                                                  │
@@ -1969,7 +1969,7 @@ parse_indent_old ()
                     if [[ "${STRING_BLOCK[-1]}" =~ "$NEW_LINE"$ ]]
                     then
                         finalize_old
-                        open_indent_code_block
+                        open_indent_code_block_old
                     else
                         open_string_block
                     fi
@@ -1995,7 +1995,7 @@ parse_indent_old ()
                         then
                             is_diff "${BLOCK_TYPE["$LEVEL"]}" "block_quote" || finalize_old
                             LEVEL="$((LEVEL + 1))"
-                            open_indent_code_block "$(( ${NESTING_DEPTH["$((LEVEL - 1))"]#*:} + 4))"
+                            open_indent_code_block_old "$(( ${NESTING_DEPTH["$((LEVEL - 1))"]#*:} + 4))"
                         else
                             if [[ "${STRING_BLOCK[-1]}" =~ "$NEW_LINE"$ ]]
                             then
@@ -2010,7 +2010,7 @@ parse_indent_old ()
                                 trim_indent  "${NESTING_DEPTH["$((LEVEL - 1))"]#*:}" "$CHAR_NUM"
                                 CHAR_NUM="$(( ${NESTING_DEPTH["$((LEVEL - 1))"]#*:} +  CHAR_NUM ))"
                                 get_indent
-                                open_indent_code_block
+                                open_indent_code_block_old
                             else
                                 put_in_string_block
                             fi
