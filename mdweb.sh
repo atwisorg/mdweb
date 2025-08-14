@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.110} - (C) 14.08.2025
+    echo "${0##*/} ${1:-0.6.111} - (C) 14.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -684,6 +684,7 @@ get_tag ()
         code_block)
             get_opening_code_block
             CLOSING_TAG="$MERGE_STOP_MARKER${CANONICAL_PRE_CODE:-}</code></pre>"
+            PARENT_DEPTH="$((PARENT_DEPTH + 2))"
             add_tag_to_buffer
             wrap_content_with_code_marker
             add_content_to_buffer
