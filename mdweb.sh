@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.103} - (C) 14.08.2025
+    echo "${0##*/} ${1:-0.6.104} - (C) 14.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -828,14 +828,19 @@ finalize ()
     for INDEX in "${TAG_TREE[@]}"
     do
         DEPTH="${INDEX%:*}"
-        test "${#DEPTH}" -ge "${PARENT_DEPTH:="${#DEPTH}"}" || {
+        if test "${#DEPTH}" -eq "${PARENT_DEPTH:-0}"
+        then
+            push_buffer
+            push_closing_tag
+        elif test "${#DEPTH}" -lt "${PARENT_DEPTH:-0}"
+        then
             push_buffer
             while test "${#DEPTH}" -lt "$PARENT_DEPTH"
             do
                 PARENT_DEPTH="$((PARENT_DEPTH - 2))"
                 push_closing_tag
             done
-        }
+        fi
         PARENT_DEPTH="${#DEPTH}"
         get_tag
     done
