@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.109} - (C) 14.08.2025
+    echo "${0##*/} ${1:-0.6.110} - (C) 14.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1082,8 +1082,18 @@ parent_block_is_list ()
 open_paragraph_block ()
 {
     case "${BLOCK_TYPE["$LEVEL"]:-}" in
-        [\).*+-]|"block_quote"|"content"|"paragraph")
+        "content"|"paragraph")
             append_to_paragraph
+            ;;
+        [\).*+-]|"block_quote")
+            if content_is_empty
+            then
+                create_block "paragraph"
+                save_tag "paragraph"
+                save_content
+            else
+                append_to_paragraph
+            fi
             ;;
         *)
             if parent_block_is_list
