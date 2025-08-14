@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.118} - (C) 14.08.2025
+    echo "${0##*/} ${1:-0.6.119} - (C) 14.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1689,6 +1689,8 @@ parse_empty_string ()
         elif list_is_open
         then
             BLANK="${BLOCK_NUM["$LEVEL"]}"
+        else
+            unset -v "BLOCK_TYPE["$LEVEL"]"
         fi
     }
     return 1
