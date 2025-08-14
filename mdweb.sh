@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.116} - (C) 14.08.2025
+    echo "${0##*/} ${1:-0.6.117} - (C) 14.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -899,7 +899,7 @@ append_to_paragraph ()
 
 content_is_empty ()
 {
-    is_equal "${CONTENT["$INDEX"]-"empty"}" "empty"
+    is_equal "${CONTENT["${INDEX:-0}"]-"empty"}" "empty"
 }
 
 save_tag_class ()
