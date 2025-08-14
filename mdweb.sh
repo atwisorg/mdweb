@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.107} - (C) 14.08.2025
+    echo "${0##*/} ${1:-0.6.108} - (C) 14.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1784,7 +1784,9 @@ parse_indent ()
                 ;;
             "block_quote")
                 test "$INDENT_LENGTH" -lt 4 || {
-                    content_is_empty && open_indent_code_block || append_to_paragraph
+                    content_is_empty ||
+                    is_equal "${INDEX##*:}" "indent_code_block" &&
+                    open_indent_code_block || append_to_paragraph
                     return 1
                 }
                 return
