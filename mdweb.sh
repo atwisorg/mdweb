@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.104} - (C) 14.08.2025
+    echo "${0##*/} ${1:-0.6.105} - (C) 14.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1798,6 +1798,7 @@ parse_indent ()
                 return
                 ;;
         esac
+        is_not_empty "${NESTING_DEPTH["$LEVEL"]:-}" || return 0
         if test "$INDENT_LENGTH" -lt "${NESTING_DEPTH["$LEVEL"]}"
         then
             test "$INDENT_LENGTH" -ge 4 || return 0
