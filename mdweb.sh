@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.124} - (C) 15.08.2025
+    echo "${0##*/} ${1:-0.6.125} - (C) 15.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -854,13 +854,11 @@ finalize ()
 
 reset_tag_branch ()
 {
-    is_diff "$LEVEL" 0 || {
-        for (( i="$((${#BLOCK_TYPE[@]} - 1))"; i>"$LEVEL"; i-- ))
-        do
-            unset -v "BLOCK_TYPE[-1]" "BLOCK_NUM[-1]"
-        done
-        BLANK= BLOCK_QUOTE= INDEX=
-    }
+    for (( i="$((${#BLOCK_TYPE[@]} - 1))"; i>"$LEVEL"; i-- ))
+    do
+        unset -v "BLOCK_TYPE[-1]" "BLOCK_NUM[-1]"
+    done
+    BLANK= BLOCK_QUOTE= INDEX=
 }
 
 create_block ()
@@ -870,7 +868,7 @@ create_block ()
     then
         DEPTH="${DEPTH:-}:0"
     else
-        reset_tag_branch
+        is_diff "$LEVEL" 0 || reset_tag_branch
          ITEM="${BLOCK_NUM["$LEVEL"]##*:}"
         DEPTH="${BLOCK_NUM["$LEVEL"]%:*}:$(("$ITEM" + 1))"
     fi
