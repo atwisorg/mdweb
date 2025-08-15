@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.123} - (C) 15.08.2025
+    echo "${0##*/} ${1:-0.6.124} - (C) 15.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -2165,6 +2165,23 @@ init_tag_tree ()
                 TAG_TREE=()
 }
 
+parse_empty_content ()
+{
+    if block_quote_is_open
+    then
+        content_is_empty || {
+            if list_is_open
+            then
+                reset_tag_branch
+                BLANK="${BLOCK_NUM["$LEVEL"]}"
+            else
+                LEVEL=0
+                reset_tag_branch
+            fi
+        }
+    fi
+}
+
 parse_blocks ()
 {
     while string_has_content
@@ -2230,13 +2247,7 @@ parse_blocks ()
         esac
         LEVEL="$((LEVEL + 1))"
     done
-    if block_quote_is_open
-    then
-        content_is_empty || {
-            LEVEL=0
-            reset_tag_branch
-        }
-    fi
+    parse_empty_content
 }
 
 parse_string ()
