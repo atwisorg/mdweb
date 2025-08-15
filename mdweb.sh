@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.125} - (C) 15.08.2025
+    echo "${0##*/} ${1:-0.6.126} - (C) 15.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -816,9 +816,9 @@ add_paragraph_to_list_item ()
     do
         CONTENT_INDEX="${LIST_ITEM_CONTENT_INDEX["$TAG_NUM"]}"
 
-        for LIST_INDEX in "${!LIST_NUM_WITH_EMPTY_STRING[@]}"
+        for LIST_NUM in "${!LIST_NUM_WITH_EMPTY_STRING[@]}"
         do
-            if [[ "$CONTENT_INDEX" =~ "$LIST_INDEX":[0-9]+:[0-9]+:content ]]
+            if [[ "$CONTENT_INDEX" =~ "$LIST_NUM":[0-9]+:[0-9]+:content ]]
             then
                 change_tag "$TAG_NUM" "$CONTENT_INDEX" "${CONTENT_INDEX%:*}:paragraph"
             fi
@@ -1381,6 +1381,7 @@ open_unordered_list ()
             increment_list_item
         else
             create_block "$1"
+            LIST_NUM="$DEPTH"
             save_tag "ul"
             append_depth
         fi
@@ -1437,6 +1438,7 @@ open_ordered_list ()
         increment_list_item
     else
         create_block "$1"
+        LIST_NUM="$DEPTH"
         save_tag "ol"
         append_depth
 
@@ -1674,23 +1676,23 @@ parse_empty_string ()
     has_no_open_block || {
         if block_quote_is_open
         then
-            if list_is_open
+            if is_empty "${LIST_NUM:-}"
             then
-                BLANK="${BLOCK_NUM["$LEVEL"]}"
-            else
                 reset_tag_branch
                 unset -v "BLOCK_TYPE["$LEVEL"]"
+            else
+                BLANK="$LIST_NUM"
             fi
         elif code_block_is_open
         then
             list_is_open && LINE= || trim_indent "$EXCESS_INDENT" "$CHAR_NUM"
             append_to_code_block
-        elif list_is_open
+        elif is_empty "${LIST_NUM:-}"
         then
-            reset_tag_branch
-            BLANK="${BLOCK_NUM["$LEVEL"]}"
-        else
             unset -v "BLOCK_TYPE["$LEVEL"]"
+        else
+            reset_tag_branch
+            BLANK="$LIST_NUM"
         fi
     }
     return 1
