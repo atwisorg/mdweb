@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.126} - (C) 15.08.2025
+    echo "${0##*/} ${1:-0.6.127} - (C) 18.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -858,17 +858,25 @@ reset_tag_branch ()
     do
         unset -v "BLOCK_TYPE[-1]" "BLOCK_NUM[-1]"
     done
-    BLANK= BLOCK_QUOTE= INDEX=
+    BREAK= BLOCK_QUOTE= INDEX=
 }
 
 create_block ()
 {
-    is_empty "${BLANK:-}" || is_equal "$LEVEL" 0 || LIST_NUM_WITH_EMPTY_STRING["$BLANK"]="" BLANK=
-    if is_empty "${BLOCK_NUM["$LEVEL"]:-}"
+    if is_empty "${BREAK:-}"
+    then
+        is_diff  "$LEVEL" 0 || reset_tag_branch
+    else
+        reset_tag_branch
+        if parent_block_is_list
+        then
+            LIST_NUM_WITH_EMPTY_STRING["${BLOCK_NUM["$((LEVEL - 1))"]}"]=
+        fi
+    fi
+    if is_empty "${BLOCK_TYPE["$LEVEL"]:-}"
     then
         DEPTH="${DEPTH:-}:0"
     else
-        is_diff "$LEVEL" 0 || reset_tag_branch
          ITEM="${BLOCK_NUM["$LEVEL"]##*:}"
         DEPTH="${BLOCK_NUM["$LEVEL"]%:*}:$(("$ITEM" + 1))"
     fi
@@ -1084,17 +1092,24 @@ parent_block_is_list ()
 open_paragraph_block ()
 {
     case "${BLOCK_TYPE["$LEVEL"]:-}" in
-        "content"|"paragraph")
-            append_to_paragraph
-            ;;
         [\).*+-]|"block_quote")
-            if content_is_empty
+            if content_is_empty || is_not_empty "${BREAK:-}"
             then
                 create_block "paragraph"
                 save_tag "paragraph"
                 save_content
             else
                 append_to_paragraph
+            fi
+            ;;
+        "content"|"paragraph")
+            if is_empty "${BREAK:-}"
+            then
+                append_to_paragraph
+            else
+                create_block "paragraph"
+                save_tag "paragraph"
+                save_content
             fi
             ;;
         *)
@@ -1376,12 +1391,12 @@ open_unordered_list ()
     [[ "$LINE" =~ ^"$1"([[:blank:]]|$) ]] && {
         if block_type_is_equal "$1"
         then
-            is_empty "${BLANK:-}" || LIST_NUM_WITH_EMPTY_STRING["$BLANK"]=""
+            is_empty "${BREAK:-}" || LIST_NUM_WITH_EMPTY_STRING["${BLOCK_NUM["$((LEVEL - 1))"]}"]=
             reset_tag_branch
             increment_list_item
         else
             create_block "$1"
-            LIST_NUM="$DEPTH"
+            LIST_NUM="${BLOCK_NUM["$LEVEL"]}"
             save_tag "ul"
             append_depth
         fi
@@ -1433,7 +1448,7 @@ open_ordered_list ()
 {
     if block_type_is_equal "$1"
     then
-        is_empty "${BLANK:-}" || LIST_NUM_WITH_EMPTY_STRING["$BLANK"]=""
+        is_empty "${BREAK:-}" || LIST_NUM_WITH_EMPTY_STRING["${BLOCK_NUM["$((LEVEL - 1))"]}"]=
         reset_tag_branch
         increment_list_item
     else
@@ -1681,7 +1696,7 @@ parse_empty_string ()
                 reset_tag_branch
                 unset -v "BLOCK_TYPE["$LEVEL"]"
             else
-                BLANK="$LIST_NUM"
+                BREAK="yes"
             fi
         elif code_block_is_open
         then
@@ -1691,8 +1706,7 @@ parse_empty_string ()
         then
             unset -v "BLOCK_TYPE["$LEVEL"]"
         else
-            reset_tag_branch
-            BLANK="$LIST_NUM"
+            BREAK="yes"
         fi
     }
     return 1
@@ -1795,9 +1809,16 @@ parse_indent ()
                 }
                 return
                 ;;
-            "paragraph")
+            "content"|"paragraph")
                 test "$INDENT_LENGTH" -lt 4 || {
-                    append_to_paragraph
+                    if is_not_empty "${BREAK:-}"
+                    then
+                        BREAK=
+                        LIST_NUM_WITH_EMPTY_STRING["${BLOCK_NUM["$((LEVEL - 1))"]}"]=
+                        open_indent_code_block
+                    else
+                        append_to_paragraph
+                    fi
                     return 1
                 }
                 return
@@ -1833,7 +1854,7 @@ parse_indent ()
             then
                 open_indent_code_block
             else
-                if [[ "${CONTENT["$INDEX"]}" =~ "$NEW_LINE"$ ]]
+                if is_not_empty "${BREAK:-}"
                 then
                     open_indent_code_block
                 else
@@ -2169,16 +2190,7 @@ parse_empty_content ()
 {
     if block_quote_is_open
     then
-        content_is_empty || {
-            if list_is_open
-            then
-                reset_tag_branch
-                BLANK="${BLOCK_NUM["$LEVEL"]}"
-            else
-                LEVEL=0
-                reset_tag_branch
-            fi
-        }
+        content_is_empty || BREAK="yes"
     fi
 }
 
