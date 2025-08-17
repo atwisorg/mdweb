@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.127} - (C) 18.08.2025
+    echo "${0##*/} ${1:-0.6.128} - (C) 18.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -2171,21 +2171,6 @@ parse_block_structure ()
     }
 }
 
-init_tag_tree ()
-{
-    unset   -v  BLOCK CONTENT LIST_NUM_WITH_EMPTY_STRING TAG_CLASS
-
-    declare -gA BLOCK CONTENT LIST_NUM_WITH_EMPTY_STRING TAG_CLASS
-
-                BLOCK_NUM=()
-                BLOCK_TYPE=()
-                BUFFER=
-                CLOSING_TAG_BUFFER=()
-                LIST_ITEM_CONTENT_INDEX=()
-                PARENT_DEPTH=
-                TAG_TREE=()
-}
-
 parse_empty_content ()
 {
     if block_quote_is_open
@@ -2194,7 +2179,7 @@ parse_empty_content ()
     fi
 }
 
-parse_blocks ()
+parse_string ()
 {
     while string_has_content
     do
@@ -2262,22 +2247,49 @@ parse_blocks ()
     parse_empty_content
 }
 
-parse_string ()
+init_tag_tree ()
 {
-    LEVEL="0"
-    CHAR_NUM="0"
-    BLOCK_START="0"
-    INDENT_LENGTH="0"
-    TAG_INDENT="${MAIN_TAG_INDENT:-}"
+    unset   -v  BLOCK CONTENT LIST_NUM_WITH_EMPTY_STRING TAG_CLASS
 
-    string_has_significant_content || parse_empty_string || return 0
-    parse_blocks
+    declare -gA BLOCK CONTENT LIST_NUM_WITH_EMPTY_STRING TAG_CLASS
+
+                BLOCK_NUM=()
+                BLOCK_TYPE=()
+                BUFFER=
+                CLOSING_TAG_BUFFER=()
+                LIST_ITEM_CONTENT_INDEX=()
+                PARENT_DEPTH=
+                TAG_TREE=()
 }
 
 preparing_input ()
 {
                         # replace NUL characters for security
     cat "${INPUT:--}" | sed 's%\x00%\xef\xbf\xbd%g'
+}
+
+open_block_new ()
+{
+    init_tag_tree
+    while IFS= read -r LINE || string_has_content
+    do
+        LEVEL="0"
+        CHAR_NUM="0"
+        BLOCK_START="0"
+        INDENT_LENGTH="0"
+        TAG_INDENT="${MAIN_TAG_INDENT:-}"
+        string_has_significant_content || parse_empty_string || return 0
+        parse_string
+    done < <(preparing_input)
+    has_no_open_block || {
+        case "${BLOCK_TYPE[-1]}" in
+            "code_block" | "indent_code_block")
+                close_code_block
+                ;;
+            *)
+                finalize
+        esac
+    }
 }
 
 # TODO: remove the function
@@ -2296,24 +2308,6 @@ open_block_old ()
         esac
     }
     finalize_old
-}
-
-open_block_new ()
-{
-    init_tag_tree
-    while IFS= read -r LINE || string_has_content
-    do
-        parse_string
-    done < <(preparing_input)
-    has_no_open_block || {
-        case "${BLOCK_TYPE[-1]}" in
-            "code_block" | "indent_code_block")
-                close_code_block
-                ;;
-            *)
-                finalize
-        esac
-    }
 }
 
 open_block ()
