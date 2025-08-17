@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.129} - (C) 18.08.2025
+    echo "${0##*/} ${1:-0.6.130} - (C) 18.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -67,12 +67,12 @@ try ()
 say ()
 {
     RETURN="$?"
-    SAVE_ONE_LINE="${ONE_LINE:-}" ONE_LINE=
+    SAVE_ONE_STRING="${ONE_STRING:-}" ONE_STRING=
     while is_diff $# 0
     do
         case "${1:-}" in
             -n)
-                ONE_LINE="-n"
+                ONE_STRING="-n"
                 ;;
             *[!0-9]*|"")
                 break
@@ -84,9 +84,9 @@ say ()
     done
     case "$@" in
         ?*)
-            echo ${ONE_LINE:-} "$PKG:${FUNC_NAME:+" $FUNC_NAME:"}${1:+" $@"}"
+            echo ${ONE_STRING:-} "$PKG:${FUNC_NAME:+" $FUNC_NAME:"}${1:+" $@"}"
     esac
-    ONE_LINE="${SAVE_ONE_LINE:-}" SAVE_ONE_LINE=
+    ONE_STRING="${SAVE_ONE_STRING:-}" SAVE_ONE_STRING=
 }
 
 die ()
@@ -587,7 +587,7 @@ is_new_id ()
 
 get_opening_heading_tag_with_class ()
 {
-    ID="$(get_heading_id <<< "${LINE:-}")"
+    ID="$(get_heading_id <<< "${STRING:-}")"
     is_empty "${ID:-}" || {
         is_new_id || ID="$ID-$(( ${ID_NUM:=0} + 1 ))"
         ID_BASE="${ID_BASE:+"$ID_BASE$NEW_LINE"}$ID"
@@ -607,7 +607,7 @@ get_opening_heading ()
 # TODO: remove the function
 get_heading_tag_with_class ()
 {
-    ID="$(get_heading_id <<< "${LINE:-}")"
+    ID="$(get_heading_id <<< "${STRING:-}")"
     is_empty "${ID:-}" || {
         is_new_id || ID="$ID-$(( ${ID_NUM:=0} + 1 ))"
         ID_BASE="${ID_BASE:+"$ID_BASE$NEW_LINE"}$ID"
@@ -898,12 +898,12 @@ save_tag ()
 
 save_content ()
 {
-    CONTENT["$INDEX"]="${LINE:-}"
+    CONTENT["$INDEX"]="${STRING:-}"
 }
 
 append_to_paragraph ()
 {
-    CONTENT["$INDEX"]="${CONTENT["$INDEX"]:-}$NEW_LINE${LINE:-}"
+    CONTENT["$INDEX"]="${CONTENT["$INDEX"]:-}$NEW_LINE${STRING:-}"
 }
 
 content_is_empty ()
@@ -1078,7 +1078,7 @@ finalize_old ()
 # TODO: remove the function
 put_in_string_block ()
 {
-    STRING_BLOCK[-1]="${STRING_BLOCK[-1]:-}$NEW_LINE${BUFFER_INDENT:-}${LINE:-}"
+    STRING_BLOCK[-1]="${STRING_BLOCK[-1]:-}$NEW_LINE${BUFFER_INDENT:-}${STRING:-}"
 }
 
 parent_block_is_list ()
@@ -1132,7 +1132,7 @@ open_string_block ()
         is_empty "${BLOCK_TYPE["$LEVEL"]:-}" || finalize_old
         is_empty "${!CLOSING_INDENT_BLOCK[@]}" || TAG_INDENT="${CLOSING_INDENT_BLOCK[-1]}"
         BUFFER_INDENT="${TAG_INDENT:-}"
-        STRING_BLOCK["$LEVEL"]="${LINE:-}"
+        STRING_BLOCK["$LEVEL"]="${STRING:-}"
     } || {
         if [[ "${STRING_BLOCK[-1]}" =~ "$NEW_LINE"$ ]]
         then
@@ -1142,32 +1142,32 @@ open_string_block ()
                 then
                     LEVEL="$((LEVEL - 1))"
                     finalize_old
-                    STRING_BLOCK["$LEVEL"]="$LINE"
+                    STRING_BLOCK["$LEVEL"]="$STRING"
                 elif [[ "${STRING_BLOCK[-1]}" =~ ^"$NEW_LINE" ]]
                 then
-                    STRING_BLOCK[-1]="${STRING_BLOCK[-1]#"$NEW_LINE"}$LINE"
+                    STRING_BLOCK[-1]="${STRING_BLOCK[-1]#"$NEW_LINE"}$STRING"
                 else
                     put_in_string_block
                 fi
             else
                 finalize_old
-                STRING_BLOCK["$LEVEL"]="$LINE"
+                STRING_BLOCK["$LEVEL"]="$STRING"
             fi
         else
             if is_empty "${STRING_BLOCK[-1]:-}"
             then
-                STRING_BLOCK[-1]="$LINE"
+                STRING_BLOCK[-1]="$STRING"
             else
                 put_in_string_block
             fi
         fi
     }
-    LINE=
+    STRING=
 }
 
 string_has_content ()
 {
-    case "${LINE:-}" in
+    case "${STRING:-}" in
         "")
             return 1
     esac
@@ -1176,7 +1176,7 @@ string_has_content ()
 trim_indent ()
 {
     string_has_content || return 0
-    SAVED_STRING="$LINE"
+    SAVED_STRING="$STRING"
     TRIM_SPACE="${1:-4}"
     CHARACTER_POSITION="${2:-0}"
     test "$CHARACTER_POSITION" -le 4 ||
@@ -1188,9 +1188,9 @@ trim_indent ()
         is_diff "$CHARACTER_POSITION" 4 &&
             CHARACTER_POSITION="$((CHARACTER_POSITION + 1))" ||
             CHARACTER_POSITION="1"
-        case "$LINE" in
+        case "$STRING" in
             $SPACE*)
-                LINE="${LINE:1}"
+                STRING="${STRING:1}"
                 TRIM_SPACE="$((TRIM_SPACE - 1))"
                 ;;
             $TAB*)
@@ -1198,14 +1198,14 @@ trim_indent ()
                 CHARACTER_POSITION="$((CHARACTER_POSITION - 1 + TAB_LENGTH))"
                 if is_equal "$TRIM_SPACE" "$TAB_LENGTH"
                 then
-                    LINE="${LINE:1}"
+                    STRING="${STRING:1}"
                     break
                 elif test "$TRIM_SPACE" -lt "$TAB_LENGTH"
                 then
-                    LINE="$(printf "%$((TAB_LENGTH - TRIM_SPACE))s")${LINE:1}"
+                    STRING="$(printf "%$((TAB_LENGTH - TRIM_SPACE))s")${STRING:1}"
                     break
                 else
-                    LINE="${LINE:1}"
+                    STRING="${STRING:1}"
                     TRIM_SPACE="$((TRIM_SPACE - TAB_LENGTH))"
                 fi
                 ;;
@@ -1213,7 +1213,7 @@ trim_indent ()
                 break
         esac
     done
-    is_diff "$SAVED_STRING" "${LINE:-}"
+    is_diff "$SAVED_STRING" "${STRING:-}"
 }
 
 open_indent_code_block ()
@@ -1267,15 +1267,15 @@ is_code_block ()
 {
     if is_empty "${FENCE_CHAR:-}"
     then
-        [[ "${LINE:-}" =~ ^[[:blank:]]*\`{3,}[^\`]*$ ]] ||
-        [[ "${LINE:-}" =~ ^[[:blank:]]*~{3,} ]] && {
-            FENCE_CHAR="${LINE%%[!~\`]*}"
+        [[ "${STRING:-}" =~ ^[[:blank:]]*\`{3,}[^\`]*$ ]] ||
+        [[ "${STRING:-}" =~ ^[[:blank:]]*~{3,} ]] && {
+            FENCE_CHAR="${STRING%%[!~\`]*}"
             FENCE_LENGTH="${#FENCE_CHAR}"
-            FENCE_LANGUAGE="${LINE#"$FENCE_CHAR"}"
+            FENCE_LANGUAGE="${STRING#"$FENCE_CHAR"}"
             FENCE_CHAR="${FENCE_CHAR:0:1}"
         }
     else
-        [[ "${LINE:-}" =~ ^[[:blank:]]*$FENCE_CHAR{$FENCE_LENGTH,}[[:blank:]]*$ ]]
+        [[ "${STRING:-}" =~ ^[[:blank:]]*$FENCE_CHAR{$FENCE_LENGTH,}[[:blank:]]*$ ]]
     fi
 }
 
@@ -1353,17 +1353,17 @@ is_code_block ()
 {
     if is_empty "${FENCE_CHAR:-}"
     then
-        [[ "${LINE:-}" =~ ^[[:blank:]]*\`{3,}[^\`]*$ ]] ||
-        [[ "${LINE:-}" =~ ^[[:blank:]]*~{3,} ]] && {
-            FENCE_CHAR="${LINE%%[!~\`]*}"
+        [[ "${STRING:-}" =~ ^[[:blank:]]*\`{3,}[^\`]*$ ]] ||
+        [[ "${STRING:-}" =~ ^[[:blank:]]*~{3,} ]] && {
+            FENCE_CHAR="${STRING%%[!~\`]*}"
             FENCE_LENGTH="${#FENCE_CHAR}"
-            CLASS="${LINE#"$FENCE_CHAR"}"
+            CLASS="${STRING#"$FENCE_CHAR"}"
             is_empty "${CLASS:-}" ||
                 CLASS="$(serialize_pre_code_language <<< "$CLASS")"
             FENCE_CHAR="${FENCE_CHAR:0:1}"
         }
     else
-        [[ "${LINE:-}" =~ ^[[:blank:]]*$FENCE_CHAR{$FENCE_LENGTH,}[[:blank:]]*$ ]]
+        [[ "${STRING:-}" =~ ^[[:blank:]]*$FENCE_CHAR{$FENCE_LENGTH,}[[:blank:]]*$ ]]
     fi
 }
 # TODO: remove the function
@@ -1388,7 +1388,7 @@ increment_list_item ()
 
 open_unordered_list ()
 {
-    [[ "$LINE" =~ ^"$1"([[:blank:]]|$) ]] && {
+    [[ "$STRING" =~ ^"$1"([[:blank:]]|$) ]] && {
         if block_type_is_equal "$1"
         then
             is_empty "${BREAK:-}" || LIST_NUM_WITH_EMPTY_STRING["${BLOCK_NUM["$((LEVEL - 1))"]}"]=
@@ -1402,7 +1402,7 @@ open_unordered_list ()
         fi
         save_tag "li"
 
-        LINE="${LINE:1}"
+        STRING="${STRING:1}"
         CHAR_NUM="$((CHAR_NUM + 1))"
         trim_indent 1 "$CHAR_NUM" || true
 
@@ -1420,7 +1420,7 @@ open_list_item ()
 # TODO: remove the function
 open_unordered_list_old ()
 {
-    [[ "$LINE" =~ ^"$1"([[:blank:]]|$) ]] && {
+    [[ "$STRING" =~ ^"$1"([[:blank:]]|$) ]] && {
         if block_type_is_equal "$1"
         then
             finalize_old "close tags to the current list item"
@@ -1457,7 +1457,7 @@ open_ordered_list ()
         save_tag "ol"
         append_depth
 
-        OL_START="${LINE%%[!0-9]*}"
+        OL_START="${STRING%%[!0-9]*}"
         LENGTH_ORDERED_LIST_NUM="${#OL_START}"
         is_equal "$LENGTH_ORDERED_LIST_NUM" 1 || OL_START="${OL_START#"${OL_START%%[!0]*}"}"
         is_equal "$OL_START" 1 || save_tag_class "$OL_START"
@@ -1465,7 +1465,7 @@ open_ordered_list ()
     fi
     save_tag "li"
 
-    LINE="${LINE:"$((1 + LENGTH_ORDERED_LIST_NUM))"}"
+    STRING="${STRING:"$((1 + LENGTH_ORDERED_LIST_NUM))"}"
     CHAR_NUM="$((CHAR_NUM + 1 + LENGTH_ORDERED_LIST_NUM))"
     trim_indent 1 "$CHAR_NUM" || true
 
@@ -1484,7 +1484,7 @@ open_ordered_list_old ()
         string_block_is_empty || finalize_old
         BLOCK_TYPE["$LEVEL"]="$1"
 
-        OL_START="${LINE%%[!0-9]*}"
+        OL_START="${STRING%%[!0-9]*}"
         LENGTH_ORDERED_LIST_NUM="${#OL_START}"
         is_equal "$LENGTH_ORDERED_LIST_NUM" 1 || OL_START="${OL_START#"${OL_START%%[!0]*}"}"
         is_diff "$OL_START" 1 || OL_START=
@@ -1512,7 +1512,7 @@ open_block_quote ()
         BLOCK_QUOTE="$LEVEL"
     }
 
-    LINE="${LINE:1}"
+    STRING="${STRING:1}"
     CHAR_NUM="$((CHAR_NUM + 1))"
     trim_indent 1 "$CHAR_NUM" && CHAR_NUM="$((CHAR_NUM + 1))" || true
     NESTING_DEPTH["$LEVEL"]="$CHAR_NUM"
@@ -1550,8 +1550,8 @@ close_block_quote ()
 
 trim_white_space ()
 {
-    LINE="${LINE#"${LINE%%[![:blank:]]*}"}"
-    LINE="${LINE%"${LINE##*[![:blank:]]}"}"
+    STRING="${STRING#"${STRING%%[![:blank:]]*}"}"
+    STRING="${STRING%"${STRING##*[![:blank:]]}"}"
 }
 
 open_heading ()
@@ -1563,9 +1563,9 @@ open_heading ()
 
 open_heading_atx ()
 {
-    [[ "${LINE:-}" =~ ^#{1,6}([[:blank:]].*|$) ]] && {
-        HEADER="${LINE%%[[:blank:]]*}"
-        LINE="$(sed 's%\(^#\+\|[[:blank:]]\+#*[[:blank:]]*$\)%%g' <<< "$LINE")"
+    [[ "${STRING:-}" =~ ^#{1,6}([[:blank:]].*|$) ]] && {
+        HEADER="${STRING%%[[:blank:]]*}"
+        STRING="$(sed 's%\(^#\+\|[[:blank:]]\+#*[[:blank:]]*$\)%%g' <<< "$STRING")"
         open_heading "h${#HEADER}"
         save_content
         save_tag_class "atx"
@@ -1574,7 +1574,7 @@ open_heading_atx ()
 
 open_heading_setext ()
 {
-    [[ "$LINE" =~ ^"$1"+[[:blank:]]*$ ]] &&
+    [[ "$STRING" =~ ^"$1"+[[:blank:]]*$ ]] &&
     block_type_is_equal "paragraph" ||
     block_type_is_equal "content"   && {
         case "$1" in
@@ -1595,16 +1595,16 @@ print_heading ()
     get_tag_old "$1"
     put_in_tag_block
     LEVEL="$((LEVEL + 1))"
-    is_empty "${LINE:-}" || open_string_block
+    is_empty "${STRING:-}" || open_string_block
     LEVEL="$((LEVEL - 1))"
     finalize_old
 }
 # TODO: remove the function
 print_heading_atx ()
 {
-    [[ "${LINE:-}" =~ ^#{1,6}([[:blank:]].*|$) ]] && {
-        HEADER="${LINE%%[[:blank:]]*}"
-        LINE="$(sed 's%\(^#\+\|[[:blank:]]\+#*[[:blank:]]*$\)%%g' <<< "$LINE")"
+    [[ "${STRING:-}" =~ ^#{1,6}([[:blank:]].*|$) ]] && {
+        HEADER="${STRING%%[[:blank:]]*}"
+        STRING="$(sed 's%\(^#\+\|[[:blank:]]\+#*[[:blank:]]*$\)%%g' <<< "$STRING")"
         CLASS="atx"
         print_heading "h${#HEADER}"
     }
@@ -1623,8 +1623,8 @@ current_depth_string_block_is_not_empty ()
 print_heading_setext ()
 {
     current_depth_string_block_is_not_empty &&
-    [[ "$LINE" =~ ^"$1"+[[:blank:]]*$ ]] && {
-        LINE="${STRING_BLOCK[-1]}"
+    [[ "$STRING" =~ ^"$1"+[[:blank:]]*$ ]] && {
+        STRING="${STRING_BLOCK[-1]}"
         unset -v "STRING_BLOCK[-1]"
         CLASS="setext"
         case "$1" in
@@ -1636,7 +1636,7 @@ print_heading_setext ()
 
 open_horizontal_rule ()
 {
-    [[ "${LINE//[[:blank:]]}" =~ ^"$1"{3,}$ ]] && {
+    [[ "${STRING//[[:blank:]]}" =~ ^"$1"{3,}$ ]] && {
         create_block "hr"
         save_tag "hr"
     }
@@ -1644,11 +1644,11 @@ open_horizontal_rule ()
 # TODO: remove the function
 print_horizontal_rule ()
 {
-    [[ "${LINE//[[:blank:]]}" =~ ^"$1"{3,}$ ]] && {
-        LINE="${TAG_INDENT:-}<hr />"
+    [[ "${STRING//[[:blank:]]}" =~ ^"$1"{3,}$ ]] && {
+        STRING="${TAG_INDENT:-}<hr />"
         is_equal "$LEVEL" 0  &&
                 finalize_old || finalize_old "without closing tags"
-        echo "$LINE"
+        echo "$STRING"
     }
 }
 
@@ -1700,7 +1700,7 @@ parse_empty_string ()
             fi
         elif code_block_is_open
         then
-            list_is_open && LINE= || trim_indent "$EXCESS_INDENT" "$CHAR_NUM"
+            list_is_open && STRING= || trim_indent "$EXCESS_INDENT" "$CHAR_NUM"
             append_to_code_block
         elif is_empty "${LIST_NUM:-}"
         then
@@ -1721,7 +1721,7 @@ parse_empty_string_old ()
     else
         if list_is_open
         then
-            LINE=
+            STRING=
             string_block_is_empty && open_string_block || put_in_string_block
         else
             if block_quote_is_closed
@@ -1741,7 +1741,7 @@ parse_empty_string_old ()
 
 expand_indent ()
 {
-    LINE="$1"
+    STRING="$1"
     CHARACTER_POSITION="${2:-0}"
     test "$CHARACTER_POSITION" -le 4 ||
     CHARACTER_POSITION=$(( CHARACTER_POSITION - $(( $(( CHARACTER_POSITION / 4 )) * 4 )) ))
@@ -1751,27 +1751,27 @@ expand_indent ()
         is_diff "$CHARACTER_POSITION" 4 &&
             CHARACTER_POSITION="$((CHARACTER_POSITION + 1))" ||
             CHARACTER_POSITION="1"
-        case "$LINE" in
+        case "$STRING" in
             $SPACE*)
                 INDENT="${INDENT:-} "
-                LINE="${LINE:1}"
+                STRING="${STRING:1}"
                 ;;
             $TAB*)
                 TAB_LENGTH="$((4 -  $((CHARACTER_POSITION - 1))))"
                 CHARACTER_POSITION="$((CHARACTER_POSITION - 1 + TAB_LENGTH))"
                 INDENT="${INDENT:-}$(printf "%${TAB_LENGTH}s")"
-                LINE="${LINE:1}"
+                STRING="${STRING:1}"
                 ;;
             *)
                 break
         esac
     done
-    echo "${INDENT:-}${LINE:-}"
+    echo "${INDENT:-}${STRING:-}"
 }
 
 string_has_significant_content ()
 {
-    case "${LINE:-}" in
+    case "${STRING:-}" in
         *[![:blank:]]*)
             return 0
     esac
@@ -1781,8 +1781,8 @@ string_has_significant_content ()
 get_indent ()
 {
     string_has_significant_content || return
-    INDENT="${LINE%%[![:blank:]]*}"
-    INDENT_LENGTH="$(expand_indent "${LINE:-}" "$CHAR_NUM")"
+    INDENT="${STRING%%[![:blank:]]*}"
+    INDENT_LENGTH="$(expand_indent "${STRING:-}" "$CHAR_NUM")"
     INDENT_LENGTH="${INDENT_LENGTH%%[![:blank:]]*}"
     INDENT_LENGTH="${#INDENT_LENGTH}"
 }
@@ -1883,7 +1883,7 @@ save_indent_length ()
 
 remove_indent ()
 {
-    LINE="${LINE#"${INDENT:-}"}"
+    STRING="${STRING#"${INDENT:-}"}"
     CHAR_NUM="$((CHAR_NUM + INDENT_LENGTH))"
 }
 
@@ -2102,9 +2102,9 @@ parse_block_structure ()
     do
           get_indent     || break
         parse_indent_old || return 0
-        LINE="${LINE#"${INDENT:-}"}"
+        STRING="${STRING#"${INDENT:-}"}"
         CHAR_NUM="$((CHAR_NUM + INDENT_LENGTH))"
-        case "$LINE" in
+        case "$STRING" in
             [_]*)
                 print_horizontal_rule "_" || open_string_block
                 return
@@ -2127,7 +2127,7 @@ parse_block_structure ()
                 ;;
             [*]*)
                 print_horizontal_rule "*" && return ||
-                [[ "$LINE" =~ ^"*"[[:blank:]]+[![:blank:]] ]] ||
+                [[ "$STRING" =~ ^"*"[[:blank:]]+[![:blank:]] ]] ||
                 current_depth_string_block_is_empty &&
                 open_unordered_list_old "*" || {
                     open_string_block
@@ -2136,7 +2136,7 @@ parse_block_structure ()
                 ;;
             [+]*)
                 is_not_empty "${NESTING_DEPTH[$((LEVEL+1))]:-}" ||
-                [[ "$LINE" =~ ^"+"[[:blank:]]+[![:blank:]] ]] ||
+                [[ "$STRING" =~ ^"+"[[:blank:]]+[![:blank:]] ]] ||
                 current_depth_string_block_is_empty  &&
                 open_unordered_list_old "+" || {
                     open_string_block
@@ -2147,12 +2147,12 @@ parse_block_structure ()
                 open_block_quote_old
                 ;;
                *)
-                [[ "$LINE" =~ ^[0-9]{1,9}[\).]([[:blank:]]|$) ]] && {
-                [[ "$LINE" =~ ^[0-9]{1,9}[\).][[:blank:]]+[![:blank:]] ]] ||
+                [[ "$STRING" =~ ^[0-9]{1,9}[\).]([[:blank:]]|$) ]] && {
+                [[ "$STRING" =~ ^[0-9]{1,9}[\).][[:blank:]]+[![:blank:]] ]] ||
                     current_depth_string_block_is_empty && {
-                        [[ "$LINE" =~ ^[0-9]{1,9}\) ]] && open_ordered_list_old ")" || {
-                        [[ "$LINE" =~ ^[0-9]{1,9}\. ]] && open_ordered_list_old "."  ; }
-                        LINE="${LINE:"$LENGTH_ORDERED_LIST_NUM"}"
+                        [[ "$STRING" =~ ^[0-9]{1,9}\) ]] && open_ordered_list_old ")" || {
+                        [[ "$STRING" =~ ^[0-9]{1,9}\. ]] && open_ordered_list_old "."  ; }
+                        STRING="${STRING:"$LENGTH_ORDERED_LIST_NUM"}"
                     }
                 } || {
                     add_to_code_block || open_string_block
@@ -2160,13 +2160,13 @@ parse_block_structure ()
                 }
                 ;;
         esac
-        LINE="${LINE:1}"
+        STRING="${STRING:1}"
         trim_indent 1 "$CHAR_NUM" && CHAR_NUM="$((CHAR_NUM + 1))" || true
     done
     no_open_blocks || {
         is_not_empty "${BLOCK_QUOTE:-}" ||
             NESTING_DEPTH[-1]="${NESTING_DEPTH[-1]}:$(( CHAR_NUM - BULLET_CHAR_NUM ))"
-        LINE=
+        STRING=
         open_string_block
     }
 }
@@ -2187,7 +2187,7 @@ parse_string ()
          parse_indent || return 0
           save_indent_length
         remove_indent
-        case "$LINE" in
+        case "$STRING" in
             [_]*)
                 open_horizontal_rule "_" || open_paragraph_block
                 return
@@ -2210,7 +2210,7 @@ parse_string ()
                 ;;
             [*]*)
                 open_horizontal_rule "*" && return ||
-                [[ "$LINE" =~ ^"*"[[:blank:]]+[^[:blank:]] ]] ||
+                [[ "$STRING" =~ ^"*"[[:blank:]]+[^[:blank:]] ]] ||
                 block_type_is_not_equal "content" &&
                 open_unordered_list "*" || {
                     open_paragraph_block
@@ -2219,7 +2219,7 @@ parse_string ()
                 ;;
             [+]*)
                 is_not_empty "${NESTING_DEPTH[$((LEVEL + 1))]:-}" ||
-                [[ "$LINE" =~ ^"+"[[:blank:]]+[^[:blank:]] ]] ||
+                [[ "$STRING" =~ ^"+"[[:blank:]]+[^[:blank:]] ]] ||
                 block_type_is_not_equal "content"  &&
                 open_unordered_list "+" || {
                     open_paragraph_block
@@ -2230,11 +2230,11 @@ parse_string ()
                 open_block_quote
                 ;;
                *)
-                [[ "$LINE" =~ ^[0-9]{1,9}[\).]([[:blank:]]|$) ]] && {
-                [[ "$LINE" =~ ^[0-9]{1,9}[\).][[:blank:]]+[^[:blank:]] ]] ||
+                [[ "$STRING" =~ ^[0-9]{1,9}[\).]([[:blank:]]|$) ]] && {
+                [[ "$STRING" =~ ^[0-9]{1,9}[\).][[:blank:]]+[^[:blank:]] ]] ||
                     block_type_is_not_equal "content" && {
-                        [[ "$LINE" =~ ^[0-9]{1,9}\) ]] && open_ordered_list ")" || {
-                        [[ "$LINE" =~ ^[0-9]{1,9}\. ]] && open_ordered_list "."  ; }
+                        [[ "$STRING" =~ ^[0-9]{1,9}\) ]] && open_ordered_list ")" || {
+                        [[ "$STRING" =~ ^[0-9]{1,9}\. ]] && open_ordered_list "."  ; }
                     }
                 } || {
                     open_code_block || open_paragraph_block
@@ -2271,7 +2271,7 @@ preparing_input ()
 open_block_new ()
 {
     init_tag_tree
-    while IFS= read -r LINE || string_has_content
+    while IFS= read -r STRING || string_has_content
     do
         LEVEL="0"
         CHAR_NUM="0"
@@ -2294,7 +2294,7 @@ open_block_new ()
 # TODO: remove the function
 open_block_old ()
 {
-    while IFS= read -r LINE || string_has_content
+    while IFS= read -r STRING || string_has_content
     do
         parse_block_structure
     done < <(preparing_input)
