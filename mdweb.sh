@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.139} - (C) 19.08.2025
+    echo "${0##*/} ${1:-0.6.140} - (C) 19.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1334,15 +1334,14 @@ parse_indent ()
             return 1
         elif test "$INDENT_LENGTH" -eq "${NESTING_DEPTH["$LEVEL"]}"
         then
+            remove_indent
             INDENT_LENGTH=0
-            LEVEL="$((LEVEL + 1))"
-            return
         else
             trim_indent  "${NESTING_DEPTH["$LEVEL"]}" "$CHAR_NUM"
             CHAR_NUM="$(( ${NESTING_DEPTH["$LEVEL"]} +  CHAR_NUM ))"
             get_indent
-            LEVEL="$((LEVEL + 1))"
         fi
+        LEVEL="$((LEVEL + 1))"
     done
 }
 
