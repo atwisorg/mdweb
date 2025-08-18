@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.136} - (C) 18.08.2025
+    echo "${0##*/} ${1:-0.6.137} - (C) 18.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -592,8 +592,8 @@ get_opening_heading ()
 get_tag_indent ()
 {
     case "$1" in
-        -) TAG_INDENT="$(printf "%$((${#TAG_INDENT} - ${2:-"${TAG_INDENT_WIDTH:="2"}"}))s" '')" ;;
-        +) TAG_INDENT="$(printf "%$((${#TAG_INDENT} + ${2:-"${TAG_INDENT_WIDTH:="2"}"}))s" '')" ;;
+        -) TAG_INDENT="$(printf "%$((${#TAG_INDENT} - ${2:-"$TAG_INDENT_WIDTH"}))s" '')" ;;
+        +) TAG_INDENT="$(printf "%$((${#TAG_INDENT} + ${2:-"$TAG_INDENT_WIDTH"}))s" '')" ;;
     esac
 }
 
