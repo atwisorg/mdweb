@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.131} - (C) 18.08.2025
+    echo "${0##*/} ${1:-0.6.132} - (C) 18.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -2202,44 +2202,35 @@ parse_string ()
           save_indent_length
         remove_indent
         case "$STRING" in
+          [\`~]*)
+                open_code_block && return
+                ;;
             [_]*)
-                open_horizontal_rule "_" || open_paragraph_block
-                return
+                open_horizontal_rule "_" && return
                 ;;
             [#]*)
-                open_heading_atx || open_paragraph_block
-                return
+                open_heading_atx && return
                 ;;
             [=]*)
-                open_heading_setext "=" || open_paragraph_block
-                return
+                open_heading_setext "=" && return
                 ;;
             [-]*)
                 open_horizontal_rule "-" && return ||
                 [[ "$STRING" =~ ^"-"[[:blank:]]+[^[:blank:]] ]] || {
                     open_heading_setext "-" && return || true
                 }
-                open_unordered_list "-" || {
-                    open_paragraph_block
-                    return
-                }
+                open_unordered_list "-"
                 ;;
             [*]*)
                 open_horizontal_rule "*" && return ||
                 [[ "$STRING" =~ ^"*"[[:blank:]]+[^[:blank:]] ]] ||
                 block_type_is_not_paragraph &&
-                open_unordered_list "*" || {
-                    open_paragraph_block
-                    return
-                }
+                open_unordered_list "*"
                 ;;
             [+]*)
                 [[ "$STRING" =~ ^"+"[[:blank:]]+[^[:blank:]] ]] ||
                 block_type_is_not_paragraph &&
-                open_unordered_list "+" || {
-                    open_paragraph_block
-                    return
-                }
+                open_unordered_list "+"
                 ;;
              \>*)
                 open_block_quote
@@ -2251,12 +2242,12 @@ parse_string ()
                         [[ "$STRING" =~ ^[0-9]{1,9}\) ]] && open_ordered_list ")" || {
                         [[ "$STRING" =~ ^[0-9]{1,9}\. ]] && open_ordered_list "."  ; }
                     }
-                } || {
-                    open_code_block || open_paragraph_block
-                    return
                 }
                 ;;
-        esac
+        esac || {
+            open_paragraph_block
+            return
+        }
         LEVEL="$((LEVEL + 1))"
     done
     parse_empty_content
