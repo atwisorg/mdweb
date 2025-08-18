@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.138} - (C) 18.08.2025
+    echo "${0##*/} ${1:-0.6.139} - (C) 19.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1166,7 +1166,7 @@ block_quote_is_open ()
 
 code_block_is_open ()
 {
-    case "${INDEX##*:}" in
+    case "${BLOCK_TYPE[-1]}" in
         "code_block"|"indent_code_block")
             return 0
     esac
