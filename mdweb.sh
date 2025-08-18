@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.137} - (C) 18.08.2025
+    echo "${0##*/} ${1:-0.6.138} - (C) 18.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -727,7 +727,7 @@ change_tag ()
 {
     TAG_TREE["$1"]="$3"
     CONTENT["$3"]="${CONTENT["$2"]}"
-    unset -v CONTENT["$2"]
+    unset -v "CONTENT[$2]"
 }
 
 add_paragraph_to_list_item ()
@@ -1191,7 +1191,7 @@ parse_empty_string ()
             if is_empty "${LIST_NUM:-}"
             then
                 reset_tag_branch
-                unset -v "BLOCK_TYPE["$LEVEL"]"
+                unset -v "BLOCK_TYPE[$LEVEL]"
             else
                 BREAK="yes"
             fi
@@ -1201,7 +1201,7 @@ parse_empty_string ()
             append_to_code_block
         elif is_empty "${LIST_NUM:-}"
         then
-            unset -v "BLOCK_TYPE["$LEVEL"]"
+            unset -v "BLOCK_TYPE[$LEVEL]"
         else
             BREAK="yes"
         fi
