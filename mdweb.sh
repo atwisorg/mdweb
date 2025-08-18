@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.130} - (C) 18.08.2025
+    echo "${0##*/} ${1:-0.6.131} - (C) 18.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -926,6 +926,21 @@ block_type_is_not_equal ()
     block_type_is_equal "$1" && return 1 || return 0
 }
 
+block_type_is_paragraph ()
+{
+    case "${BLOCK_TYPE["$LEVEL"]:-}" in
+        "content"|"paragraph")
+            return 0
+        ;;
+    esac
+    return 1
+}
+
+block_type_is_not_paragraph ()
+{
+    block_type_is_paragraph && return 1 || return 0
+}
+
 # TODO: remove the function
 put_in_tag_block ()
 {
@@ -1574,9 +1589,8 @@ open_heading_atx ()
 
 open_heading_setext ()
 {
-    [[ "$STRING" =~ ^"$1"+[[:blank:]]*$ ]] &&
-    block_type_is_equal "paragraph" ||
-    block_type_is_equal "content"   && {
+    block_type_is_paragraph &&
+    [[ "$STRING" =~ ^"$1"+[[:blank:]]*$ ]] && {
         case "$1" in
             =) TAG="h1" ;;
             -) TAG="h2" ;;
@@ -2201,9 +2215,11 @@ parse_string ()
                 return
                 ;;
             [-]*)
-                open_heading_setext  "-" ||
                 open_horizontal_rule "-" && return ||
-                open_unordered_list  "-" || {
+                [[ "$STRING" =~ ^"-"[[:blank:]]+[^[:blank:]] ]] || {
+                    open_heading_setext "-" && return || true
+                }
+                open_unordered_list "-" || {
                     open_paragraph_block
                     return
                 }
@@ -2211,16 +2227,15 @@ parse_string ()
             [*]*)
                 open_horizontal_rule "*" && return ||
                 [[ "$STRING" =~ ^"*"[[:blank:]]+[^[:blank:]] ]] ||
-                block_type_is_not_equal "content" &&
+                block_type_is_not_paragraph &&
                 open_unordered_list "*" || {
                     open_paragraph_block
                     return
                 }
                 ;;
             [+]*)
-                is_not_empty "${NESTING_DEPTH[$((LEVEL + 1))]:-}" ||
                 [[ "$STRING" =~ ^"+"[[:blank:]]+[^[:blank:]] ]] ||
-                block_type_is_not_equal "content"  &&
+                block_type_is_not_paragraph &&
                 open_unordered_list "+" || {
                     open_paragraph_block
                     return
