@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.133} - (C) 18.08.2025
+    echo "${0##*/} ${1:-0.6.134} - (C) 18.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -2284,7 +2284,7 @@ open_block_new ()
         CHAR_NUM="0"
         INDENT_LENGTH="0"
         TAG_INDENT="${MAIN_TAG_INDENT:-}"
-        string_has_significant_content || parse_empty_string || return 0
+        string_has_significant_content || parse_empty_string || continue
         parse_string
     done < <(preparing_input)
     has_no_open_block || {
