@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.132} - (C) 18.08.2025
+    echo "${0##*/} ${1:-0.6.133} - (C) 18.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -2235,15 +2235,16 @@ parse_string ()
              \>*)
                 open_block_quote
                 ;;
-               *)
-                [[ "$STRING" =~ ^[0-9]{1,9}[\).]([[:blank:]]|$) ]] && {
-                [[ "$STRING" =~ ^[0-9]{1,9}[\).][[:blank:]]+[^[:blank:]] ]] ||
-                    block_type_is_not_equal "content" && {
-                        [[ "$STRING" =~ ^[0-9]{1,9}\) ]] && open_ordered_list ")" || {
-                        [[ "$STRING" =~ ^[0-9]{1,9}\. ]] && open_ordered_list "."  ; }
-                    }
+          [0-9]*)
+                [[ "$STRING" =~ ^[0-9]{1,9}[\).][[:blank:]]+[^[:blank:]] ]] || {
+                    [[ "$STRING" =~ ^[0-9]{1,9}[\).][[:blank:]]*$ ]] &&
+                    block_type_is_not_paragraph
+                } && {
+                    [[ "$STRING" =~ ^[0-9]{1,9}\) ]] && open_ordered_list ")" || {
+                    [[ "$STRING" =~ ^[0-9]{1,9}\. ]] && open_ordered_list "."  ; }
                 }
                 ;;
+               *) false
         esac || {
             open_paragraph_block
             return
