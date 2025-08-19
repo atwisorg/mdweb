@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.143} - (C) 19.08.2025
+    echo "${0##*/} ${1:-0.6.144} - (C) 19.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -774,7 +774,7 @@ finalize ()
 
 reset_tag_branch ()
 {
-    for (( i="$((${#BLOCK_TYPE[@]} - 1))"; i>"$LEVEL"; i-- ))
+    for (( i="$((${#BLOCK_TYPE[@]} - 1))"; i>"${1:-$LEVEL}"; i-- ))
     do
         unset -v "BLOCK_TYPE[-1]" "BLOCK_NUM[-1]"
     done
