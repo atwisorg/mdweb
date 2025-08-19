@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.144} - (C) 19.08.2025
+    echo "${0##*/} ${1:-0.6.145} - (C) 19.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1180,27 +1180,18 @@ has_no_open_block ()
 
 parse_empty_string ()
 {
-    has_no_open_block || {
-        if block_quote_is_open
-        then
-            if is_empty "${LIST_NUM:-}"
-            then
-                reset_tag_branch
-                unset -v "BLOCK_TYPE[$LEVEL]"
-            else
-                BREAK="yes"
-            fi
-        elif code_block_is_open
-        then
-            list_is_open && STRING= || trim_indent "$EXCESS_INDENT" "$CHAR_NUM"
+    case "${BLOCK_TYPE[0]:-}" in
+        "code_block"|"indent_code_block")
+            trim_indent "$EXCESS_INDENT" "$CHAR_NUM"
             append_to_code_block
-        elif is_empty "${LIST_NUM:-}"
-        then
-            unset -v "BLOCK_TYPE[$LEVEL]"
-        else
+            ;;
+        "block_quote"|"paragraph")
             BREAK="yes"
-        fi
-    }
+            ;;
+        [\).*+-])
+            code_block_is_open && STRING= && append_to_code_block || BREAK="yes"
+            ;;
+    esac
     return 1
 }
 
