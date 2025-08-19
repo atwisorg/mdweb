@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.149} - (C) 19.08.2025
+    echo "${0##*/} ${1:-0.6.150} - (C) 19.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -866,13 +866,13 @@ parent_block_is_list ()
     is_diff "$LEVEL" 0 || return
     PARENT_BLOCK="${BLOCK_TYPE["$((LEVEL - 1))"]:-}"
     is_not_empty "${PARENT_BLOCK:-}" || return
-    [[ "$PARENT_BLOCK" =~ [\).*+-] ]]
+    [[ "$PARENT_BLOCK" =~ [$LIST] ]]
 }
 
 open_paragraph_block ()
 {
     case "${BLOCK_TYPE["$LEVEL"]:-}" in
-        [\).*+-]|"block_quote")
+        [$LIST]|"block_quote")
             if content_is_empty || is_not_empty "${EMPTY_STRING:-}"
             then
                 create_block "paragraph"
@@ -1171,7 +1171,7 @@ code_block_is_open ()
 
 list_is_open ()
 {
-    [[ "${BLOCK_TYPE["$LEVEL"]:-}" =~ [\).*+-] ]]
+    [[ "${BLOCK_TYPE["$LEVEL"]:-}" =~ [$LIST] ]]
 }
 
 parse_empty_string ()
@@ -1184,7 +1184,7 @@ parse_empty_string ()
         "block_quote"|"paragraph")
             EMPTY_STRING="yes"
             ;;
-        [\).*+-])
+        [$LIST])
             code_block_is_open && STRING= && append_to_code_block || EMPTY_STRING="yes"
             ;;
     esac
@@ -1300,34 +1300,36 @@ parse_indent ()
                 is_code_block || append_to_code_block
                 return 1
                 ;;
-        esac
-        # TODO: check if the following line is needed
-        is_not_empty "${BLOCK_INDENT["$LEVEL"]:-}" || return 0
-        if test "$INDENT_LENGTH" -lt "${BLOCK_INDENT["$LEVEL"]}"
-        then
-            test "$INDENT_LENGTH" -ge 4 || return 0
-            if content_is_empty
-            then
-                open_indent_code_block
-            else
-                if is_not_empty "${EMPTY_STRING:-}"
+            [$LIST])
+                if test "$INDENT_LENGTH" -lt "${BLOCK_INDENT["$LEVEL"]}"
                 then
-                    open_indent_code_block
+                    test "$INDENT_LENGTH" -ge 4 || return 0
+                    if content_is_empty
+                    then
+                        open_indent_code_block
+                    else
+                        if is_not_empty "${EMPTY_STRING:-}"
+                        then
+                            open_indent_code_block
+                        else
+                            append_to_paragraph
+                        fi
+                    fi
+                    return 1
+                elif test "$INDENT_LENGTH" -eq "${BLOCK_INDENT["$LEVEL"]}"
+                then
+                    remove_indent
+                    INDENT_LENGTH=0
                 else
-                    append_to_paragraph
+                    trim_indent  "${BLOCK_INDENT["$LEVEL"]}" "$CHAR_NUM"
+                    CHAR_NUM="$(( ${BLOCK_INDENT["$LEVEL"]} +  CHAR_NUM ))"
+                    get_indent
                 fi
-            fi
-            return 1
-        elif test "$INDENT_LENGTH" -eq "${BLOCK_INDENT["$LEVEL"]}"
-        then
-            remove_indent
-            INDENT_LENGTH=0
-        else
-            trim_indent  "${BLOCK_INDENT["$LEVEL"]}" "$CHAR_NUM"
-            CHAR_NUM="$(( ${BLOCK_INDENT["$LEVEL"]} +  CHAR_NUM ))"
-            get_indent
-        fi
-        LEVEL="$((LEVEL + 1))"
+                LEVEL="$((LEVEL + 1))"
+                ;;
+            *)
+                return 0
+        esac
     done
 }
 
@@ -2107,6 +2109,7 @@ parse ()
     BLOCK_INDENT=()
 
     BLOCK_QUOTE=
+    LIST=').*+-'
 
     MERGE_START_MARKER="$(sed 's%.%\x1b%' <<< ".")" # ˆ[ [\x1b]
      MERGE_STOP_MARKER="$(sed 's%.%\x1d%' <<< ".")" # ˆ] [\x1d]
