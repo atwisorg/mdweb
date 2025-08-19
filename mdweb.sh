@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.140} - (C) 19.08.2025
+    echo "${0##*/} ${1:-0.6.141} - (C) 19.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1271,51 +1271,44 @@ parse_indent ()
             "")
                 #   ┌> indent length is less than 4
                 # ◦◦◦-◦◦>◦◦*◦◦◦◦12)◦◦◦◦◦foo
-                test "$INDENT_LENGTH" -lt 4 || {
-                    # ┌───┬─> indent length greater than or equal to 4
-                    # ◦◦◦◦◦foo
-                    open_indent_code_block
-                    return 1
-                }
-                return
+                test "$INDENT_LENGTH" -ge 4 || return 0
+                # ┌───┬─> indent length greater than or equal to 4
+                # ◦◦◦◦◦foo
+                open_indent_code_block
+                return 1
                 ;;
             "content"|"paragraph")
-                test "$INDENT_LENGTH" -lt 4 || {
-                    if is_not_empty "${BREAK:-}"
-                    then
-                        BREAK=
-                        LIST_NUM_WITH_EMPTY_STRING["${BLOCK_NUM["$((LEVEL - 1))"]}"]=
-                        open_indent_code_block
-                    else
-                        append_to_paragraph
-                    fi
-                    return 1
-                }
-                return
+                test "$INDENT_LENGTH" -ge 4 || return 0
+                if is_empty "${BREAK:-}"
+                then
+                    append_to_paragraph
+                else
+                    BREAK=
+                    LIST_NUM_WITH_EMPTY_STRING["${BLOCK_NUM["$((LEVEL - 1))"]}"]=
+                    open_indent_code_block
+                fi
+                return 1
                 ;;
             "block_quote")
-                test "$INDENT_LENGTH" -lt 4 || {
-                    content_is_empty ||
-                    is_equal "${INDEX##*:}" "indent_code_block" &&
-                    open_indent_code_block || append_to_paragraph
-                    return 1
-                }
-                return
+                test "$INDENT_LENGTH" -ge 4 || return 0
+                content_is_empty ||
+                is_equal "${INDEX##*:}" "indent_code_block" &&
+                open_indent_code_block || append_to_paragraph
+                return 1
+                ;;
+            "indent_code_block")
+                test "$INDENT_LENGTH" -ge 4 || return 0
+                trim_indent "$EXCESS_INDENT" "$CHAR_NUM"
+                append_to_paragraph
+                return 1
                 ;;
             "code_block")
                 trim_indent "$EXCESS_INDENT" "$CHAR_NUM"
                 is_code_block || append_to_code_block
                 return 1
                 ;;
-            "indent_code_block")
-                test "$INDENT_LENGTH" -lt 4 || {
-                    trim_indent "$EXCESS_INDENT" "$CHAR_NUM"
-                    append_to_paragraph
-                    return 1
-                }
-                return
-                ;;
         esac
+        # TODO: check if the following line is needed
         is_not_empty "${NESTING_DEPTH["$LEVEL"]:-}" || return 0
         if test "$INDENT_LENGTH" -lt "${NESTING_DEPTH["$LEVEL"]}"
         then
