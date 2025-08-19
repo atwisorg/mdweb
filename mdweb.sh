@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.141} - (C) 19.08.2025
+    echo "${0##*/} ${1:-0.6.142} - (C) 19.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1154,11 +1154,6 @@ block_quote_is_closed ()
     is_empty "${BLOCK_QUOTE:-}"
 }
 
-code_block_is_closed ()
-{
-    is_diff "${CODE_BLOCK:-"${INDENT_CODE_BLOCK:-}"}" "open"
-}
-
 block_quote_is_open ()
 {
     is_not_empty "${BLOCK_QUOTE:-}"
@@ -2113,8 +2108,6 @@ parse ()
     BLOCK_TYPE=()
     NESTING_DEPTH=()
 
-    INDENT_CODE_BLOCK=
-    CODE_BLOCK=
     BLOCK_QUOTE=
 
     MERGE_START_MARKER="$(sed 's%.%\x1b%' <<< ".")" # ˆ[ [\x1b]
