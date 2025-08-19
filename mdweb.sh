@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.145} - (C) 19.08.2025
+    echo "${0##*/} ${1:-0.6.146} - (C) 19.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1173,11 +1173,6 @@ list_is_open ()
     [[ "${BLOCK_TYPE["$LEVEL"]:-}" =~ [\).*+-] ]]
 }
 
-has_no_open_block ()
-{
-    is_empty "${!TAG_TREE[@]}"
-}
-
 parse_empty_string ()
 {
     case "${BLOCK_TYPE[0]:-}" in
@@ -1437,7 +1432,7 @@ open_block ()
         string_has_significant_content || parse_empty_string || continue
         parse_string
     done < <(preparing_input)
-    has_no_open_block || finalize
+    is_empty "${!TAG_TREE[@]}" || finalize
 }
 
 prepare_code ()
