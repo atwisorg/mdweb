@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.142} - (C) 19.08.2025
+    echo "${0##*/} ${1:-0.6.143} - (C) 19.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1055,8 +1055,8 @@ open_unordered_list ()
         trim_indent 1 "$CHAR_NUM" || true
 
         CHAR_NUM="$((CHAR_NUM + 1))"
-        is_equal "$LEVEL"  0 && NESTING_DEPTH["$LEVEL"]="$CHAR_NUM" ||
-                                NESTING_DEPTH["$LEVEL"]="$((CHAR_NUM - NESTING_DEPTH[-1]))"
+        is_equal "$LEVEL"  0 && BLOCK_INDENT["$LEVEL"]="$CHAR_NUM" ||
+                                BLOCK_INDENT["$LEVEL"]="$((CHAR_NUM - BLOCK_INDENT[-1]))"
     }
 }
 
@@ -1086,8 +1086,8 @@ open_ordered_list ()
     trim_indent 1 "$CHAR_NUM" || true
 
     CHAR_NUM="$((CHAR_NUM + 1))"
-    is_equal "$LEVEL"  0 && NESTING_DEPTH["$LEVEL"]="$CHAR_NUM" ||
-                            NESTING_DEPTH["$LEVEL"]="$((CHAR_NUM - NESTING_DEPTH[-1]))"
+    is_equal "$LEVEL"  0 && BLOCK_INDENT["$LEVEL"]="$CHAR_NUM" ||
+                            BLOCK_INDENT["$LEVEL"]="$((CHAR_NUM - BLOCK_INDENT[-1]))"
 }
 
 open_block_quote ()
@@ -1101,7 +1101,7 @@ open_block_quote ()
     STRING="${STRING:1}"
     CHAR_NUM="$((CHAR_NUM + 1))"
     trim_indent 1 "$CHAR_NUM" && CHAR_NUM="$((CHAR_NUM + 1))" || true
-    NESTING_DEPTH["$LEVEL"]="$CHAR_NUM"
+    BLOCK_INDENT["$LEVEL"]="$CHAR_NUM"
 }
 
 trim_white_space ()
@@ -1254,10 +1254,10 @@ get_indent ()
 
 parse_indent ()
 {
-    #    ┌>┌─────────────> LEVEL="0" BLOCK_TYPE[0]="-"                 NESTING_DEPTH[0]="6"
-    #    │ │┌────────────> LEVEL="1" BLOCK_TYPE[1]="block_quote"       NESTING_DEPTH[1]="8"
-    #    │ ││  ┌>--┌─────> LEVEL="2" BLOCK_TYPE[2]="*"                 NESTING_DEPTH[2]="6"
-    #    │ ││  │   │┌>-┌─> LEVEL="3" BLOCK_TYPE[3]=")"                 NESTING_DEPTH[3]="4"
+    #    ┌>┌─────────────> LEVEL="0" BLOCK_TYPE[0]="-"                 BLOCK_INDENT[0]="6"
+    #    │ │┌────────────> LEVEL="1" BLOCK_TYPE[1]="block_quote"       BLOCK_INDENT[1]="8"
+    #    │ ││  ┌>--┌─────> LEVEL="2" BLOCK_TYPE[2]="*"                 BLOCK_INDENT[2]="6"
+    #    │ ││  │   │┌>-┌─> LEVEL="3" BLOCK_TYPE[3]=")"                 BLOCK_INDENT[3]="4"
     #    │ ││  │   ││  │┌> LEVEL="4" BLOCK_TYPE[4]="indent_code_block"
     # ◦◦◦-◦◦>◦◦*◦◦◦◦12)◦◦◦◦◦foo
     while true
@@ -1304,8 +1304,8 @@ parse_indent ()
                 ;;
         esac
         # TODO: check if the following line is needed
-        is_not_empty "${NESTING_DEPTH["$LEVEL"]:-}" || return 0
-        if test "$INDENT_LENGTH" -lt "${NESTING_DEPTH["$LEVEL"]}"
+        is_not_empty "${BLOCK_INDENT["$LEVEL"]:-}" || return 0
+        if test "$INDENT_LENGTH" -lt "${BLOCK_INDENT["$LEVEL"]}"
         then
             test "$INDENT_LENGTH" -ge 4 || return 0
             if content_is_empty
@@ -1320,13 +1320,13 @@ parse_indent ()
                 fi
             fi
             return 1
-        elif test "$INDENT_LENGTH" -eq "${NESTING_DEPTH["$LEVEL"]}"
+        elif test "$INDENT_LENGTH" -eq "${BLOCK_INDENT["$LEVEL"]}"
         then
             remove_indent
             INDENT_LENGTH=0
         else
-            trim_indent  "${NESTING_DEPTH["$LEVEL"]}" "$CHAR_NUM"
-            CHAR_NUM="$(( ${NESTING_DEPTH["$LEVEL"]} +  CHAR_NUM ))"
+            trim_indent  "${BLOCK_INDENT["$LEVEL"]}" "$CHAR_NUM"
+            CHAR_NUM="$(( ${BLOCK_INDENT["$LEVEL"]} +  CHAR_NUM ))"
             get_indent
         fi
         LEVEL="$((LEVEL + 1))"
@@ -1335,7 +1335,7 @@ parse_indent ()
 
 save_indent_length ()
 {
-    is_equal "$LEVEL" 0 || NESTING_DEPTH[-1]="$((NESTING_DEPTH[-1] + INDENT_LENGTH))"
+    is_equal "$LEVEL" 0 || BLOCK_INDENT[-1]="$((BLOCK_INDENT[-1] + INDENT_LENGTH))"
 }
 
 remove_indent ()
@@ -2106,7 +2106,7 @@ parse ()
     MAIN_TAG_INDENT=
 
     BLOCK_TYPE=()
-    NESTING_DEPTH=()
+    BLOCK_INDENT=()
 
     BLOCK_QUOTE=
 
