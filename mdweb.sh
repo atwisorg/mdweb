@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.150} - (C) 19.08.2025
+    echo "${0##*/} ${1:-0.6.151} - (C) 20.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -778,7 +778,7 @@ reset_tag_branch ()
     do
         unset -v "BLOCK_TYPE[-1]" "BLOCK_NUM[-1]"
     done
-    BLOCK_QUOTE= EMPTY_STRING= INDEX=
+    BLOCK_QUOTE= INDEX=
 }
 
 create_block ()
@@ -802,6 +802,8 @@ create_block ()
     fi
     BLOCK_NUM["$LEVEL"]="$DEPTH"
     BLOCK_TYPE["$LEVEL"]="$1"
+    EMPTY_STRING=
+    PARAGRAPH_BREAK=
 }
 
 append_depth ()
@@ -873,7 +875,7 @@ open_paragraph_block ()
 {
     case "${BLOCK_TYPE["$LEVEL"]:-}" in
         [$LIST]|"block_quote")
-            if content_is_empty || is_not_empty "${EMPTY_STRING:-}"
+            if content_is_empty || is_not_empty "${EMPTY_STRING:-"${PARAGRAPH_BREAK:-}"}"
             then
                 create_block "paragraph"
                 save_tag "paragraph"
@@ -883,7 +885,7 @@ open_paragraph_block ()
             fi
             ;;
         "content"|"paragraph")
-            if is_empty "${EMPTY_STRING:-}"
+            if is_empty "${EMPTY_STRING:-"${PARAGRAPH_BREAK:-}"}"
             then
                 append_to_paragraph
             else
@@ -1039,7 +1041,7 @@ open_unordered_list ()
     [[ "$STRING" =~ ^"$1"([[:blank:]]|$) ]] && {
         if block_type_is_equal "$1"
         then
-            is_empty "${EMPTY_STRING:-}" || LIST_NUM_WITH_EMPTY_STRING["${BLOCK_NUM["$((LEVEL - 1))"]}"]=
+            is_empty "${EMPTY_STRING:-"${PARAGRAPH_BREAK:-}"}" || LIST_NUM_WITH_EMPTY_STRING["${BLOCK_NUM["$((LEVEL - 1))"]}"]=
             reset_tag_branch
             increment_list_item
         else
@@ -1064,7 +1066,7 @@ open_ordered_list ()
 {
     if block_type_is_equal "$1"
     then
-        is_empty "${EMPTY_STRING:-}" || LIST_NUM_WITH_EMPTY_STRING["${BLOCK_NUM["$((LEVEL - 1))"]}"]=
+        is_empty "${EMPTY_STRING:-"${PARAGRAPH_BREAK:-}"}" || LIST_NUM_WITH_EMPTY_STRING["${BLOCK_NUM["$((LEVEL - 1))"]}"]=
         reset_tag_branch
         increment_list_item
     else
@@ -1346,10 +1348,11 @@ remove_indent ()
 
 parse_empty_content ()
 {
-    if block_quote_is_open
-    then
-        content_is_empty || EMPTY_STRING="yes"
-    fi
+    LEVEL="$((LEVEL - 1))"
+    case "${BLOCK_TYPE["$LEVEL"]}" in
+        "block_quote")
+            content_is_empty || PARAGRAPH_BREAK="yes"
+    esac
 }
 
 parse_string ()
@@ -2110,6 +2113,7 @@ parse ()
 
     BLOCK_QUOTE=
     LIST=').*+-'
+    PARAGRAPH_BREAK=
 
     MERGE_START_MARKER="$(sed 's%.%\x1b%' <<< ".")" # ˆ[ [\x1b]
      MERGE_STOP_MARKER="$(sed 's%.%\x1d%' <<< ".")" # ˆ] [\x1d]
