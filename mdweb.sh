@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.151} - (C) 20.08.2025
+    echo "${0##*/} ${1:-0.6.152} - (C) 21.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -781,18 +781,20 @@ reset_tag_branch ()
     BLOCK_QUOTE= INDEX=
 }
 
+parent_block_is_list ()
+{
+    is_diff "$LEVEL" 0 || return
+    [[ "${BLOCK_TYPE["$((LEVEL - 1))"]}" =~ [$LIST] ]]
+}
+
 create_block ()
 {
-    if is_empty "${EMPTY_STRING:-}"
-    then
-        is_diff  "$LEVEL" 0 || reset_tag_branch
-    else
-        reset_tag_branch
+    is_empty "${EMPTY_STRING:-"${PARAGRAPH_BREAK:-}"}" || {
         if parent_block_is_list
         then
             LIST_NUM_WITH_EMPTY_STRING["${BLOCK_NUM["$((LEVEL - 1))"]}"]=
         fi
-    fi
+    }
     if is_empty "${BLOCK_TYPE["$LEVEL"]:-}"
     then
         DEPTH="${DEPTH:-}:0"
@@ -804,6 +806,7 @@ create_block ()
     BLOCK_TYPE["$LEVEL"]="$1"
     EMPTY_STRING=
     PARAGRAPH_BREAK=
+    CODE_BLOCK_CLOSED=
 }
 
 append_depth ()
@@ -863,25 +866,34 @@ block_type_is_not_paragraph ()
     block_type_is_paragraph && return 1 || return 0
 }
 
-parent_block_is_list ()
+create_paragraph_block ()
 {
-    is_diff "$LEVEL" 0 || return
-    PARENT_BLOCK="${BLOCK_TYPE["$((LEVEL - 1))"]:-}"
-    is_not_empty "${PARENT_BLOCK:-}" || return
-    [[ "$PARENT_BLOCK" =~ [$LIST] ]]
+    if parent_block_is_list
+    then
+        create_block "content"
+        save_tag "content"
+        LIST_ITEM_CONTENT_INDEX["$TAG_NUM"]="$INDEX"
+    else
+        create_block "paragraph"
+        save_tag "paragraph"
+    fi
+    save_content
 }
 
 open_paragraph_block ()
 {
     case "${BLOCK_TYPE["$LEVEL"]:-}" in
         [$LIST]|"block_quote")
-            if content_is_empty || is_not_empty "${EMPTY_STRING:-"${PARAGRAPH_BREAK:-}"}"
+            if is_empty "${EMPTY_STRING:-"${PARAGRAPH_BREAK:-}"}"
             then
-                create_block "paragraph"
-                save_tag "paragraph"
-                save_content
+                if content_is_empty
+                then
+                    create_paragraph_block
+                else
+                    append_to_paragraph
+                fi
             else
-                append_to_paragraph
+                create_paragraph_block
             fi
             ;;
         "content"|"paragraph")
@@ -889,22 +901,12 @@ open_paragraph_block ()
             then
                 append_to_paragraph
             else
-                create_block "paragraph"
-                save_tag "paragraph"
-                save_content
+                LIST_NUM_WITH_EMPTY_STRING["${BLOCK_NUM["$((LEVEL - 1))"]}"]=
+                create_paragraph_block
             fi
             ;;
         *)
-            if parent_block_is_list
-            then
-                create_block "content"
-                save_tag "content"
-                LIST_ITEM_CONTENT_INDEX["$TAG_NUM"]="$INDEX"
-            else
-                create_block "paragraph"
-                save_tag "paragraph"
-            fi
-            save_content
+            create_paragraph_block
     esac
 }
 
@@ -1041,10 +1043,11 @@ open_unordered_list ()
     [[ "$STRING" =~ ^"$1"([[:blank:]]|$) ]] && {
         if block_type_is_equal "$1"
         then
-            is_empty "${EMPTY_STRING:-"${PARAGRAPH_BREAK:-}"}" || LIST_NUM_WITH_EMPTY_STRING["${BLOCK_NUM["$((LEVEL - 1))"]}"]=
+            is_empty "${EMPTY_STRING:-"${PARAGRAPH_BREAK:-}"}" || LIST_NUM_WITH_EMPTY_STRING["${BLOCK_NUM["$LEVEL"]}"]=
             reset_tag_branch
             increment_list_item
         else
+            reset_tag_branch
             create_block "$1"
             LIST_NUM="${BLOCK_NUM["$LEVEL"]}"
             save_tag "ul"
@@ -1066,10 +1069,11 @@ open_ordered_list ()
 {
     if block_type_is_equal "$1"
     then
-        is_empty "${EMPTY_STRING:-"${PARAGRAPH_BREAK:-}"}" || LIST_NUM_WITH_EMPTY_STRING["${BLOCK_NUM["$((LEVEL - 1))"]}"]=
+        is_empty "${EMPTY_STRING:-"${PARAGRAPH_BREAK:-}"}" || LIST_NUM_WITH_EMPTY_STRING["${BLOCK_NUM["$LEVEL"]}"]=
         reset_tag_branch
         increment_list_item
     else
+        reset_tag_branch
         create_block "$1"
         LIST_NUM="$DEPTH"
         save_tag "ol"
@@ -1096,6 +1100,7 @@ open_block_quote ()
 {
     block_type_is_equal "block_quote" &&
     is_empty "${EMPTY_STRING:-}" || {
+        is_diff "$LEVEL" 0 || reset_tag_branch
         create_block "block_quote"
         save_tag "blockquote"
         BLOCK_QUOTE="$LEVEL"
@@ -1166,7 +1171,7 @@ code_block_is_open ()
 {
     case "${BLOCK_TYPE[-1]}" in
         "code_block"|"indent_code_block")
-            return 0
+            is_equal "${CODE_BLOCK_CLOSED:-}" "yes" || return 0
     esac
     return 1
 }
@@ -1180,8 +1185,10 @@ parse_empty_string ()
 {
     case "${BLOCK_TYPE[0]:-}" in
         "code_block"|"indent_code_block")
-            trim_indent "$EXCESS_INDENT" "$CHAR_NUM"
-            append_to_code_block
+            is_equal "${CODE_BLOCK_CLOSED:-}" "yes" || {
+                trim_indent "$EXCESS_INDENT" "$CHAR_NUM"
+                append_to_code_block
+            }
             ;;
         "block_quote"|"paragraph")
             EMPTY_STRING="yes"
@@ -1298,8 +1305,9 @@ parse_indent ()
                 return 1
                 ;;
             "code_block")
+                is_diff "${CODE_BLOCK_CLOSED:-}" "yes" || return 0
                 trim_indent "$EXCESS_INDENT" "$CHAR_NUM"
-                is_code_block || append_to_code_block
+                is_code_block && CODE_BLOCK_CLOSED="yes" || append_to_code_block
                 return 1
                 ;;
             [$LIST])
