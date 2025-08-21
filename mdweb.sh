@@ -49,7 +49,7 @@ $PKG home page: <https://www.atwis.org/shell-script/$PKG/>"
 
 show_version ()
 {
-    echo "${0##*/} ${1:-0.6.152} - (C) 21.08.2025
+    echo "${0##*/} ${1:-0.6.153} - (C) 21.08.2025
 
 Written by Mironov A Semyon
 Site       www.atwis.org
@@ -1382,14 +1382,12 @@ parse_string ()
                 open_heading_atx && return
                 ;;
             [=]*)
-                open_heading_setext "=" && return
+                open_heading_setext  "=" && return
                 ;;
             [-]*)
+                open_heading_setext  "-" ||
                 open_horizontal_rule "-" && return ||
-                [[ "$STRING" =~ ^"-"[[:blank:]]+[^[:blank:]] ]] || {
-                    open_heading_setext "-" && return || true
-                }
-                open_unordered_list "-"
+                open_unordered_list  "-"
                 ;;
             [*]*)
                 open_horizontal_rule "*" && return ||
