@@ -33,6 +33,11 @@ is_equal ()
     return 1
 }
 
+is_dir ()
+{
+    test -d "${1:-}"
+}
+
 is_file ()
 {
     test -f "${1:-}"
@@ -99,10 +104,18 @@ say ()
         esac
         shift
     done
-    is_empty "$@" || {
-        puts "$PACKAGE_NAME:${1:+" $@"}"
-        PUTS_OPTIONS=
-    }
+    case "${*:-"${STATUS:-}"}" in
+        *"$LF"*)
+            echo "${*:-"${STATUS:-}"}" | while read -r LINE || is_not_empty "${LINE:-}"
+            do
+                puts "$PACKAGE_NAME: ${LINE:-}"
+            done
+        ;;
+        ?*)
+            puts "$PACKAGE_NAME: ${*:-"${STATUS:-}"}"
+        ;;
+    esac
+    PUTS_OPTIONS=
 }
 
 die ()
@@ -121,9 +134,78 @@ abs_dirpath ()
     cd -- "$1" 2>&1 && pwd -P 2>&1
 }
 
+say_status ()
+{
+    case $? in
+        0)  case "${VERBOSE:-}" in
+                ?*) say "${STATUS:-}" ;;
+            esac ;;
+        *)  case "$DIE" in
+                no) say "${STATUS:-}"
+                    return "$RETURN"  ;;
+                 *) die "${STATUS:-}" ;;
+            esac ;;
+    esac
+}
+
+exec_cmd ()
+{
+    DIE=yes STATUS= VERBOSE=
+    while :
+    do
+        case "${1:-}" in
+            -c ) DIE=no ;;
+            -c*) DIE=no
+                 ARG="-${1#??}"
+                 shift
+                 set -- '' "$ARG" "$@" ;;
+            -v ) VERBOSE=yes ;;
+            -v*) VERBOSE=yes
+                 ARG="-${1#??}"
+                 shift
+                 set -- '' "$ARG" "$@" ;;
+            -- ) shift
+                 break ;;
+              *) break ;;
+        esac
+        shift
+    done
+    case "${1:-}" in
+        "") STATUS="not enough arguments"
+            DIE=yes
+            false ;;
+    esac && STATUS="$(2>&1 $CMD -- "$@")" && say_status || say_status
+}
+
+change_dir ()
+{
+    CMD="cd"
+    exec_cmd "$@"
+}
+
+change_mod ()
+{
+    CMD="chmod $1"
+    shift
+    exec_cmd "$@"
+}
+
+make_dir ()
+{
+    CMD="mkdir -vp"
+    exec_cmd "$@"
+}
+
+remove ()
+{
+    CMD="rm -rvf"
+    exec_cmd "$@"
+}
+
 get_pkg_vars ()
 {
     PKG="${0##*/}"
+    PACKAGE_NAME="${PKG%.sh}"
     PKG_DIR="${0%"$PKG"}"
     PKG_DIR="${PKG_DIR:-/}"
     PKG_DIR="$(abs_dirpath "$PKG_DIR")"
@@ -163,40 +245,40 @@ get_test_nums ()
 
 save_result ()
 {
-    STATUS=":test:$TEST_NAME$NEW_STRING"
+    STATUS=":test:$TEST_NAME$LF"
     is_equal "${#TESTED_ARGS[@]}" 0 ||
-        STATUS="$STATUS:args:${TESTED_ARGS[@]}$NEW_STRING"
+        STATUS="$STATUS:args:${TESTED_ARGS[@]}$LF"
     is_empty "${COMPARE_STDOUT:-}" ||
-        STATUS="$STATUS:expect: |$NEW_STRING${EXPECT:+"$EXPECT$NEW_STRING"}"
+        STATUS="$STATUS:expect: |$LF${EXPECT:+"$EXPECT$LF"}"
     is_empty "${COMPARE_STDERR:-}" ||
-        STATUS="$STATUS:expect-err: |$NEW_STRING${EXPECT_ERR:+$EXPECT_ERR$NEW_STRING}"
+        STATUS="$STATUS:expect-err: |$LF${EXPECT_ERR:+$EXPECT_ERR$LF}"
     is_empty "${EXPECT_RETURN_CODE:-}" ||
-        STATUS="$STATUS:return: $EXPECT_RETURN_CODE$NEW_STRING"
-    STATUS="$STATUS:sample: |$NEW_STRING${SAMPLE:+$SAMPLE$NEW_STRING}:run:$NEW_STRING$NEW_STRING"
-    STATUS="$STATUS:stdout: |$NEW_STRING${STDOUT_RESULT:+$STDOUT_RESULT$NEW_STRING}"
-    STATUS="$STATUS:stderr: |$NEW_STRING${STDERR_RESULT:+$STDERR_RESULT$NEW_STRING}"
-    STATUS="$STATUS:return: $RETURN_CODE$NEW_STRING:end:"
-    echo "$STATUS" > "$1/${NAME_TESTED_FILE}_$STRING_NUM_TEST.txt"
+        STATUS="$STATUS:return: $EXPECT_RETURN_CODE$LF"
+    STATUS="$STATUS:sample: |$LF${SAMPLE:+$SAMPLE$LF}:run:$LF$LF"
+    STATUS="$STATUS:stdout: |$LF${STDOUT_RESULT:+$STDOUT_RESULT$LF}"
+    STATUS="$STATUS:stderr: |$LF${STDERR_RESULT:+$STDERR_RESULT$LF}"
+    STATUS="$STATUS:return: $RETURN_CODE$LF:end:"
+    echo "$STATUS" > "$1/${NAME_TEST_SAMPLE}_$STRING_NUM_TEST.txt"
 }
 
 expect_out ()
 {
-    echo -e "|\033[0;33m${1//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[0;33m}\033[0m|"
+    echo -e "|\033[0;33m${1//$LF/\\033\[0m|$LF$INDENT\\033\[0;33m}\033[0m|"
 }
 
 success_out ()
 {
-    echo -e "|\033[1;32m${1//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[1;32m}\033[0m|"
+    echo -e "|\033[1;32m${1//$LF/\\033\[0m|$LF$INDENT\\033\[1;32m}\033[0m|"
 }
 
 failed_out ()
 {
-    echo -e "|\033[1;31m${1//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[1;31m}\033[0m|"
+    echo -e "|\033[1;31m${1//$LF/\\033\[0m|$LF$INDENT\\033\[1;31m}\033[0m|"
 }
 
 info_out ()
 {
-    echo -e "|\033[0;36m${1//$NEW_STRING/\\033\[0m|$NEW_STRING$INDENT\\033\[0;36m}\033[0m|"
+    echo -e "|\033[0;36m${1//$LF/\\033\[0m|$LF$INDENT\\033\[0;36m}\033[0m|"
 }
 
 cmp_results ()
@@ -213,7 +295,6 @@ cmp_results ()
                 "$H2" ""
                 "stdout:" "$(success_out "$STDOUT_RESULT")"
             )
-            is_equal "$SAVE_RESULTS" "yes" || rm -f "$STDOUT"
         else
             REPORT_STDOUT=(
                 "$H2" ""
@@ -233,7 +314,6 @@ cmp_results ()
                 "$H2" ""
                 "stderr:" "$(success_out "$STDERR_RESULT")"
             )
-            is_equal "$SAVE_RESULTS" "yes" || rm -f "$STDERR"
         else
             REPORT_STDERR=(
                 "$H2" ""
@@ -337,15 +417,18 @@ unset_vars ()
     REPORT_STDOUT=()
     REPORT_STDERR=()
     REPORT_RETURN=()
+    WORKDIR=
+    WORKDIR_CLEAN=
+    WORKDIR_CHMOD=
 }
 
 get_result ()
 {
     if is_not_empty "${NO_HEADINGS:-}"
     then
-        printf '%16s %s\n' "$H1" "" "sample:" "|${SAMPLE//$NEW_STRING/|$NEW_STRING$INDENT}|"
+        printf '%16s %s\n' "$H1" "" "sample:" "|${SAMPLE//$LF/|$LF$INDENT}|"
     else
-        printf '%16s %s\n' "$H1" "" "${PREFIX[@]}" "$H2" "" "sample:" "|${SAMPLE//$NEW_STRING/|$NEW_STRING$INDENT}|"
+        printf '%16s %s\n' "$H1" "" "${PREFIX[@]}" "$H2" "" "sample:" "|${SAMPLE//$LF/|$LF$INDENT}|"
     fi
     if cmp_results
     then
@@ -354,9 +437,10 @@ get_result ()
         save_result "$TEST_FAILED"
     fi
     unset_vars
+    cd -- "$CURRENT_DIR"
 }
 
-run_test_file ()
+run_test_sample ()
 {
     STRING_NUM=0
     TEST_NUMBER=0
@@ -402,7 +486,7 @@ run_test_file ()
             *)
                 is_equal "$LOAD_TEST" "yes" || continue
                 case "${LINE:-}" in
-                    :args|:return|:return-code|:timeout)
+                    :args|:return|:return-code|:timeout|:workdir|:workdir-clean|:workdir-chmod)
                         ;;
                     :args:*)
                         is_equal "$LOAD_TEST" "yes" || continue
@@ -436,18 +520,27 @@ run_test_file ()
                     :run|:run:*)
                         is_equal "$LOAD_TEST" "yes" || continue
                         PREFIX=(
-                            "test file:" "[$TESTED_FILE]"
+                            "test sample:" "[$TEST_SAMPLE]"
                             "string num:" "[$STRING_NUM_TEST]"
                             "test name:" "[$TEST_NAME]"
                             "test num:" "[$TEST_NUMBER]"
                         )
-                        is_diff "${#TESTED_FILES[@]}" 0 || PREFIX=( "${PREFIX[@]}" "total test num:" "[$TOTAL_TEST_NUMBER]" )
-                        NAME_TESTED_FILE="${TESTED_FILE##*/}"
-                        NAME_TESTED_FILE="${NAME_TESTED_FILE%.txt}"
-                        STDOUT="$PKG_DIR/${NAME_TESTED_FILE}_$STRING_NUM_TEST.out"
-                        STDERR="$PKG_DIR/${NAME_TESTED_FILE}_$STRING_NUM_TEST.err"
-                        is_diff "${#TESTED_ARGS[@]}" 0 || TESTED_ARGS=( "${GLOBAL_ARGS[@]}" )
+                        is_diff "${#TEST_SAMPLES[@]}" 0 || PREFIX=( "${PREFIX[@]}" "total test num:" "[$TOTAL_TEST_NUMBER]" )
+                        NAME_TEST_SAMPLE="${TEST_SAMPLE##*/}"
+                        NAME_TEST_SAMPLE="${NAME_TEST_SAMPLE%.txt}"
+                        WORKDIR="${GLOBAL_WORKDIR:-"${WORKDIR:-}"}"
+                        WORKDIR_CLEAN="${GLOBAL_WORKDIR_CLEAN:-"${WORKDIR_CLEAN:-}"}"
+                        WORKDIR_CHMOD="${GLOBAL_WORKDIR_CHMOD:-"${WORKDIR_CHMOD:-}"}"
+                        STDOUT="$TEMP_DIR/${NAME_TEST_SAMPLE}_$STRING_NUM_TEST.out"
+                        STDERR="$TEMP_DIR/${NAME_TEST_SAMPLE}_$STRING_NUM_TEST.err"
+                        is_empty "${WORKDIR:-}" && WORKDIR="$CURRENT_DIR" || {
+                            is_dir   "$WORKDIR"               || make_dir   "$WORKDIR" &&
+                            is_diff  "${WORKDIR_CLEAN:-}" yes || remove     "$WORKDIR"/*
+                            is_empty "${WORKDIR_CHMOD:-}"     || change_mod "$WORKDIR_CHMOD" "$WORKDIR"
+                                                                 change_dir "$WORKDIR"
+                        }
                         RETURN_CODE=0
+                        is_diff "${#TESTED_ARGS[@]}" 0 || TESTED_ARGS=( "${GLOBAL_ARGS[@]}" )
                         timeout "${GLOBAL_TIMEOUT:-"${TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_PKG" "${TESTED_ARGS[@]}" < <(sed 's%\o357\o277\o275%\o000%g' <<< "$SAMPLE") > "$STDOUT" 2> "$STDERR" &
                         CHILD_PID="$!"
                         wait "$CHILD_PID"
@@ -460,22 +553,37 @@ run_test_file ()
                         ;;
                     :timeout:*)
                         is_equal "$LOAD_TEST" "yes" || continue
-                        set -- ${LINE#:args:}
+                        set -- ${LINE#:timeout:}
                         TIMEOUT="${1:-}"
+                        ;;
+                    :workdir:*)
+                        is_equal "$LOAD_TEST" "yes" || continue
+                        set -- ${LINE#:workdir:}
+                        WORKDIR="${1:-}"
+                        ;;
+                    :workdir-clean:*)
+                        is_equal "$LOAD_TEST" "yes" || continue
+                        set -- ${LINE#:workdir-clean:}
+                        WORKDIR_CLEAN="${1:-}"
+                        ;;
+                    :workdir-chmod:*)
+                        is_equal "$LOAD_TEST" "yes" || continue
+                        set -- ${LINE#:workdir-chmod:}
+                        WORKDIR_CHMOD="${1:-}"
                         ;;
                     *)
                         if is_equal "$NEXT_LINE" "expect-stdout"
                         then
-                            EXPECT="${EXPECT:+"$EXPECT$NEW_STRING"}${LINE:-}"
+                            EXPECT="${EXPECT:+"$EXPECT$LF"}${LINE:-}"
                         elif is_equal "$NEXT_LINE" "expect-stderr"
                         then
-                            EXPECT_ERR="${EXPECT_ERR:+"$EXPECT_ERR$NEW_STRING"}${LINE:-}"
+                            EXPECT_ERR="${EXPECT_ERR:+"$EXPECT_ERR$LF"}${LINE:-}"
                         else
-                            SAMPLE="${SAMPLE:+"$SAMPLE$NEW_STRING"}${LINE:-}"
+                            SAMPLE="${SAMPLE:+"$SAMPLE$LF"}${LINE:-}"
                         fi
                 esac
         esac
-    done < <(cat "$TESTED_FILE" | sed 's%\o000%\o357\o277\o275%g')
+    done < <(cat "$TEST_SAMPLE" | sed 's%\o000%\o357\o277\o275%g')
 }
 
 get_range_nums ()
@@ -534,23 +642,20 @@ report ()
 
 run_test ()
 {
-    is_diff "${!TESTED_FILES[@]}" &&
-    for TESTED_FILE in "${TESTED_FILES[@]}"
+    is_diff "${!TEST_SAMPLES[@]}" &&
+    for TEST_SAMPLE in "${TEST_SAMPLES[@]}"
     do
-        is_exists "$TESTED_FILE" || {
-            is_exists   "$PKG_DIR/$TESTED_FILE" &&
-            TESTED_FILE="$PKG_DIR/$TESTED_FILE"
-        } || {
-            is_exists   "$PKG_DIR/tests/$TESTED_FILE" &&
-            TESTED_FILE="$PKG_DIR/tests/$TESTED_FILE"
-        } || die 2 "no such file: -- '$TESTED_FILE'" 2>&3
-        run_test_file || break
+        is_exists "$TEST_SAMPLE" || {
+            is_exists   "$TEST_SAMPLES_DIR/$TEST_SAMPLE" &&
+            TEST_SAMPLE="$TEST_SAMPLES_DIR/$TEST_SAMPLE"
+        } || die 2 "no such file: -- '$TEST_SAMPLE'" 2>&3
+        run_test_sample || break
     done ||
-    for TESTED_FILE in "$PKG_DIR"/tests/*.txt
+    for TEST_SAMPLE in "$TEST_SAMPLES_DIR"/*.txt
     do
-        grep "^[[:blank:]]*${TESTED_FILE##*/}" "$PKG_DIR/tests/.testignor" &>/dev/null && continue
-        is_exists "$TESTED_FILE" || die 2 "no such file: -- '$TESTED_FILE'" 2>&3
-        run_test_file || break
+        grep "^[[:blank:]]*${TEST_SAMPLE##*/}" "$TEST_SAMPLES_DIR/.testignor" &>/dev/null && continue
+        is_exists "$TEST_SAMPLE" || die 2 "no such file: -- '$TEST_SAMPLE'" 2>&3
+        run_test_sample || break
     done
     report >&3
 }
@@ -565,7 +670,14 @@ is_not_key ()
 
 argparse ()
 {
-    ARGS=( "all-streams" "args" "clear" "no-headings" "no-report" "no-streams" "save-results" "show-stdout" "show-stderr" "show-retcode" "test-file" "test-num" "timeout" )
+    ARGS=(
+        "all-streams" "args"
+        "clear"
+        "no-headings" "no-report" "no-streams"
+        "save-results" "show-stdout" "show-stderr" "show-retcode"
+        "test-file" "test-num" "timeout"
+        "workdir" "workdir-clean" "workdir-chmod"
+    )
     while is_diff $# 0
     do
         case "${1:-}" in
@@ -610,7 +722,7 @@ argparse ()
                 while is_diff $# 0
                 do
                     is_not_empty "${2:-}" && is_not_key "$2" || break
-                    TESTED_FILES+=( "${2:-}" )
+                    TEST_SAMPLES+=( "${2:-}" )
                     shift
                 done
                 ;;
@@ -624,7 +736,22 @@ argparse ()
                 ;;
             --timeout)
                 is_not_empty "${2:-}" && is_not_key "$2" && {
-                    GLOBAL_TIMEOUT="${2:-}"
+                    TIMEOUT="${2:-}"
+                    shift
+                } || true
+                ;;
+            --workdir)
+                is_not_empty "${2:-}" && is_not_key "$2" && {
+                    WORKDIR="${2:-}"
+                    shift
+                } || true
+                ;;
+            --workdir-clean)
+                WORKDIR_CLEAN="yes"
+                ;;
+            --workdir-chmod)
+                is_not_empty "${2:-}" && is_not_key "$2" && {
+                    WORKDIR_CHMOD="${2:-}"
                     shift
                 } || true
                 ;;
@@ -653,9 +780,7 @@ main ()
     CLEAR_RESULTS="no"
     SAVE_RESULTS="no"
     TEST_NUM=()
-    TEST_PASSED="${TEST_PASSED:-"$PKG_DIR/test_passed"}"
-    TEST_FAILED="${TEST_FAILED:-"$PKG_DIR/test_failed"}"
-    TESTED_FILES=()
+    TEST_SAMPLES=()
     FUNC_NAME="[${TESTED_PKG##*/}]"
     PASSED=0
     FAILED=0
@@ -664,7 +789,21 @@ main ()
     LOAD_TEST="no"
     TEST_NUMBER=0
     STRING_NUM=0
-    NEW_STRING=$'\n'
+    LF=$'\n'
+
+    GLOBAL_TIMEOUT="${TIMEOUT:-}"
+    GLOBAL_WORKDIR="${WORKDIR:-}"
+    GLOBAL_WORKDIR_CLEAN="${WORKDIR_CLEAN:-}"
+    GLOBAL_WORKDIR_CHMOD="${WORKDIR_CHMOD:-}"
+
+    CURRENT_DIR="$PWD"
+    TEMP_DIR="$PKG_DIR/tmp"
+    TEST_PASSED="${TEST_PASSED:-"$PKG_DIR/test_passed"}"
+    TEST_FAILED="${TEST_FAILED:-"$PKG_DIR/test_failed"}"
+
+    is_dir "$TEMP_DIR"    || make_dir "$TEMP_DIR"
+    is_dir "$TEST_PASSED" || make_dir "$TEST_PASSED"
+    is_dir "$TEST_FAILED" || make_dir "$TEST_FAILED"
 
     is_exists "$TESTED_PKG" || die 2 "no such file: -- '$TESTED_PKG'" 2>&3
     argparse "$@"
@@ -673,11 +812,9 @@ main ()
         SPECIFIC_TEST="${#TEST_NUM[@]}"
     }
 
-    is_equal "$CLEAR_RESULTS" "no" || {
-        rm -rf "$TEST_PASSED"/*.txt &&
-        rm -rf "$TEST_FAILED"/*.txt || die
-    }
+    is_equal "$CLEAR_RESULTS" "no" || remove "$TEST_PASSED"/* "$TEST_FAILED"/*
     run_test
+    remove "$TEMP_DIR"
 }
 
 out ()
