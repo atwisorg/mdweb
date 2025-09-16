@@ -33,6 +33,25 @@ is_equal ()
     return 1
 }
 
+is_file ()
+{
+    test -f "${1:-}"
+}
+
+can_read_file ()
+{
+    is_file "${1:-}" || {
+        is_exists "${1:-}" &&
+        say 2 "can't open '${1:-}': is not a file" ||
+        say 2 "can't open '${1:-}': no such file"
+        return 2
+    } >&2
+    test -r "${1:-}" || {
+        say 1 "can't open '${1:-}': no read permissions" >&2
+        return 1
+    }
+}
+
 if is_not_empty "${KSH_VERSION:-}"
 then
     PUTS=print
@@ -246,8 +265,8 @@ cmp_results ()
         fi
     }
 
-    is_equal "$RETURN" 0 && SUCCESS="$((SUCCESS+1))" || {
-                             FAILED="$((FAILED+1))"
+    is_equal "$RETURN" 0 && PASSED="$((PASSED+1))" || {
+                            FAILED="$((FAILED+1))"
         FAILED_TEST_NUMBERS+=( "$TOTAL_TEST_NUMBER" )
     }
 
@@ -330,9 +349,9 @@ get_result ()
     fi
     if cmp_results
     then
-        is_equal "$SAVE_RESULTS" "no" || save_result "$TEST_OK"
+        is_equal "$SAVE_RESULTS" "no" || save_result "$TEST_PASSED"
     else
-        save_result "$TEST_FAILURE"
+        save_result "$TEST_FAILED"
     fi
     unset_vars
 }
@@ -429,7 +448,7 @@ run_test_file ()
                         STDERR="$PKG_DIR/${NAME_TESTED_FILE}_$STRING_NUM_TEST.err"
                         is_diff "${#TESTED_ARGS[@]}" 0 || TESTED_ARGS=( "${GLOBAL_ARGS[@]}" )
                         RETURN_CODE=0
-                        timeout "${GLOBAL_TIMEOUT:-"${TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_SCRIPT" "${TESTED_ARGS[@]}" < <(sed 's%\o357\o277\o275%\o000%g' <<< "$SAMPLE") > "$STDOUT" 2> "$STDERR" &
+                        timeout "${GLOBAL_TIMEOUT:-"${TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_PKG" "${TESTED_ARGS[@]}" < <(sed 's%\o357\o277\o275%\o000%g' <<< "$SAMPLE") > "$STDOUT" 2> "$STDERR" &
                         CHILD_PID="$!"
                         wait "$CHILD_PID"
                         RETURN_CODE="$?"
@@ -505,8 +524,8 @@ report ()
             get_range_nums
             printf '\033[0;31m%15s\033[0m: [\033[1;31m%s\033[0m]\n' "failed tests" "$RANGE_NUMS"
         }
-        printf '\033[0;31m%15s\033[0m: [\033[1;31m%s\033[0m]\n' "failed"     "$FAILED"
-        printf '\033[0;32m%15s\033[0m: [\033[1;32m%s\033[0m]\n' "successful" "$SUCCESS"
+        printf '\033[0;31m%15s\033[0m: [\033[1;31m%s\033[0m]\n' "failed" "$FAILED"
+        printf '\033[0;32m%15s\033[0m: [\033[1;32m%s\033[0m]\n' "passed" "$PASSED"
         is_empty "${SPECIFIC_TEST:-}" || TOTAL_TEST_NUMBER="$SPECIFIC_TEST"
         printf '\033[0;33m%15s\033[0m: [\033[1;33m%s\033[0m]\n' "total tests" "$TOTAL_TEST_NUMBER"
         echo "$H1"
@@ -623,6 +642,10 @@ main ()
 {
     exec 3>&1
     get_pkg_vars
+
+    can_read_file "$PKG_DIR/${PKG%.sh}.conf" &&
+           source "$PKG_DIR/${PKG%.sh}.conf" || die
+
     INDENT="                 |"
     H1="================"
     H2="----------------"
@@ -630,13 +653,11 @@ main ()
     CLEAR_RESULTS="no"
     SAVE_RESULTS="no"
     TEST_NUM=()
-    TEST_OK="$PKG_DIR/test_ok"
-    TEST_FAILURE="$PKG_DIR/test_failure"
+    TEST_PASSED="${TEST_PASSED:-"$PKG_DIR/test_passed"}"
+    TEST_FAILED="${TEST_FAILED:-"$PKG_DIR/test_failed"}"
     TESTED_FILES=()
-    TESTED_SHELL="/bin/bash"
-    TESTED_SCRIPT="$PKG_DIR/../mdweb.sh"
-    FUNC_NAME="[${TESTED_SCRIPT##*/}]"
-    SUCCESS=0
+    FUNC_NAME="[${TESTED_PKG##*/}]"
+    PASSED=0
     FAILED=0
     FAIL=()
     TOTAL_TEST_NUMBER=0
@@ -645,7 +666,7 @@ main ()
     STRING_NUM=0
     NEW_STRING=$'\n'
 
-    is_exists "$TESTED_SCRIPT" || die 2 "no such file: -- '$TESTED_SCRIPT'" 2>&3
+    is_exists "$TESTED_PKG" || die 2 "no such file: -- '$TESTED_PKG'" 2>&3
     argparse "$@"
     is_empty "${!TEST_NUM[@]}" || {
         get_test_nums
@@ -653,8 +674,8 @@ main ()
     }
 
     is_equal "$CLEAR_RESULTS" "no" || {
-        rm -rf "$TEST_OK"/*.txt &&
-        rm -rf "$TEST_FAILURE"/*.txt || die
+        rm -rf "$TEST_PASSED"/*.txt &&
+        rm -rf "$TEST_FAILED"/*.txt || die
     }
     run_test
 }
@@ -662,7 +683,7 @@ main ()
 out ()
 {
     echo
-    CHILD_PIDS=( $(ps aux | grep -v grep | grep "${TESTED_SCRIPT##*/}" | awk '{print $2}') )
+    CHILD_PIDS=( $(ps aux | grep -v grep | grep "${TESTED_PKG##*/}" | awk '{print $2}') )
     # https://stackoverflow.com/questions/1570262/get-exit-code-of-a-background-process#1570356
     kill -9 "${CHILD_PIDS[@]}"
        wait "${CHILD_PIDS[@]}" 2>/dev/null
