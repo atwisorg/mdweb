@@ -2,7 +2,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-633
 :test: 6.7 Hard line breaks (Example 633)
-:sample: |
+:stdin: |
 foo  
 baz
 :expect: |
@@ -12,7 +12,7 @@ baz</p>
 
 # https://spec.commonmark.org/0.31.2/#example-634
 :test: 6.7 Hard line breaks (Example 634)
-:sample: |
+:stdin: |
 foo\
 baz
 :expect: |
@@ -22,7 +22,7 @@ baz</p>
 
 # https://spec.commonmark.org/0.31.2/#example-635
 :test: 6.7 Hard line breaks (Example 635)
-:sample: |
+:stdin: |
 foo       
 baz
 :expect: |
@@ -32,7 +32,7 @@ baz</p>
 
 # https://spec.commonmark.org/0.31.2/#example-636
 :test: 6.7 Hard line breaks (Example 636)
-:sample: |
+:stdin: |
 foo  
      bar
 :expect: |
@@ -42,7 +42,7 @@ bar</p>
 
 # https://spec.commonmark.org/0.31.2/#example-637
 :test: 6.7 Hard line breaks (Example 637)
-:sample: |
+:stdin: |
 foo\
      bar
 :expect: |
@@ -52,7 +52,7 @@ bar</p>
 
 # https://spec.commonmark.org/0.31.2/#example-638
 :test: 6.7 Hard line breaks (Example 638)
-:sample: |
+:stdin: |
 *foo  
 bar*
 :expect: |
@@ -62,7 +62,7 @@ bar</em></p>
 
 # https://spec.commonmark.org/0.31.2/#example-639
 :test: 6.7 Hard line breaks (Example 639)
-:sample: |
+:stdin: |
 *foo\
 bar*
 :expect: |
@@ -72,7 +72,7 @@ bar</em></p>
 
 # https://spec.commonmark.org/0.31.2/#example-640
 :test: 6.7 Hard line breaks (Example 640)
-:sample: |
+:stdin: |
 `code  
 span`
 :expect: |
@@ -81,7 +81,7 @@ span`
 
 # https://spec.commonmark.org/0.31.2/#example-641
 :test: 6.7 Hard line breaks (Example 641)
-:sample: |
+:stdin: |
 `code\
 span`
 :expect: |
@@ -90,7 +90,7 @@ span`
 
 # https://spec.commonmark.org/0.31.2/#example-642
 :test: 6.7 Hard line breaks (Example 642)
-:sample: |
+:stdin: |
 <a href="foo  
 bar">
 :expect: |
@@ -100,7 +100,7 @@ bar"></p>
 
 # https://spec.commonmark.org/0.31.2/#example-643
 :test: 6.7 Hard line breaks (Example 643)
-:sample: |
+:stdin: |
 <a href="foo\
 bar">
 :expect: |
@@ -110,7 +110,7 @@ bar"></p>
 
 # https://spec.commonmark.org/0.31.2/#example-644
 :test: 6.7 Hard line breaks (Example 644)
-:sample: |
+:stdin: |
 foo\
 :expect: |
 <p>foo\</p>
@@ -118,7 +118,7 @@ foo\
 
 # https://spec.commonmark.org/0.31.2/#example-645
 :test: 6.7 Hard line breaks (Example 645)
-:sample: |
+:stdin: |
 foo  
 :expect: |
 <p>foo</p>
@@ -126,7 +126,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-646
 :test: 6.7 Hard line breaks (Example 646)
-:sample: |
+:stdin: |
 ### foo\
 :expect: |
 <h3>foo\</h3>
@@ -134,7 +134,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-647
 :test: 6.7 Hard line breaks (Example 647)
-:sample: |
+:stdin: |
 ### foo  
 :expect: |
 <h3>foo</h3>

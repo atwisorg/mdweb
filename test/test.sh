@@ -254,7 +254,7 @@ save_result ()
         STATUS="$STATUS:expect-err: |$LF${EXPECT_ERR:+$EXPECT_ERR$LF}"
     is_empty "${EXPECT_RETURN_CODE:-}" ||
         STATUS="$STATUS:return: $EXPECT_RETURN_CODE$LF"
-    STATUS="$STATUS:sample: |$LF${SAMPLE:+$SAMPLE$LF}:run:$LF$LF"
+    STATUS="$STATUS:stdin:  |$LF${STDIN:+$STDIN$LF}:run:$LF$LF"
     STATUS="$STATUS:stdout: |$LF${STDOUT_RESULT:+$STDOUT_RESULT$LF}"
     STATUS="$STATUS:stderr: |$LF${STDERR_RESULT:+$STDERR_RESULT$LF}"
     STATUS="$STATUS:return: $RETURN_CODE$LF:end:"
@@ -411,7 +411,7 @@ unset_vars ()
     EXPECT_ERR=
     EXPECT_RETURN_CODE=
     LOAD_TEST="no"
-    SAMPLE=
+    STDIN=
     TESTED_ARGS=()
     TIMEOUT=
     REPORT_STDOUT=()
@@ -426,9 +426,9 @@ get_result ()
 {
     if is_not_empty "${NO_HEADINGS:-}"
     then
-        printf '%16s %s\n' "$H1" "" "sample:" "|${SAMPLE//$LF/|$LF$INDENT}|"
+        printf '%16s %s\n' "$H1" "" "stdin:" "|${STDIN//$LF/|$LF$INDENT}|"
     else
-        printf '%16s %s\n' "$H1" "" "${PREFIX[@]}" "$H2" "" "sample:" "|${SAMPLE//$LF/|$LF$INDENT}|"
+        printf '%16s %s\n' "$H1" "" "${PREFIX[@]}" "$H2" "" "stdin:" "|${STDIN//$LF/|$LF$INDENT}|"
     fi
     if cmp_results
     then
@@ -520,7 +520,7 @@ run_test_sample ()
                     :run|:run:*)
                         is_equal "$LOAD_TEST" "yes" || continue
                         PREFIX=(
-                            "test sample:" "[$TEST_SAMPLE]"
+                            "test stdin:" "[$TEST_SAMPLE]"
                             "string num:" "[$STRING_NUM_TEST]"
                             "test name:" "[$TEST_NAME]"
                             "test num:" "[$TEST_NUMBER]"
@@ -541,15 +541,15 @@ run_test_sample ()
                         }
                         RETURN_CODE=0
                         is_diff "${#TESTED_ARGS[@]}" 0 || TESTED_ARGS=( "${GLOBAL_ARGS[@]}" )
-                        timeout "${GLOBAL_TIMEOUT:-"${TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_PKG" "${TESTED_ARGS[@]}" < <(sed 's%\o357\o277\o275%\o000%g' <<< "$SAMPLE") > "$STDOUT" 2> "$STDERR" &
+                        timeout "${GLOBAL_TIMEOUT:-"${TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_PKG" "${TESTED_ARGS[@]}" < <(sed 's%\o357\o277\o275%\o000%g' <<< "$STDIN") > "$STDOUT" 2> "$STDERR" &
                         CHILD_PID="$!"
                         wait "$CHILD_PID"
                         RETURN_CODE="$?"
                         get_result
                         ;;
-                    :sample|:sample:*)
+                    :stdin|:stdin:*)
                         is_equal "$LOAD_TEST" "yes" || continue
-                        NEXT_LINE="sample"
+                        NEXT_LINE="stdin"
                         ;;
                     :timeout:*)
                         is_equal "$LOAD_TEST" "yes" || continue
@@ -579,7 +579,7 @@ run_test_sample ()
                         then
                             EXPECT_ERR="${EXPECT_ERR:+"$EXPECT_ERR$LF"}${LINE:-}"
                         else
-                            SAMPLE="${SAMPLE:+"$SAMPLE$LF"}${LINE:-}"
+                            STDIN="${STDIN:+"$STDIN$LF"}${LINE:-}"
                         fi
                 esac
         esac

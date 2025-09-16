@@ -2,7 +2,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-594
 :test: 6.5 Autolinks (Example 594)
-:sample: |
+:stdin: |
 <http://foo.bar.baz>
 :expect: |
 <p><a href="http://foo.bar.baz">http://foo.bar.baz</a></p>
@@ -10,7 +10,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-595
 :test: 6.5 Autolinks (Example 595)
-:sample: |
+:stdin: |
 <https://foo.bar.baz/test?q=hello&id=22&boolean>
 :expect: |
 <p><a href="https://foo.bar.baz/test?q=hello&amp;id=22&amp;boolean">https://foo.bar.baz/test?q=hello&amp;id=22&amp;boolean</a></p>
@@ -18,7 +18,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-596
 :test: 6.5 Autolinks (Example 596)
-:sample: |
+:stdin: |
 <irc://foo.bar:2233/baz>
 :expect: |
 <p><a href="irc://foo.bar:2233/baz">irc://foo.bar:2233/baz</a></p>
@@ -26,7 +26,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-597
 :test: 6.5 Autolinks (Example 597)
-:sample: |
+:stdin: |
 <MAILTO:FOO@BAR.BAZ>
 :expect: |
 <p><a href="MAILTO:FOO@BAR.BAZ">MAILTO:FOO@BAR.BAZ</a></p>
@@ -34,7 +34,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-598
 :test: 6.5 Autolinks (Example 598)
-:sample: |
+:stdin: |
 <a+b+c:d>
 :expect: |
 <p><a href="a+b+c:d">a+b+c:d</a></p>
@@ -42,7 +42,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-599
 :test: 6.5 Autolinks (Example 599)
-:sample: |
+:stdin: |
 <made-up-scheme://foo,bar>
 :expect: |
 <p><a href="made-up-scheme://foo,bar">made-up-scheme://foo,bar</a></p>
@@ -50,7 +50,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-600
 :test: 6.5 Autolinks (Example 600)
-:sample: |
+:stdin: |
 <https://../>
 :expect: |
 <p><a href="https://../">https://../</a></p>
@@ -58,7 +58,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-601
 :test: 6.5 Autolinks (Example 601)
-:sample: |
+:stdin: |
 <localhost:5001/foo>
 :expect: |
 <p><a href="localhost:5001/foo">localhost:5001/foo</a></p>
@@ -66,7 +66,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-602
 :test: 6.5 Autolinks (Example 602)
-:sample: |
+:stdin: |
 <https://foo.bar/baz bim>
 :expect: |
 <p>&lt;https://foo.bar/baz bim&gt;</p>
@@ -74,7 +74,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-603
 :test: 6.5 Autolinks (Example 603)
-:sample: |
+:stdin: |
 <https://example.com/\[\>
 :expect: |
 <p><a href="https://example.com/%5C%5B%5C">https://example.com/\[\</a></p>
@@ -82,7 +82,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-604
 :test: 6.5 Autolinks (Example 604)
-:sample: |
+:stdin: |
 <foo@bar.example.com>
 :expect: |
 <p><a href="mailto:foo@bar.example.com">foo@bar.example.com</a></p>
@@ -90,7 +90,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-605
 :test: 6.5 Autolinks (Example 605)
-:sample: |
+:stdin: |
 <foo+special@Bar.baz-bar0.com>
 :expect: |
 <p><a href="mailto:foo+special@Bar.baz-bar0.com">foo+special@Bar.baz-bar0.com</a></p>
@@ -98,7 +98,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-606
 :test: 6.5 Autolinks (Example 606)
-:sample: |
+:stdin: |
 <foo\+@bar.example.com>
 :expect: |
 <p>&lt;foo+@bar.example.com&gt;</p>
@@ -106,7 +106,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-607
 :test: 6.5 Autolinks (Example 607)
-:sample: |
+:stdin: |
 <>
 :expect: |
 <p>&lt;&gt;</p>
@@ -114,7 +114,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-608
 :test: 6.5 Autolinks (Example 608)
-:sample: |
+:stdin: |
 < https://foo.bar >
 :expect: |
 <p>&lt; https://foo.bar &gt;</p>
@@ -122,7 +122,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-609
 :test: 6.5 Autolinks (Example 609)
-:sample: |
+:stdin: |
 <m:abc>
 :expect: |
 <p>&lt;m:abc&gt;</p>
@@ -130,7 +130,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-610
 :test: 6.5 Autolinks (Example 610)
-:sample: |
+:stdin: |
 <foo.bar.baz>
 :expect: |
 <p>&lt;foo.bar.baz&gt;</p>
@@ -138,7 +138,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-611
 :test: 6.5 Autolinks (Example 611)
-:sample: |
+:stdin: |
 https://example.com
 :expect: |
 <p>https://example.com</p>
@@ -146,7 +146,7 @@ https://example.com
 
 # https://spec.commonmark.org/0.31.2/#example-612
 :test: 6.5 Autolinks (Example 612)
-:sample: |
+:stdin: |
 foo@bar.example.com
 :expect: |
 <p>foo@bar.example.com</p>

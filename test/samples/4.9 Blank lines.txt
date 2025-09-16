@@ -2,7 +2,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-227
 :test: 4.9 Blank lines (Example 227)
-:sample: |
+:stdin: |
   
 
 aaa

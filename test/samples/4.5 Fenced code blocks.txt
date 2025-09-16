@@ -2,7 +2,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-119
 :test: 4.5 Fenced code blocks (Example 119)
-:sample: |
+:stdin: |
 ```
 <
  >
@@ -15,7 +15,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-120
 :test: 4.5 Fenced code blocks (Example 120)
-:sample: |
+:stdin: |
 ~~~
 <
  >
@@ -28,7 +28,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-121
 :test: 4.5 Fenced code blocks (Example 121)
-:sample: |
+:stdin: |
 ``
 foo
 ``
@@ -38,7 +38,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-122
 :test: 4.5 Fenced code blocks (Example 122)
-:sample: |
+:stdin: |
 ```
 aaa
 ~~~
@@ -51,7 +51,7 @@ aaa
 
 # https://spec.commonmark.org/0.31.2/#example-123
 :test: 4.5 Fenced code blocks (Example 123)
-:sample: |
+:stdin: |
 ~~~
 aaa
 ```
@@ -64,7 +64,7 @@ aaa
 
 # https://spec.commonmark.org/0.31.2/#example-124
 :test: 4.5 Fenced code blocks (Example 124)
-:sample: |
+:stdin: |
 ````
 aaa
 ```
@@ -77,7 +77,7 @@ aaa
 
 # https://spec.commonmark.org/0.31.2/#example-125
 :test: 4.5 Fenced code blocks (Example 125)
-:sample: |
+:stdin: |
 ~~~~
 aaa
 ~~~
@@ -90,7 +90,7 @@ aaa
 
 # https://spec.commonmark.org/0.31.2/#example-126
 :test: 4.5 Fenced code blocks (Example 126)
-:sample: |
+:stdin: |
 ```
 :expect: |
 <pre><code></code></pre>
@@ -98,7 +98,7 @@ aaa
 
 # https://spec.commonmark.org/0.31.2/#example-127
 :test: 4.5 Fenced code blocks (Example 127)
-:sample: |
+:stdin: |
 `````
 
 ```
@@ -112,7 +112,7 @@ aaa
 
 # https://spec.commonmark.org/0.31.2/#example-128
 :test: 4.5 Fenced code blocks (Example 128)
-:sample: |
+:stdin: |
 > ```
 > aaa
 
@@ -127,7 +127,7 @@ bbb
 
 # https://spec.commonmark.org/0.31.2/#example-129
 :test: 4.5 Fenced code blocks (Example 129)
-:sample: |
+:stdin: |
 ```
 
   
@@ -140,7 +140,7 @@ bbb
 
 # https://spec.commonmark.org/0.31.2/#example-130
 :test: 4.5 Fenced code blocks (Example 130)
-:sample: |
+:stdin: |
 ```
 ```
 :expect: |
@@ -149,7 +149,7 @@ bbb
 
 # https://spec.commonmark.org/0.31.2/#example-131
 :test: 4.5 Fenced code blocks (Example 131)
-:sample: |
+:stdin: |
  ```
  aaa
 aaa
@@ -162,7 +162,7 @@ aaa
 
 # https://spec.commonmark.org/0.31.2/#example-132
 :test: 4.5 Fenced code blocks (Example 132)
-:sample: |
+:stdin: |
   ```
 aaa
   aaa
@@ -177,7 +177,7 @@ aaa
 
 # https://spec.commonmark.org/0.31.2/#example-133
 :test: 4.5 Fenced code blocks (Example 133)
-:sample: |
+:stdin: |
    ```
    aaa
     aaa
@@ -192,7 +192,7 @@ aaa
 
 # https://spec.commonmark.org/0.31.2/#example-134
 :test: 4.5 Fenced code blocks (Example 134)
-:sample: |
+:stdin: |
     ```
     aaa
     ```
@@ -205,7 +205,7 @@ aaa
 
 # https://spec.commonmark.org/0.31.2/#example-135
 :test: 4.5 Fenced code blocks (Example 135)
-:sample: |
+:stdin: |
 ```
 aaa
   ```
@@ -216,7 +216,7 @@ aaa
 
 # https://spec.commonmark.org/0.31.2/#example-136
 :test: 4.5 Fenced code blocks (Example 136)
-:sample: |
+:stdin: |
    ```
 aaa
   ```
@@ -227,7 +227,7 @@ aaa
 
 # https://spec.commonmark.org/0.31.2/#example-137
 :test: 4.5 Fenced code blocks (Example 137)
-:sample: |
+:stdin: |
 ```
 aaa
     ```
@@ -239,7 +239,7 @@ aaa
 
 # https://spec.commonmark.org/0.31.2/#example-138
 :test: 4.5 Fenced code blocks (Example 138)
-:sample: |
+:stdin: |
 ``` ```
 aaa
 :expect: |
@@ -249,7 +249,7 @@ aaa</p>
 
 # https://spec.commonmark.org/0.31.2/#example-139
 :test: 4.5 Fenced code blocks (Example 139)
-:sample: |
+:stdin: |
 ~~~~~~
 aaa
 ~~~ ~~
@@ -261,7 +261,7 @@ aaa
 
 # https://spec.commonmark.org/0.31.2/#example-140
 :test: 4.5 Fenced code blocks (Example 140)
-:sample: |
+:stdin: |
 foo
 ```
 bar
@@ -276,7 +276,7 @@ baz
 
 # https://spec.commonmark.org/0.31.2/#example-141
 :test: 4.5 Fenced code blocks (Example 141)
-:sample: |
+:stdin: |
 foo
 ---
 ~~~
@@ -292,7 +292,7 @@ bar
 
 # https://spec.commonmark.org/0.31.2/#example-142
 :test: 4.5 Fenced code blocks (Example 142)
-:sample: |
+:stdin: |
 ```ruby
 def foo(x)
   return 3
@@ -307,7 +307,7 @@ end
 
 # https://spec.commonmark.org/0.31.2/#example-143
 :test: 4.5 Fenced code blocks (Example 143)
-:sample: |
+:stdin: |
 ~~~~    ruby startline=3 $%@#$
 def foo(x)
   return 3
@@ -322,7 +322,7 @@ end
 
 # https://spec.commonmark.org/0.31.2/#example-144
 :test: 4.5 Fenced code blocks (Example 144)
-:sample: |
+:stdin: |
 ````;
 ````
 :expect: |
@@ -331,7 +331,7 @@ end
 
 # https://spec.commonmark.org/0.31.2/#example-145
 :test: 4.5 Fenced code blocks (Example 145)
-:sample: |
+:stdin: |
 ``` aa ```
 foo
 :expect: |
@@ -341,7 +341,7 @@ foo</p>
 
 # https://spec.commonmark.org/0.31.2/#example-146
 :test: 4.5 Fenced code blocks (Example 146)
-:sample: |
+:stdin: |
 ~~~ aa ``` ~~~
 foo
 ~~~
@@ -352,7 +352,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-147
 :test: 4.5 Fenced code blocks (Example 147)
-:sample: |
+:stdin: |
 ```
 ``` aaa
 ```

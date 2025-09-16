@@ -2,7 +2,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-148
 :test: 4.6 HTML blocks (Example 148)
-:sample: |
+:stdin: |
 <table><tr><td>
 <pre>
 **Hello**,
@@ -21,7 +21,7 @@ _world_.
 
 # https://spec.commonmark.org/0.31.2/#example-149
 :test: 4.6 HTML blocks (Example 149)
-:sample: |
+:stdin: |
 <table>
   <tr>
     <td>
@@ -44,7 +44,7 @@ okay.
 
 # https://spec.commonmark.org/0.31.2/#example-150
 :test: 4.6 HTML blocks (Example 150)
-:sample: |
+:stdin: |
  <div>
   *hello*
          <foo><a>
@@ -56,7 +56,7 @@ okay.
 
 # https://spec.commonmark.org/0.31.2/#example-151
 :test: 4.6 HTML blocks (Example 151)
-:sample: |
+:stdin: |
 </div>
 *foo*
 :expect: |
@@ -66,7 +66,7 @@ okay.
 
 # https://spec.commonmark.org/0.31.2/#example-152
 :test: 4.6 HTML blocks (Example 152)
-:sample: |
+:stdin: |
 <DIV CLASS="foo">
 
 *Markdown*
@@ -80,7 +80,7 @@ okay.
 
 # https://spec.commonmark.org/0.31.2/#example-153
 :test: 4.6 HTML blocks (Example 153)
-:sample: |
+:stdin: |
 <div id="foo"
   class="bar">
 </div>
@@ -92,7 +92,7 @@ okay.
 
 # https://spec.commonmark.org/0.31.2/#example-154
 :test: 4.6 HTML blocks (Example 154)
-:sample: |
+:stdin: |
 <div id="foo" class="bar
   baz">
 </div>
@@ -104,7 +104,7 @@ okay.
 
 # https://spec.commonmark.org/0.31.2/#example-155
 :test: 4.6 HTML blocks (Example 155)
-:sample: |
+:stdin: |
 <div>
 *foo*
 
@@ -117,7 +117,7 @@ okay.
 
 # https://spec.commonmark.org/0.31.2/#example-156
 :test: 4.6 HTML blocks (Example 156)
-:sample: |
+:stdin: |
 <div id="foo"
 *hi*
 :expect: |
@@ -127,7 +127,7 @@ okay.
 
 # https://spec.commonmark.org/0.31.2/#example-157
 :test: 4.6 HTML blocks (Example 157)
-:sample: |
+:stdin: |
 <div class
 foo
 :expect: |
@@ -137,7 +137,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-158
 :test: 4.6 HTML blocks (Example 158)
-:sample: |
+:stdin: |
 <div *???-&&&-<---
 *foo*
 :expect: |
@@ -147,7 +147,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-159
 :test: 4.6 HTML blocks (Example 159)
-:sample: |
+:stdin: |
 <div><a href="bar">*foo*</a></div>
 :expect: |
 <div><a href="bar">*foo*</a></div>
@@ -155,7 +155,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-160
 :test: 4.6 HTML blocks (Example 160)
-:sample: |
+:stdin: |
 <table><tr><td>
 foo
 </td></tr></table>
@@ -167,7 +167,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-161
 :test: 4.6 HTML blocks (Example 161)
-:sample: |
+:stdin: |
 <div></div>
 ``` c
 int x = 33;
@@ -181,7 +181,7 @@ int x = 33;
 
 # https://spec.commonmark.org/0.31.2/#example-162
 :test: 4.6 HTML blocks (Example 162)
-:sample: |
+:stdin: |
 <a href="foo">
 *bar*
 </a>
@@ -193,7 +193,7 @@ int x = 33;
 
 # https://spec.commonmark.org/0.31.2/#example-163
 :test: 4.6 HTML blocks (Example 163)
-:sample: |
+:stdin: |
 <Warning>
 *bar*
 </Warning>
@@ -205,7 +205,7 @@ int x = 33;
 
 # https://spec.commonmark.org/0.31.2/#example-164
 :test: 4.6 HTML blocks (Example 164)
-:sample: |
+:stdin: |
 <i class="foo">
 *bar*
 </i>
@@ -217,7 +217,7 @@ int x = 33;
 
 # https://spec.commonmark.org/0.31.2/#example-165
 :test: 4.6 HTML blocks (Example 165)
-:sample: |
+:stdin: |
 </ins>
 *bar*
 :expect: |
@@ -227,7 +227,7 @@ int x = 33;
 
 # https://spec.commonmark.org/0.31.2/#example-166
 :test: 4.6 HTML blocks (Example 166)
-:sample: |
+:stdin: |
 <del>
 *foo*
 </del>
@@ -239,7 +239,7 @@ int x = 33;
 
 # https://spec.commonmark.org/0.31.2/#example-167
 :test: 4.6 HTML blocks (Example 167)
-:sample: |
+:stdin: |
 <del>
 
 *foo*
@@ -253,7 +253,7 @@ int x = 33;
 
 # https://spec.commonmark.org/0.31.2/#example-168
 :test: 4.6 HTML blocks (Example 168)
-:sample: |
+:stdin: |
 <del>*foo*</del>
 :expect: |
 <p><del><em>foo</em></del></p>
@@ -261,7 +261,7 @@ int x = 33;
 
 # https://spec.commonmark.org/0.31.2/#example-169
 :test: 4.6 HTML blocks (Example 169)
-:sample: |
+:stdin: |
 <pre language="haskell"><code>
 import Text.HTML.TagSoup
 
@@ -281,7 +281,7 @@ main = print $ parseTags tags
 
 # https://spec.commonmark.org/0.31.2/#example-170
 :test: 4.6 HTML blocks (Example 170)
-:sample: |
+:stdin: |
 <script type="text/javascript">
 // JavaScript example
 
@@ -299,7 +299,7 @@ document.getElementById("demo").innerHTML = "Hello JavaScript!";
 
 # https://spec.commonmark.org/0.31.2/#example-171
 :test: 4.6 HTML blocks (Example 171)
-:sample: |
+:stdin: |
 <textarea>
 
 *foo*
@@ -319,7 +319,7 @@ _bar_
 
 # https://spec.commonmark.org/0.31.2/#example-172
 :test: 4.6 HTML blocks (Example 172)
-:sample: |
+:stdin: |
 <style
   type="text/css">
 h1 {color:red;}
@@ -339,7 +339,7 @@ p {color:blue;}
 
 # https://spec.commonmark.org/0.31.2/#example-173
 :test: 4.6 HTML blocks (Example 173)
-:sample: |
+:stdin: |
 <style
   type="text/css">
 
@@ -353,7 +353,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-174
 :test: 4.6 HTML blocks (Example 174)
-:sample: |
+:stdin: |
 > <div>
 > foo
 
@@ -368,7 +368,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-175
 :test: 4.6 HTML blocks (Example 175)
-:sample: |
+:stdin: |
 - <div>
 - foo
 :expect: |
@@ -382,7 +382,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-176
 :test: 4.6 HTML blocks (Example 176)
-:sample: |
+:stdin: |
 <style>p{color:red;}</style>
 *foo*
 :expect: |
@@ -392,7 +392,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-177
 :test: 4.6 HTML blocks (Example 177)
-:sample: |
+:stdin: |
 <!-- foo -->*bar*
 *baz*
 :expect: |
@@ -402,7 +402,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-178
 :test: 4.6 HTML blocks (Example 178)
-:sample: |
+:stdin: |
 <script>
 foo
 </script>1. *bar*
@@ -414,7 +414,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-179
 :test: 4.6 HTML blocks (Example 179)
-:sample: |
+:stdin: |
 <!-- Foo
 
 bar
@@ -430,7 +430,7 @@ bar
 
 # https://spec.commonmark.org/0.31.2/#example-180
 :test: 4.6 HTML blocks (Example 180)
-:sample: |
+:stdin: |
 <?php
 
   echo '>';
@@ -448,7 +448,7 @@ okay
 
 # https://spec.commonmark.org/0.31.2/#example-181
 :test: 4.6 HTML blocks (Example 181)
-:sample: |
+:stdin: |
 <!DOCTYPE html>
 :expect: |
 <!DOCTYPE html>
@@ -456,7 +456,7 @@ okay
 
 # https://spec.commonmark.org/0.31.2/#example-182
 :test: 4.6 HTML blocks (Example 182)
-:sample: |
+:stdin: |
 <![CDATA[
 function matchwo(a,b)
 {
@@ -488,7 +488,7 @@ function matchwo(a,b)
 
 # https://spec.commonmark.org/0.31.2/#example-183
 :test: 4.6 HTML blocks (Example 183)
-:sample: |
+:stdin: |
   <!-- foo -->
 
     <!-- foo -->
@@ -500,7 +500,7 @@ function matchwo(a,b)
 
 # https://spec.commonmark.org/0.31.2/#example-184
 :test: 4.6 HTML blocks (Example 184)
-:sample: |
+:stdin: |
   <div>
 
     <div>
@@ -512,7 +512,7 @@ function matchwo(a,b)
 
 # https://spec.commonmark.org/0.31.2/#example-185
 :test: 4.6 HTML blocks (Example 185)
-:sample: |
+:stdin: |
 Foo
 <div>
 bar
@@ -526,7 +526,7 @@ bar
 
 # https://spec.commonmark.org/0.31.2/#example-186
 :test: 4.6 HTML blocks (Example 186)
-:sample: |
+:stdin: |
 <div>
 bar
 </div>
@@ -540,7 +540,7 @@ bar
 
 # https://spec.commonmark.org/0.31.2/#example-187
 :test: 4.6 HTML blocks (Example 187)
-:sample: |
+:stdin: |
 Foo
 <a href="bar">
 baz
@@ -552,7 +552,7 @@ baz</p>
 
 # https://spec.commonmark.org/0.31.2/#example-188
 :test: 4.6 HTML blocks (Example 188)
-:sample: |
+:stdin: |
 <div>
 
 *Emphasized* text.
@@ -566,7 +566,7 @@ baz</p>
 
 # https://spec.commonmark.org/0.31.2/#example-189
 :test: 4.6 HTML blocks (Example 189)
-:sample: |
+:stdin: |
 <div>
 *Emphasized* text.
 </div>
@@ -578,7 +578,7 @@ baz</p>
 
 # https://spec.commonmark.org/0.31.2/#example-190
 :test: 4.6 HTML blocks (Example 190)
-:sample: |
+:stdin: |
 <table>
 
 <tr>
@@ -602,7 +602,7 @@ Hi
 
 # https://spec.commonmark.org/0.31.2/#example-191
 :test: 4.6 HTML blocks (Example 191)
-:sample: |
+:stdin: |
 <table>
 
   <tr>

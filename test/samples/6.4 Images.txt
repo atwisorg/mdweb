@@ -2,7 +2,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-572
 :test: 6.4 Images (Example 572)
-:sample: |
+:stdin: |
 ![foo](/url "title")
 :expect: |
 <p><img src="/url" alt="foo" title="title" /></p>
@@ -10,7 +10,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-573
 :test: 6.4 Images (Example 573)
-:sample: |
+:stdin: |
 ![foo *bar*]
 
 [foo *bar*]: train.jpg "train & tracks"
@@ -20,7 +20,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-574
 :test: 6.4 Images (Example 574)
-:sample: |
+:stdin: |
 ![foo ![bar](/url)](/url2)
 :expect: |
 <p><img src="/url2" alt="foo bar" /></p>
@@ -28,7 +28,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-575
 :test: 6.4 Images (Example 575)
-:sample: |
+:stdin: |
 ![foo [bar](/url)](/url2)
 :expect: |
 <p><img src="/url2" alt="foo bar" /></p>
@@ -36,7 +36,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-576
 :test: 6.4 Images (Example 576)
-:sample: |
+:stdin: |
 ![foo *bar*][]
 
 [foo *bar*]: train.jpg "train & tracks"
@@ -46,7 +46,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-577
 :test: 6.4 Images (Example 577)
-:sample: |
+:stdin: |
 ![foo *bar*][foobar]
 
 [FOOBAR]: train.jpg "train & tracks"
@@ -56,7 +56,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-578
 :test: 6.4 Images (Example 578)
-:sample: |
+:stdin: |
 ![foo](train.jpg)
 :expect: |
 <p><img src="train.jpg" alt="foo" /></p>
@@ -64,7 +64,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-579
 :test: 6.4 Images (Example 579)
-:sample: |
+:stdin: |
 My ![foo bar](/path/to/train.jpg  "title"   )
 :expect: |
 <p>My <img src="/path/to/train.jpg" alt="foo bar" title="title" /></p>
@@ -72,7 +72,7 @@ My ![foo bar](/path/to/train.jpg  "title"   )
 
 # https://spec.commonmark.org/0.31.2/#example-580
 :test: 6.4 Images (Example 580)
-:sample: |
+:stdin: |
 ![foo](<url>)
 :expect: |
 <p><img src="url" alt="foo" /></p>
@@ -80,7 +80,7 @@ My ![foo bar](/path/to/train.jpg  "title"   )
 
 # https://spec.commonmark.org/0.31.2/#example-581
 :test: 6.4 Images (Example 581)
-:sample: |
+:stdin: |
 ![](/url)
 :expect: |
 <p><img src="/url" alt="" /></p>
@@ -88,7 +88,7 @@ My ![foo bar](/path/to/train.jpg  "title"   )
 
 # https://spec.commonmark.org/0.31.2/#example-582
 :test: 6.4 Images (Example 582)
-:sample: |
+:stdin: |
 ![foo][bar]
 
 [bar]: /url
@@ -98,7 +98,7 @@ My ![foo bar](/path/to/train.jpg  "title"   )
 
 # https://spec.commonmark.org/0.31.2/#example-583
 :test: 6.4 Images (Example 583)
-:sample: |
+:stdin: |
 ![foo][bar]
 
 [BAR]: /url
@@ -108,7 +108,7 @@ My ![foo bar](/path/to/train.jpg  "title"   )
 
 # https://spec.commonmark.org/0.31.2/#example-584
 :test: 6.4 Images (Example 584)
-:sample: |
+:stdin: |
 ![foo][]
 
 [foo]: /url "title"
@@ -118,7 +118,7 @@ My ![foo bar](/path/to/train.jpg  "title"   )
 
 # https://spec.commonmark.org/0.31.2/#example-585
 :test: 6.4 Images (Example 585)
-:sample: |
+:stdin: |
 ![*foo* bar][]
 
 [*foo* bar]: /url "title"
@@ -128,7 +128,7 @@ My ![foo bar](/path/to/train.jpg  "title"   )
 
 # https://spec.commonmark.org/0.31.2/#example-586
 :test: 6.4 Images (Example 586)
-:sample: |
+:stdin: |
 ![Foo][]
 
 [foo]: /url "title"
@@ -138,7 +138,7 @@ My ![foo bar](/path/to/train.jpg  "title"   )
 
 # https://spec.commonmark.org/0.31.2/#example-587
 :test: 6.4 Images (Example 587)
-:sample: |
+:stdin: |
 ![foo] 
 []
 
@@ -150,7 +150,7 @@ My ![foo bar](/path/to/train.jpg  "title"   )
 
 # https://spec.commonmark.org/0.31.2/#example-588
 :test: 6.4 Images (Example 588)
-:sample: |
+:stdin: |
 ![foo]
 
 [foo]: /url "title"
@@ -160,7 +160,7 @@ My ![foo bar](/path/to/train.jpg  "title"   )
 
 # https://spec.commonmark.org/0.31.2/#example-589
 :test: 6.4 Images (Example 589)
-:sample: |
+:stdin: |
 ![*foo* bar]
 
 [*foo* bar]: /url "title"
@@ -170,7 +170,7 @@ My ![foo bar](/path/to/train.jpg  "title"   )
 
 # https://spec.commonmark.org/0.31.2/#example-590
 :test: 6.4 Images (Example 590)
-:sample: |
+:stdin: |
 ![[foo]]
 
 [[foo]]: /url "title"
@@ -181,7 +181,7 @@ My ![foo bar](/path/to/train.jpg  "title"   )
 
 # https://spec.commonmark.org/0.31.2/#example-591
 :test: 6.4 Images (Example 591)
-:sample: |
+:stdin: |
 ![Foo]
 
 [foo]: /url "title"
@@ -191,7 +191,7 @@ My ![foo bar](/path/to/train.jpg  "title"   )
 
 # https://spec.commonmark.org/0.31.2/#example-592
 :test: 6.4 Images (Example 592)
-:sample: |
+:stdin: |
 !\[foo]
 
 [foo]: /url "title"
@@ -201,7 +201,7 @@ My ![foo bar](/path/to/train.jpg  "title"   )
 
 # https://spec.commonmark.org/0.31.2/#example-593
 :test: 6.4 Images (Example 593)
-:sample: |
+:stdin: |
 \![foo]
 
 [foo]: /url "title"

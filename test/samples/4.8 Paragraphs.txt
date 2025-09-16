@@ -2,7 +2,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-219
 :test: 4.8 Paragraphs (Example 219)
-:sample: |
+:stdin: |
 aaa
 
 bbb
@@ -13,7 +13,7 @@ bbb
 
 # https://spec.commonmark.org/0.31.2/#example-220
 :test: 4.8 Paragraphs (Example 220)
-:sample: |
+:stdin: |
 aaa
 bbb
 
@@ -28,7 +28,7 @@ ddd</p>
 
 # https://spec.commonmark.org/0.31.2/#example-221
 :test: 4.8 Paragraphs (Example 221)
-:sample: |
+:stdin: |
 aaa
 
 
@@ -40,7 +40,7 @@ bbb
 
 # https://spec.commonmark.org/0.31.2/#example-222
 :test: 4.8 Paragraphs (Example 222)
-:sample: |
+:stdin: |
   aaa
  bbb
 :expect: |
@@ -50,7 +50,7 @@ bbb</p>
 
 # https://spec.commonmark.org/0.31.2/#example-223
 :test: 4.8 Paragraphs (Example 223)
-:sample: |
+:stdin: |
 aaa
              bbb
                                        ccc
@@ -62,7 +62,7 @@ ccc</p>
 
 # https://spec.commonmark.org/0.31.2/#example-224
 :test: 4.8 Paragraphs (Example 224)
-:sample: |
+:stdin: |
    aaa
 bbb
 :expect: |
@@ -72,7 +72,7 @@ bbb</p>
 
 # https://spec.commonmark.org/0.31.2/#example-225
 :test: 4.8 Paragraphs (Example 225)
-:sample: |
+:stdin: |
     aaa
 bbb
 :expect: |
@@ -83,7 +83,7 @@ bbb
 
 # https://spec.commonmark.org/0.31.2/#example-226
 :test: 4.8 Paragraphs (Example 226)
-:sample: |
+:stdin: |
 aaa     
 bbb     
 :expect: |

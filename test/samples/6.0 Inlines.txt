@@ -2,7 +2,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-327
 :test: 6 Inlines (Example 327)
-:sample: |
+:stdin: |
 `hi`lo`
 :expect: |
 <p><code>hi</code>lo`</p>

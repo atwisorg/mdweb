@@ -2,7 +2,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-482
 :test: 6.3 Links (Example 482)
-:sample: |
+:stdin: |
 [link](/uri "title")
 :expect: |
 <p><a href="/uri" title="title">link</a></p>
@@ -10,7 +10,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-483
 :test: 6.3 Links (Example 483)
-:sample: |
+:stdin: |
 [link](/uri)
 :expect: |
 <p><a href="/uri">link</a></p>
@@ -18,7 +18,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-484
 :test: 6.3 Links (Example 484)
-:sample: |
+:stdin: |
 [](./target.md)
 :expect: |
 <p><a href="./target.md"></a></p>
@@ -26,7 +26,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-485
 :test: 6.3 Links (Example 485)
-:sample: |
+:stdin: |
 [link]()
 :expect: |
 <p><a href="">link</a></p>
@@ -34,7 +34,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-486
 :test: 6.3 Links (Example 486)
-:sample: |
+:stdin: |
 [link](<>)
 :expect: |
 <p><a href="">link</a></p>
@@ -42,7 +42,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-487
 :test: 6.3 Links (Example 487)
-:sample: |
+:stdin: |
 []()
 :expect: |
 <p><a href=""></a></p>
@@ -50,7 +50,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-488
 :test: 6.3 Links (Example 488)
-:sample: |
+:stdin: |
 [link](/my uri)
 :expect: |
 <p>[link](/my uri)</p>
@@ -58,7 +58,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-489
 :test: 6.3 Links (Example 489)
-:sample: |
+:stdin: |
 [link](</my uri>)
 :expect: |
 <p><a href="/my%20uri">link</a></p>
@@ -66,7 +66,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-490
 :test: 6.3 Links (Example 490)
-:sample: |
+:stdin: |
 [link](foo
 bar)
 :expect: |
@@ -76,7 +76,7 @@ bar)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-491
 :test: 6.3 Links (Example 491)
-:sample: |
+:stdin: |
 [link](<foo
 bar>)
 :expect: |
@@ -86,7 +86,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-492
 :test: 6.3 Links (Example 492)
-:sample: |
+:stdin: |
 [a](<b)c>)
 :expect: |
 <p><a href="b)c">a</a></p>
@@ -94,7 +94,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-493
 :test: 6.3 Links (Example 493)
-:sample: |
+:stdin: |
 [link](<foo\>)
 :expect: |
 <p>[link](&lt;foo&gt;)</p>
@@ -102,7 +102,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-494
 :test: 6.3 Links (Example 494)
-:sample: |
+:stdin: |
 [a](<b)c
 [a](<b)c>
 [a](<b>c)
@@ -114,7 +114,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-495
 :test: 6.3 Links (Example 495)
-:sample: |
+:stdin: |
 [link](\(foo\))
 :expect: |
 <p><a href="(foo)">link</a></p>
@@ -122,7 +122,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-496
 :test: 6.3 Links (Example 496)
-:sample: |
+:stdin: |
 [link](foo(and(bar)))
 :expect: |
 <p><a href="foo(and(bar))">link</a></p>
@@ -130,7 +130,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-497
 :test: 6.3 Links (Example 497)
-:sample: |
+:stdin: |
 [link](foo(and(bar))
 :expect: |
 <p>[link](foo(and(bar))</p>
@@ -138,7 +138,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-498
 :test: 6.3 Links (Example 498)
-:sample: |
+:stdin: |
 [link](foo\(and\(bar\))
 :expect: |
 <p><a href="foo(and(bar)">link</a></p>
@@ -146,7 +146,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-499
 :test: 6.3 Links (Example 499)
-:sample: |
+:stdin: |
 [link](<foo(and(bar)>)
 :expect: |
 <p><a href="foo(and(bar)">link</a></p>
@@ -154,7 +154,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-500
 :test: 6.3 Links (Example 500)
-:sample: |
+:stdin: |
 [link](foo\)\:)
 :expect: |
 <p><a href="foo):">link</a></p>
@@ -162,7 +162,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-501
 :test: 6.3 Links (Example 501)
-:sample: |
+:stdin: |
 [link](#fragment)
 
 [link](https://example.com#fragment)
@@ -176,7 +176,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-502
 :test: 6.3 Links (Example 502)
-:sample: |
+:stdin: |
 [link](foo\bar)
 :expect: |
 <p><a href="foo%5Cbar">link</a></p>
@@ -184,7 +184,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-503
 :test: 6.3 Links (Example 503)
-:sample: |
+:stdin: |
 [link](foo%20b&auml;)
 :expect: |
 <p><a href="foo%20b%C3%A4">link</a></p>
@@ -192,7 +192,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-504
 :test: 6.3 Links (Example 504)
-:sample: |
+:stdin: |
 [link]("title")
 :expect: |
 <p><a href="%22title%22">link</a></p>
@@ -200,7 +200,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-505
 :test: 6.3 Links (Example 505)
-:sample: |
+:stdin: |
 [link](/url "title")
 [link](/url 'title')
 [link](/url (title))
@@ -212,7 +212,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-506
 :test: 6.3 Links (Example 506)
-:sample: |
+:stdin: |
 [link](/url "title \"&quot;")
 :expect: |
 <p><a href="/url" title="title &quot;&quot;">link</a></p>
@@ -220,7 +220,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-507
 :test: 6.3 Links (Example 507)
-:sample: |
+:stdin: |
 [link](/url "title")
 :expect: |
 <p><a href="/url%C2%A0%22title%22">link</a></p>
@@ -228,7 +228,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-508
 :test: 6.3 Links (Example 508)
-:sample: |
+:stdin: |
 [link](/url "title "and" title")
 :expect: |
 <p>[link](/url &quot;title &quot;and&quot; title&quot;)</p>
@@ -236,7 +236,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-509
 :test: 6.3 Links (Example 509)
-:sample: |
+:stdin: |
 [link](/url 'title "and" title')
 :expect: |
 <p><a href="/url" title="title &quot;and&quot; title">link</a></p>
@@ -244,7 +244,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-510
 :test: 6.3 Links (Example 510)
-:sample: |
+:stdin: |
 [link](   /uri
   "title"  )
 :expect: |
@@ -253,7 +253,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-511
 :test: 6.3 Links (Example 511)
-:sample: |
+:stdin: |
 [link] (/uri)
 :expect: |
 <p>[link] (/uri)</p>
@@ -261,7 +261,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-512
 :test: 6.3 Links (Example 512)
-:sample: |
+:stdin: |
 [link [foo [bar]]](/uri)
 :expect: |
 <p><a href="/uri">link [foo [bar]]</a></p>
@@ -269,7 +269,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-513
 :test: 6.3 Links (Example 513)
-:sample: |
+:stdin: |
 [link] bar](/uri)
 :expect: |
 <p>[link] bar](/uri)</p>
@@ -277,7 +277,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-514
 :test: 6.3 Links (Example 514)
-:sample: |
+:stdin: |
 [link [bar](/uri)
 :expect: |
 <p>[link <a href="/uri">bar</a></p>
@@ -285,7 +285,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-515
 :test: 6.3 Links (Example 515)
-:sample: |
+:stdin: |
 [link \[bar](/uri)
 :expect: |
 <p><a href="/uri">link [bar</a></p>
@@ -293,7 +293,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-516
 :test: 6.3 Links (Example 516)
-:sample: |
+:stdin: |
 [link *foo **bar** `#`*](/uri)
 :expect: |
 <p><a href="/uri">link <em>foo <strong>bar</strong> <code>#</code></em></a></p>
@@ -301,7 +301,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-517
 :test: 6.3 Links (Example 517)
-:sample: |
+:stdin: |
 [![moon](moon.jpg)](/uri)
 :expect: |
 <p><a href="/uri"><img src="moon.jpg" alt="moon" /></a></p>
@@ -309,7 +309,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-518
 :test: 6.3 Links (Example 518)
-:sample: |
+:stdin: |
 [foo [bar](/uri)](/uri)
 :expect: |
 <p>[foo <a href="/uri">bar</a>](/uri)</p>
@@ -317,7 +317,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-519
 :test: 6.3 Links (Example 519)
-:sample: |
+:stdin: |
 [foo *[bar [baz](/uri)](/uri)*](/uri)
 :expect: |
 <p>[foo <em>[bar <a href="/uri">baz</a>](/uri)</em>](/uri)</p>
@@ -325,7 +325,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-520
 :test: 6.3 Links (Example 520)
-:sample: |
+:stdin: |
 ![[[foo](uri1)](uri2)](uri3)
 :expect: |
 <p><img src="uri3" alt="[foo](uri2)" /></p>
@@ -333,7 +333,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-521
 :test: 6.3 Links (Example 521)
-:sample: |
+:stdin: |
 *[foo*](/uri)
 :expect: |
 <p>*<a href="/uri">foo*</a></p>
@@ -341,7 +341,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-522
 :test: 6.3 Links (Example 522)
-:sample: |
+:stdin: |
 [foo *bar](baz*)
 :expect: |
 <p><a href="baz*">foo *bar</a></p>
@@ -349,7 +349,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-523
 :test: 6.3 Links (Example 523)
-:sample: |
+:stdin: |
 *foo [bar* baz]
 :expect: |
 <p><em>foo [bar</em> baz]</p>
@@ -357,7 +357,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-524
 :test: 6.3 Links (Example 524)
-:sample: |
+:stdin: |
 [foo <bar attr="](baz)">
 :expect: |
 <p>[foo <bar attr="](baz)"></p>
@@ -365,7 +365,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-525
 :test: 6.3 Links (Example 525)
-:sample: |
+:stdin: |
 [foo`](/uri)`
 :expect: |
 <p>[foo<code>](/uri)</code></p>
@@ -373,7 +373,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-526
 :test: 6.3 Links (Example 526)
-:sample: |
+:stdin: |
 [foo<https://example.com/?search=](uri)>
 :expect: |
 <p>[foo<a href="https://example.com/?search=%5D(uri)">https://example.com/?search=](uri)</a></p>
@@ -381,7 +381,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-527
 :test: 6.3 Links (Example 527)
-:sample: |
+:stdin: |
 [foo][bar]
 
 [bar]: /url "title"
@@ -391,7 +391,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-528
 :test: 6.3 Links (Example 528)
-:sample: |
+:stdin: |
 [link [foo [bar]]][ref]
 
 [ref]: /uri
@@ -401,7 +401,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-529
 :test: 6.3 Links (Example 529)
-:sample: |
+:stdin: |
 [link \[bar][ref]
 
 [ref]: /uri
@@ -411,7 +411,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-530
 :test: 6.3 Links (Example 530)
-:sample: |
+:stdin: |
 [link *foo **bar** `#`*][ref]
 
 [ref]: /uri
@@ -421,7 +421,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-531
 :test: 6.3 Links (Example 531)
-:sample: |
+:stdin: |
 [![moon](moon.jpg)][ref]
 
 [ref]: /uri
@@ -431,7 +431,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-532
 :test: 6.3 Links (Example 532)
-:sample: |
+:stdin: |
 [foo [bar](/uri)][ref]
 
 [ref]: /uri
@@ -441,7 +441,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-533
 :test: 6.3 Links (Example 533)
-:sample: |
+:stdin: |
 [foo *bar [baz][ref]*][ref]
 
 [ref]: /uri
@@ -451,7 +451,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-534
 :test: 6.3 Links (Example 534)
-:sample: |
+:stdin: |
 *[foo*][ref]
 
 [ref]: /uri
@@ -461,7 +461,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-535
 :test: 6.3 Links (Example 535)
-:sample: |
+:stdin: |
 [foo *bar][ref]*
 
 [ref]: /uri
@@ -471,7 +471,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-536
 :test: 6.3 Links (Example 536)
-:sample: |
+:stdin: |
 [foo <bar attr="][ref]">
 
 [ref]: /uri
@@ -481,7 +481,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-537
 :test: 6.3 Links (Example 537)
-:sample: |
+:stdin: |
 [foo`][ref]`
 
 [ref]: /uri
@@ -491,7 +491,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-538
 :test: 6.3 Links (Example 538)
-:sample: |
+:stdin: |
 [foo<https://example.com/?search=][ref]>
 
 [ref]: /uri
@@ -501,7 +501,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-539
 :test: 6.3 Links (Example 539)
-:sample: |
+:stdin: |
 [foo][BaR]
 
 [bar]: /url "title"
@@ -511,7 +511,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-540
 :test: 6.3 Links (Example 540)
-:sample: |
+:stdin: |
 [ẞ]
 
 [SS]: /url
@@ -521,7 +521,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-541
 :test: 6.3 Links (Example 541)
-:sample: |
+:stdin: |
 [Foo
   bar]: /url
 
@@ -532,7 +532,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-542
 :test: 6.3 Links (Example 542)
-:sample: |
+:stdin: |
 [foo] [bar]
 
 [bar]: /url "title"
@@ -542,7 +542,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-543
 :test: 6.3 Links (Example 543)
-:sample: |
+:stdin: |
 [foo]
 [bar]
 
@@ -554,7 +554,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-544
 :test: 6.3 Links (Example 544)
-:sample: |
+:stdin: |
 [foo]: /url1
 
 [foo]: /url2
@@ -566,7 +566,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-545
 :test: 6.3 Links (Example 545)
-:sample: |
+:stdin: |
 [bar][foo\!]
 
 [foo!]: /url
@@ -576,7 +576,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-546
 :test: 6.3 Links (Example 546)
-:sample: |
+:stdin: |
 [foo][ref[]
 
 [ref[]: /uri
@@ -587,7 +587,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-547
 :test: 6.3 Links (Example 547)
-:sample: |
+:stdin: |
 [foo][ref[bar]]
 
 [ref[bar]]: /uri
@@ -598,7 +598,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-548
 :test: 6.3 Links (Example 548)
-:sample: |
+:stdin: |
 [[[foo]]]
 
 [[[foo]]]: /url
@@ -609,7 +609,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-549
 :test: 6.3 Links (Example 549)
-:sample: |
+:stdin: |
 [foo][ref\[]
 
 [ref\[]: /uri
@@ -619,7 +619,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-550
 :test: 6.3 Links (Example 550)
-:sample: |
+:stdin: |
 [bar\\]: /uri
 
 [bar\\]
@@ -629,7 +629,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-551
 :test: 6.3 Links (Example 551)
-:sample: |
+:stdin: |
 []
 
 []: /uri
@@ -640,7 +640,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-552
 :test: 6.3 Links (Example 552)
-:sample: |
+:stdin: |
 [
  ]
 
@@ -655,7 +655,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-553
 :test: 6.3 Links (Example 553)
-:sample: |
+:stdin: |
 [foo][]
 
 [foo]: /url "title"
@@ -665,7 +665,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-554
 :test: 6.3 Links (Example 554)
-:sample: |
+:stdin: |
 [*foo* bar][]
 
 [*foo* bar]: /url "title"
@@ -675,7 +675,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-555
 :test: 6.3 Links (Example 555)
-:sample: |
+:stdin: |
 [Foo][]
 
 [foo]: /url "title"
@@ -685,7 +685,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-556
 :test: 6.3 Links (Example 556)
-:sample: |
+:stdin: |
 [foo] 
 []
 
@@ -697,7 +697,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-557
 :test: 6.3 Links (Example 557)
-:sample: |
+:stdin: |
 [foo]
 
 [foo]: /url "title"
@@ -707,7 +707,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-558
 :test: 6.3 Links (Example 558)
-:sample: |
+:stdin: |
 [*foo* bar]
 
 [*foo* bar]: /url "title"
@@ -717,7 +717,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-559
 :test: 6.3 Links (Example 559)
-:sample: |
+:stdin: |
 [[*foo* bar]]
 
 [*foo* bar]: /url "title"
@@ -727,7 +727,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-560
 :test: 6.3 Links (Example 560)
-:sample: |
+:stdin: |
 [[bar [foo]
 
 [foo]: /url
@@ -737,7 +737,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-561
 :test: 6.3 Links (Example 561)
-:sample: |
+:stdin: |
 [Foo]
 
 [foo]: /url "title"
@@ -747,7 +747,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-562
 :test: 6.3 Links (Example 562)
-:sample: |
+:stdin: |
 [foo] bar
 
 [foo]: /url
@@ -757,7 +757,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-563
 :test: 6.3 Links (Example 563)
-:sample: |
+:stdin: |
 \[foo]
 
 [foo]: /url "title"
@@ -767,7 +767,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-564
 :test: 6.3 Links (Example 564)
-:sample: |
+:stdin: |
 [foo*]: /url
 
 *[foo*]
@@ -777,7 +777,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-565
 :test: 6.3 Links (Example 565)
-:sample: |
+:stdin: |
 [foo][bar]
 
 [foo]: /url1
@@ -788,7 +788,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-566
 :test: 6.3 Links (Example 566)
-:sample: |
+:stdin: |
 [foo][]
 
 [foo]: /url1
@@ -798,7 +798,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-567
 :test: 6.3 Links (Example 567)
-:sample: |
+:stdin: |
 [foo]()
 
 [foo]: /url1
@@ -808,7 +808,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-568
 :test: 6.3 Links (Example 568)
-:sample: |
+:stdin: |
 [foo](not a link)
 
 [foo]: /url1
@@ -818,7 +818,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-569
 :test: 6.3 Links (Example 569)
-:sample: |
+:stdin: |
 [foo][bar][baz]
 
 [baz]: /url
@@ -828,7 +828,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-570
 :test: 6.3 Links (Example 570)
-:sample: |
+:stdin: |
 [foo][bar][baz]
 
 [baz]: /url1
@@ -839,7 +839,7 @@ bar>)</p>
 
 # https://spec.commonmark.org/0.31.2/#example-571
 :test: 6.3 Links (Example 571)
-:sample: |
+:stdin: |
 [foo][bar][baz]
 
 [baz]: /url1

@@ -2,7 +2,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-228
 :test: 5.1 Block quotes (Example 228)
-:sample: |
+:stdin: |
 > # Foo
 > bar
 > baz
@@ -16,7 +16,7 @@ baz</p>
 
 # https://spec.commonmark.org/0.31.2/#example-229
 :test: 5.1 Block quotes (Example 229)
-:sample: |
+:stdin: |
 ># Foo
 >bar
 > baz
@@ -30,7 +30,7 @@ baz</p>
 
 # https://spec.commonmark.org/0.31.2/#example-230
 :test: 5.1 Block quotes (Example 230)
-:sample: |
+:stdin: |
    > # Foo
    > bar
  > baz
@@ -44,7 +44,7 @@ baz</p>
 
 # https://spec.commonmark.org/0.31.2/#example-231
 :test: 5.1 Block quotes (Example 231)
-:sample: |
+:stdin: |
     > # Foo
     > bar
     > baz
@@ -57,7 +57,7 @@ baz</p>
 
 # https://spec.commonmark.org/0.31.2/#example-232
 :test: 5.1 Block quotes (Example 232)
-:sample: |
+:stdin: |
 > # Foo
 > bar
 baz
@@ -71,7 +71,7 @@ baz</p>
 
 # https://spec.commonmark.org/0.31.2/#example-233
 :test: 5.1 Block quotes (Example 233)
-:sample: |
+:stdin: |
 > bar
 baz
 > foo
@@ -85,7 +85,7 @@ foo</p>
 
 # https://spec.commonmark.org/0.31.2/#example-234
 :test: 5.1 Block quotes (Example 234)
-:sample: |
+:stdin: |
 > foo
 ---
 :expect: |
@@ -97,7 +97,7 @@ foo</p>
 
 # https://spec.commonmark.org/0.31.2/#example-235
 :test: 5.1 Block quotes (Example 235)
-:sample: |
+:stdin: |
 > - foo
 - bar
 :expect: |
@@ -113,7 +113,7 @@ foo</p>
 
 # https://spec.commonmark.org/0.31.2/#example-236
 :test: 5.1 Block quotes (Example 236)
-:sample: |
+:stdin: |
 >     foo
     bar
 :expect: |
@@ -127,7 +127,7 @@ foo</p>
 
 # https://spec.commonmark.org/0.31.2/#example-237
 :test: 5.1 Block quotes (Example 237)
-:sample: |
+:stdin: |
 > ```
 foo
 ```
@@ -141,7 +141,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-238
 :test: 5.1 Block quotes (Example 238)
-:sample: |
+:stdin: |
 > foo
     - bar
 :expect: |
@@ -153,7 +153,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-239
 :test: 5.1 Block quotes (Example 239)
-:sample: |
+:stdin: |
 >
 :expect: |
 <blockquote>
@@ -162,7 +162,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-240
 :test: 5.1 Block quotes (Example 240)
-:sample: |
+:stdin: |
 >
 >  
 > 
@@ -173,7 +173,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-241
 :test: 5.1 Block quotes (Example 241)
-:sample: |
+:stdin: |
 >
 > foo
 >  
@@ -185,7 +185,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-242
 :test: 5.1 Block quotes (Example 242)
-:sample: |
+:stdin: |
 > foo
 
 > bar
@@ -200,7 +200,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-243
 :test: 5.1 Block quotes (Example 243)
-:sample: |
+:stdin: |
 > foo
 > bar
 :expect: |
@@ -212,7 +212,7 @@ bar</p>
 
 # https://spec.commonmark.org/0.31.2/#example-244
 :test: 5.1 Block quotes (Example 244)
-:sample: |
+:stdin: |
 > foo
 >
 > bar
@@ -225,7 +225,7 @@ bar</p>
 
 # https://spec.commonmark.org/0.31.2/#example-245
 :test: 5.1 Block quotes (Example 245)
-:sample: |
+:stdin: |
 foo
 > bar
 :expect: |
@@ -237,7 +237,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-246
 :test: 5.1 Block quotes (Example 246)
-:sample: |
+:stdin: |
 > aaa
 ***
 > bbb
@@ -253,7 +253,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-247
 :test: 5.1 Block quotes (Example 247)
-:sample: |
+:stdin: |
 > bar
 baz
 :expect: |
@@ -265,7 +265,7 @@ baz</p>
 
 # https://spec.commonmark.org/0.31.2/#example-248
 :test: 5.1 Block quotes (Example 248)
-:sample: |
+:stdin: |
 > bar
 
 baz
@@ -278,7 +278,7 @@ baz
 
 # https://spec.commonmark.org/0.31.2/#example-249
 :test: 5.1 Block quotes (Example 249)
-:sample: |
+:stdin: |
 > bar
 >
 baz
@@ -291,7 +291,7 @@ baz
 
 # https://spec.commonmark.org/0.31.2/#example-250
 :test: 5.1 Block quotes (Example 250)
-:sample: |
+:stdin: |
 > > > foo
 bar
 :expect: |
@@ -307,7 +307,7 @@ bar</p>
 
 # https://spec.commonmark.org/0.31.2/#example-251
 :test: 5.1 Block quotes (Example 251)
-:sample: |
+:stdin: |
 >>> foo
 > bar
 >>baz
@@ -325,7 +325,7 @@ baz</p>
 
 # https://spec.commonmark.org/0.31.2/#example-252
 :test: 5.1 Block quotes (Example 252)
-:sample: |
+:stdin: |
 >     code
 
 >    not code

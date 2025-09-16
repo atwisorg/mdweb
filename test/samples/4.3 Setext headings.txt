@@ -2,7 +2,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-80
 :test: 4.3 Setext headings (Example 80)
-:sample: |
+:stdin: |
 Foo *bar*
 =========
 
@@ -15,7 +15,7 @@ Foo *bar*
 
 # https://spec.commonmark.org/0.31.2/#example-81
 :test: 4.3 Setext headings (Example 81)
-:sample: |
+:stdin: |
 Foo *bar
 baz*
 ====
@@ -26,7 +26,7 @@ baz</em></h1>
 
 # https://spec.commonmark.org/0.31.2/#example-82
 :test: 4.3 Setext headings (Example 82)
-:sample: |
+:stdin: |
   Foo *bar
 baz*	
 ====
@@ -37,7 +37,7 @@ baz</em></h1>
 
 # https://spec.commonmark.org/0.31.2/#example-83
 :test: 4.3 Setext headings (Example 83)
-:sample: |
+:stdin: |
 Foo
 -------------------------
 
@@ -50,7 +50,7 @@ Foo
 
 # https://spec.commonmark.org/0.31.2/#example-84
 :test: 4.3 Setext headings (Example 84)
-:sample: |
+:stdin: |
    Foo
 ---
 
@@ -67,7 +67,7 @@ Foo
 
 # https://spec.commonmark.org/0.31.2/#example-85
 :test: 4.3 Setext headings (Example 85)
-:sample: |
+:stdin: |
     Foo
     ---
 
@@ -84,7 +84,7 @@ Foo
 
 # https://spec.commonmark.org/0.31.2/#example-86
 :test: 4.3 Setext headings (Example 86)
-:sample: |
+:stdin: |
 Foo
    ----      
 :expect: |
@@ -93,7 +93,7 @@ Foo
 
 # https://spec.commonmark.org/0.31.2/#example-87
 :test: 4.3 Setext headings (Example 87)
-:sample: |
+:stdin: |
 Foo
     ---
 :expect: |
@@ -103,7 +103,7 @@ Foo
 
 # https://spec.commonmark.org/0.31.2/#example-88
 :test: 4.3 Setext headings (Example 88)
-:sample: |
+:stdin: |
 Foo
 = =
 
@@ -118,7 +118,7 @@ Foo
 
 # https://spec.commonmark.org/0.31.2/#example-89
 :test: 4.3 Setext headings (Example 89)
-:sample: |
+:stdin: |
 Foo  
 -----
 :expect: |
@@ -127,7 +127,7 @@ Foo
 
 # https://spec.commonmark.org/0.31.2/#example-90
 :test: 4.3 Setext headings (Example 90)
-:sample: |
+:stdin: |
 Foo\
 ----
 :expect: |
@@ -136,7 +136,7 @@ Foo\
 
 # https://spec.commonmark.org/0.31.2/#example-91
 :test: 4.3 Setext headings (Example 91)
-:sample: |
+:stdin: |
 `Foo
 ----
 `
@@ -153,7 +153,7 @@ of dashes"/>
 
 # https://spec.commonmark.org/0.31.2/#example-92
 :test: 4.3 Setext headings (Example 92)
-:sample: |
+:stdin: |
 > Foo
 ---
 :expect: |
@@ -165,7 +165,7 @@ of dashes"/>
 
 # https://spec.commonmark.org/0.31.2/#example-93
 :test: 4.3 Setext headings (Example 93)
-:sample: |
+:stdin: |
 > foo
 bar
 ===
@@ -179,7 +179,7 @@ bar
 
 # https://spec.commonmark.org/0.31.2/#example-94
 :test: 4.3 Setext headings (Example 94)
-:sample: |
+:stdin: |
 - Foo
 ---
 :expect: |
@@ -191,7 +191,7 @@ bar
 
 # https://spec.commonmark.org/0.31.2/#example-95
 :test: 4.3 Setext headings (Example 95)
-:sample: |
+:stdin: |
 Foo
 Bar
 ---
@@ -202,7 +202,7 @@ Bar</h2>
 
 # https://spec.commonmark.org/0.31.2/#example-96
 :test: 4.3 Setext headings (Example 96)
-:sample: |
+:stdin: |
 ---
 Foo
 ---
@@ -218,7 +218,7 @@ Baz
 
 # https://spec.commonmark.org/0.31.2/#example-97
 :test: 4.3 Setext headings (Example 97)
-:sample: |
+:stdin: |
 
 ====
 :expect: |
@@ -227,7 +227,7 @@ Baz
 
 # https://spec.commonmark.org/0.31.2/#example-98
 :test: 4.3 Setext headings (Example 98)
-:sample: |
+:stdin: |
 ---
 ---
 :expect: |
@@ -237,7 +237,7 @@ Baz
 
 # https://spec.commonmark.org/0.31.2/#example-99
 :test: 4.3 Setext headings (Example 99)
-:sample: |
+:stdin: |
 - foo
 -----
 :expect: |
@@ -249,7 +249,7 @@ Baz
 
 # https://spec.commonmark.org/0.31.2/#example-100
 :test: 4.3 Setext headings (Example 100)
-:sample: |
+:stdin: |
     foo
 ---
 :expect: |
@@ -260,7 +260,7 @@ Baz
 
 # https://spec.commonmark.org/0.31.2/#example-101
 :test: 4.3 Setext headings (Example 101)
-:sample: |
+:stdin: |
 > foo
 -----
 :expect: |
@@ -272,7 +272,7 @@ Baz
 
 # https://spec.commonmark.org/0.31.2/#example-102
 :test: 4.3 Setext headings (Example 102)
-:sample: |
+:stdin: |
 \> foo
 ------
 :expect: |
@@ -281,7 +281,7 @@ Baz
 
 # https://spec.commonmark.org/0.31.2/#example-103
 :test: 4.3 Setext headings (Example 103)
-:sample: |
+:stdin: |
 Foo
 
 bar
@@ -295,7 +295,7 @@ baz
 
 # https://spec.commonmark.org/0.31.2/#example-104
 :test: 4.3 Setext headings (Example 104)
-:sample: |
+:stdin: |
 Foo
 bar
 
@@ -311,7 +311,7 @@ bar</p>
 
 # https://spec.commonmark.org/0.31.2/#example-105
 :test: 4.3 Setext headings (Example 105)
-:sample: |
+:stdin: |
 Foo
 bar
 * * *
@@ -325,7 +325,7 @@ bar</p>
 
 # https://spec.commonmark.org/0.31.2/#example-106
 :test: 4.3 Setext headings (Example 106)
-:sample: |
+:stdin: |
 Foo
 bar
 \---

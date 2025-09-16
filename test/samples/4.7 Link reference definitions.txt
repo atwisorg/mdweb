@@ -2,7 +2,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-192
 :test: 4.7 Link reference definitions (Example 192)
-:sample: |
+:stdin: |
 [foo]: /url "title"
 
 [foo]
@@ -12,7 +12,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-193
 :test: 4.7 Link reference definitions (Example 193)
-:sample: |
+:stdin: |
    [foo]: 
       /url  
            'the title'  
@@ -24,7 +24,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-194
 :test: 4.7 Link reference definitions (Example 194)
-:sample: |
+:stdin: |
 [Foo*bar\]]:my_(url) 'title (with parens)'
 
 [Foo*bar\]]
@@ -34,7 +34,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-195
 :test: 4.7 Link reference definitions (Example 195)
-:sample: |
+:stdin: |
 [Foo bar]:
 <my url>
 'title'
@@ -46,7 +46,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-196
 :test: 4.7 Link reference definitions (Example 196)
-:sample: |
+:stdin: |
 [foo]: /url '
 title
 line1
@@ -64,7 +64,7 @@ line2
 
 # https://spec.commonmark.org/0.31.2/#example-197
 :test: 4.7 Link reference definitions (Example 197)
-:sample: |
+:stdin: |
 [foo]: /url 'title
 
 with blank line'
@@ -78,7 +78,7 @@ with blank line'
 
 # https://spec.commonmark.org/0.31.2/#example-198
 :test: 4.7 Link reference definitions (Example 198)
-:sample: |
+:stdin: |
 [foo]:
 /url
 
@@ -89,7 +89,7 @@ with blank line'
 
 # https://spec.commonmark.org/0.31.2/#example-199
 :test: 4.7 Link reference definitions (Example 199)
-:sample: |
+:stdin: |
 [foo]:
 
 [foo]
@@ -100,7 +100,7 @@ with blank line'
 
 # https://spec.commonmark.org/0.31.2/#example-200
 :test: 4.7 Link reference definitions (Example 200)
-:sample: |
+:stdin: |
 [foo]: <>
 
 [foo]
@@ -110,7 +110,7 @@ with blank line'
 
 # https://spec.commonmark.org/0.31.2/#example-201
 :test: 4.7 Link reference definitions (Example 201)
-:sample: |
+:stdin: |
 [foo]: <bar>(baz)
 
 [foo]
@@ -121,7 +121,7 @@ with blank line'
 
 # https://spec.commonmark.org/0.31.2/#example-202
 :test: 4.7 Link reference definitions (Example 202)
-:sample: |
+:stdin: |
 [foo]: /url\bar\*baz "foo\"bar\baz"
 
 [foo]
@@ -131,7 +131,7 @@ with blank line'
 
 # https://spec.commonmark.org/0.31.2/#example-203
 :test: 4.7 Link reference definitions (Example 203)
-:sample: |
+:stdin: |
 [foo]
 
 [foo]: url
@@ -141,7 +141,7 @@ with blank line'
 
 # https://spec.commonmark.org/0.31.2/#example-204
 :test: 4.7 Link reference definitions (Example 204)
-:sample: |
+:stdin: |
 [foo]
 
 [foo]: first
@@ -152,7 +152,7 @@ with blank line'
 
 # https://spec.commonmark.org/0.31.2/#example-205
 :test: 4.7 Link reference definitions (Example 205)
-:sample: |
+:stdin: |
 [FOO]: /url
 
 [Foo]
@@ -162,7 +162,7 @@ with blank line'
 
 # https://spec.commonmark.org/0.31.2/#example-206
 :test: 4.7 Link reference definitions (Example 206)
-:sample: |
+:stdin: |
 [ΑΓΩ]: /φου
 
 [αγω]
@@ -172,7 +172,7 @@ with blank line'
 
 # https://spec.commonmark.org/0.31.2/#example-207
 :test: 4.7 Link reference definitions (Example 207)
-:sample: |
+:stdin: |
 [foo]: /url
 :expect: |
 
@@ -180,7 +180,7 @@ with blank line'
 
 # https://spec.commonmark.org/0.31.2/#example-208
 :test: 4.7 Link reference definitions (Example 208)
-:sample: |
+:stdin: |
 [
 foo
 ]: /url
@@ -191,7 +191,7 @@ bar
 
 # https://spec.commonmark.org/0.31.2/#example-209
 :test: 4.7 Link reference definitions (Example 209)
-:sample: |
+:stdin: |
 [foo]: /url "title" ok
 :expect: |
 <p>[foo]: /url &quot;title&quot; ok</p>
@@ -199,7 +199,7 @@ bar
 
 # https://spec.commonmark.org/0.31.2/#example-210
 :test: 4.7 Link reference definitions (Example 210)
-:sample: |
+:stdin: |
 [foo]: /url
 "title" ok
 :expect: |
@@ -208,7 +208,7 @@ bar
 
 # https://spec.commonmark.org/0.31.2/#example-211
 :test: 4.7 Link reference definitions (Example 211)
-:sample: |
+:stdin: |
     [foo]: /url "title"
 
 [foo]
@@ -220,7 +220,7 @@ bar
 
 # https://spec.commonmark.org/0.31.2/#example-212
 :test: 4.7 Link reference definitions (Example 212)
-:sample: |
+:stdin: |
 ```
 [foo]: /url
 ```
@@ -234,7 +234,7 @@ bar
 
 # https://spec.commonmark.org/0.31.2/#example-213
 :test: 4.7 Link reference definitions (Example 213)
-:sample: |
+:stdin: |
 Foo
 [bar]: /baz
 
@@ -247,7 +247,7 @@ Foo
 
 # https://spec.commonmark.org/0.31.2/#example-214
 :test: 4.7 Link reference definitions (Example 214)
-:sample: |
+:stdin: |
 # [Foo]
 [foo]: /url
 > bar
@@ -259,7 +259,7 @@ Foo
 
 # https://spec.commonmark.org/0.31.2/#example-215
 :test: 4.7 Link reference definitions (Example 215)
-:sample: |
+:stdin: |
 [foo]: /url
 bar
 ===
@@ -271,7 +271,7 @@ bar
 
 # https://spec.commonmark.org/0.31.2/#example-216
 :test: 4.7 Link reference definitions (Example 216)
-:sample: |
+:stdin: |
 [foo]: /url
 ===
 [foo]
@@ -282,7 +282,7 @@ bar
 
 # https://spec.commonmark.org/0.31.2/#example-217
 :test: 4.7 Link reference definitions (Example 217)
-:sample: |
+:stdin: |
 [foo]: /foo-url "foo"
 [bar]: /bar-url
   "bar"
@@ -299,7 +299,7 @@ bar
 
 # https://spec.commonmark.org/0.31.2/#example-218
 :test: 4.7 Link reference definitions (Example 218)
-:sample: |
+:stdin: |
 [foo]
 
 > [foo]: /url

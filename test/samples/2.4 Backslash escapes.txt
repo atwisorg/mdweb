@@ -2,7 +2,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-12
 :test: 2.4 Backslash escapes (Example 12)
-:sample: |
+:stdin: |
 \!\"\#\$\%\&\'\(\)\*\+\,\-\.\/\:\;\<\=\>\?\@\[\\\]\^\_\`\{\|\}\~
 :expect: |
 <p>!&quot;#$%&amp;'()*+,-./:;&lt;=&gt;?@[\]^_`{|}~</p>
@@ -10,7 +10,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-13
 :test: 2.4 Backslash escapes (Example 13)
-:sample: |
+:stdin: |
 \	\A\a\ \3\φ\«
 :expect: |
 <p>\	\A\a\ \3\φ\«</p>
@@ -18,7 +18,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-14
 :test: 2.4 Backslash escapes (Example 14)
-:sample: |
+:stdin: |
 \*not emphasized*
 \<br/> not a tag
 \[not a link](/foo)
@@ -42,7 +42,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-15
 :test: 2.4 Backslash escapes (Example 15)
-:sample: |
+:stdin: |
 \\*emphasis*
 :expect: |
 <p>\<em>emphasis</em></p>
@@ -50,7 +50,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-16
 :test: 2.4 Backslash escapes (Example 16)
-:sample: |
+:stdin: |
 foo\
 bar
 :expect: |
@@ -60,7 +60,7 @@ bar</p>
 
 # https://spec.commonmark.org/0.31.2/#example-17
 :test: 2.4 Backslash escapes (Example 17)
-:sample: |
+:stdin: |
 `` \[\` ``
 :expect: |
 <p><code>\[\`</code></p>
@@ -68,7 +68,7 @@ bar</p>
 
 # https://spec.commonmark.org/0.31.2/#example-18
 :test: 2.4 Backslash escapes (Example 18)
-:sample: |
+:stdin: |
     \[\]
 :expect: |
 <pre><code>\[\]
@@ -77,7 +77,7 @@ bar</p>
 
 # https://spec.commonmark.org/0.31.2/#example-19
 :test: 2.4 Backslash escapes (Example 19)
-:sample: |
+:stdin: |
 ~~~
 \[\]
 ~~~
@@ -88,7 +88,7 @@ bar</p>
 
 # https://spec.commonmark.org/0.31.2/#example-20
 :test: 2.4 Backslash escapes (Example 20)
-:sample: |
+:stdin: |
 <https://example.com?find=\*>
 :expect: |
 <p><a href="https://example.com?find=%5C*">https://example.com?find=\*</a></p>
@@ -96,7 +96,7 @@ bar</p>
 
 # https://spec.commonmark.org/0.31.2/#example-21
 :test: 2.4 Backslash escapes (Example 21)
-:sample: |
+:stdin: |
 <a href="/bar\/)">
 :expect: |
 <a href="/bar\/)">
@@ -107,7 +107,7 @@ bar</p>
 # and info strings in fenced code blocks:
 # https://spec.commonmark.org/0.31.2/#example-22
 :test: 2.4 Backslash escapes (Example 22)
-:sample: |
+:stdin: |
 [foo](/bar\* "ti\*tle")
 :expect: |
 <p><a href="/bar*" title="ti*tle">foo</a></p>
@@ -115,7 +115,7 @@ bar</p>
 
 # https://spec.commonmark.org/0.31.2/#example-23
 :test: 2.4 Backslash escapes (Example 23)
-:sample: |
+:stdin: |
 [foo]
 
 [foo]: /bar\* "ti\*tle"
@@ -125,7 +125,7 @@ bar</p>
 
 # https://spec.commonmark.org/0.31.2/#example-24
 :test: 2.4 Backslash escapes (Example 24)
-:sample: |
+:stdin: |
 ``` foo\+bar
 foo
 ```

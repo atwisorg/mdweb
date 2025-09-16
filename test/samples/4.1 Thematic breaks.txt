@@ -2,7 +2,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-43
 :test: 4.1 Thematic breaks (Example 43)
-:sample: |
+:stdin: |
 ***
 ---
 ___
@@ -14,7 +14,7 @@ ___
 
 # https://spec.commonmark.org/0.31.2/#example-44
 :test: 4.1 Thematic breaks (Example 44)
-:sample: |
+:stdin: |
 +++
 :expect: |
 <p>+++</p>
@@ -22,7 +22,7 @@ ___
 
 # https://spec.commonmark.org/0.31.2/#example-45
 :test: 4.1 Thematic breaks (Example 45)
-:sample: |
+:stdin: |
 ===
 :expect: |
 <p>===</p>
@@ -30,7 +30,7 @@ ___
 
 # https://spec.commonmark.org/0.31.2/#example-46
 :test: 4.1 Thematic breaks (Example 46)
-:sample: |
+:stdin: |
 --
 **
 __
@@ -42,7 +42,7 @@ __</p>
 
 # https://spec.commonmark.org/0.31.2/#example-47
 :test: 4.1 Thematic breaks (Example 47)
-:sample: |
+:stdin: |
  ***
   ***
    ***
@@ -54,7 +54,7 @@ __</p>
 
 # https://spec.commonmark.org/0.31.2/#example-48
 :test: 4.1 Thematic breaks (Example 48)
-:sample: |
+:stdin: |
     ***
 :expect: |
 <pre><code>***
@@ -63,7 +63,7 @@ __</p>
 
 # https://spec.commonmark.org/0.31.2/#example-49
 :test: 4.1 Thematic breaks (Example 49)
-:sample: |
+:stdin: |
 Foo
     ***
 :expect: |
@@ -73,7 +73,7 @@ Foo
 
 # https://spec.commonmark.org/0.31.2/#example-50
 :test: 4.1 Thematic breaks (Example 50)
-:sample: |
+:stdin: |
 _____________________________________
 :expect: |
 <hr />
@@ -81,7 +81,7 @@ _____________________________________
 
 # https://spec.commonmark.org/0.31.2/#example-51
 :test: 4.1 Thematic breaks (Example 51)
-:sample: |
+:stdin: |
  - - -
 :expect: |
 <hr />
@@ -89,7 +89,7 @@ _____________________________________
 
 # https://spec.commonmark.org/0.31.2/#example-52
 :test: 4.1 Thematic breaks (Example 52)
-:sample: |
+:stdin: |
  **  * ** * ** * **
 :expect: |
 <hr />
@@ -97,7 +97,7 @@ _____________________________________
 
 # https://spec.commonmark.org/0.31.2/#example-53
 :test: 4.1 Thematic breaks (Example 53)
-:sample: |
+:stdin: |
 -     -      -      -
 :expect: |
 <hr />
@@ -105,7 +105,7 @@ _____________________________________
 
 # https://spec.commonmark.org/0.31.2/#example-54
 :test: 4.1 Thematic breaks (Example 54)
-:sample: |
+:stdin: |
 - - - -    
 :expect: |
 <hr />
@@ -113,7 +113,7 @@ _____________________________________
 
 # https://spec.commonmark.org/0.31.2/#example-55
 :test: 4.1 Thematic breaks (Example 55)
-:sample: |
+:stdin: |
 _ _ _ _ a
 
 a------
@@ -127,7 +127,7 @@ a------
 
 # https://spec.commonmark.org/0.31.2/#example-56
 :test: 4.1 Thematic breaks (Example 56)
-:sample: |
+:stdin: |
  *-*
 :expect: |
 <p><em>-</em></p>
@@ -135,7 +135,7 @@ a------
 
 # https://spec.commonmark.org/0.31.2/#example-57
 :test: 4.1 Thematic breaks (Example 57)
-:sample: |
+:stdin: |
 - foo
 ***
 - bar
@@ -151,7 +151,7 @@ a------
 
 # https://spec.commonmark.org/0.31.2/#example-58
 :test: 4.1 Thematic breaks (Example 58)
-:sample: |
+:stdin: |
 Foo
 ***
 bar
@@ -163,7 +163,7 @@ bar
 
 # https://spec.commonmark.org/0.31.2/#example-59
 :test: 4.1 Thematic breaks (Example 59)
-:sample: |
+:stdin: |
 Foo
 ---
 bar
@@ -174,7 +174,7 @@ bar
 
 # https://spec.commonmark.org/0.31.2/#example-60
 :test: 4.1 Thematic breaks (Example 60)
-:sample: |
+:stdin: |
 * Foo
 * * *
 * Bar
@@ -190,7 +190,7 @@ bar
 
 # https://spec.commonmark.org/0.31.2/#example-61
 :test: 4.1 Thematic breaks (Example 61)
-:sample: |
+:stdin: |
 - Foo
 - * * *
 :expect: |

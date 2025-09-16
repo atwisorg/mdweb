@@ -2,7 +2,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-650
 :test: 6.9 Textual content (Example 650)
-:sample: |
+:stdin: |
 hello $.;'there
 :expect: |
 <p>hello $.;'there</p>
@@ -10,7 +10,7 @@ hello $.;'there
 
 # https://spec.commonmark.org/0.31.2/#example-651
 :test: 6.9 Textual content (Example 651)
-:sample: |
+:stdin: |
 Foo χρῆν
 :expect: |
 <p>Foo χρῆν</p>
@@ -18,7 +18,7 @@ Foo χρῆν
 
 # https://spec.commonmark.org/0.31.2/#example-652
 :test: 6.9 Textual content (Example 652)
-:sample: |
+:stdin: |
 Multiple     spaces
 :expect: |
 <p>Multiple     spaces</p>

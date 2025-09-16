@@ -2,7 +2,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-62
 :test: 4.2 ATX headings (Example 62)
-:sample: |
+:stdin: |
 # foo
 ## foo
 ### foo
@@ -20,7 +20,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-63
 :test: 4.2 ATX headings (Example 63)
-:sample: |
+:stdin: |
 ####### foo
 :expect: |
 <p>####### foo</p>
@@ -28,7 +28,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-64
 :test: 4.2 ATX headings (Example 64)
-:sample: |
+:stdin: |
 #5 bolt
 
 #hashtag
@@ -39,7 +39,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-65
 :test: 4.2 ATX headings (Example 65)
-:sample: |
+:stdin: |
 \## foo
 :expect: |
 <p>## foo</p>
@@ -47,7 +47,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-66
 :test: 4.2 ATX headings (Example 66)
-:sample: |
+:stdin: |
 # foo *bar* \*baz\*
 :expect: |
 <h1>foo <em>bar</em> *baz*</h1>
@@ -55,7 +55,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-67
 :test: 4.2 ATX headings (Example 67)
-:sample: |
+:stdin: |
 #                  foo                     
 :expect: |
 <h1>foo</h1>
@@ -63,7 +63,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-68
 :test: 4.2 ATX headings (Example 68)
-:sample: |
+:stdin: |
  ### foo
   ## foo
    # foo
@@ -75,7 +75,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-69
 :test: 4.2 ATX headings (Example 69)
-:sample: |
+:stdin: |
     # foo
 :expect: |
 <pre><code># foo
@@ -84,7 +84,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-70
 :test: 4.2 ATX headings (Example 70)
-:sample: |
+:stdin: |
 foo
     # bar
 :expect: |
@@ -94,7 +94,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-71
 :test: 4.2 ATX headings (Example 71)
-:sample: |
+:stdin: |
 ## foo ##
   ###   bar    ###
 :expect: |
@@ -104,7 +104,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-72
 :test: 4.2 ATX headings (Example 72)
-:sample: |
+:stdin: |
 # foo ##################################
 ##### foo ##
 :expect: |
@@ -114,7 +114,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-73
 :test: 4.2 ATX headings (Example 73)
-:sample: |
+:stdin: |
 ### foo ###     
 :expect: |
 <h3>foo</h3>
@@ -122,7 +122,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-74
 :test: 4.2 ATX headings (Example 74)
-:sample: |
+:stdin: |
 ### foo ### b
 :expect: |
 <h3>foo ### b</h3>
@@ -130,7 +130,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-75
 :test: 4.2 ATX headings (Example 75)
-:sample: |
+:stdin: |
 # foo#
 :expect: |
 <h1>foo#</h1>
@@ -138,7 +138,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-76
 :test: 4.2 ATX headings (Example 76)
-:sample: |
+:stdin: |
 ### foo \###
 ## foo #\##
 # foo \#
@@ -150,7 +150,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-77
 :test: 4.2 ATX headings (Example 77)
-:sample: |
+:stdin: |
 ****
 ## foo
 ****
@@ -162,7 +162,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-78
 :test: 4.2 ATX headings (Example 78)
-:sample: |
+:stdin: |
 Foo bar
 # baz
 Bar foo
@@ -174,7 +174,7 @@ Bar foo
 
 # https://spec.commonmark.org/0.31.2/#example-79
 :test: 4.2 ATX headings (Example 79)
-:sample: |
+:stdin: |
 ## 
 #
 ### ###

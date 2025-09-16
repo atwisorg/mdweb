@@ -2,7 +2,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-107
 :test: 4.4 Indented code blocks (Example 107)
-:sample: |
+:stdin: |
     a simple
       indented code block
 :expect: |
@@ -13,7 +13,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-108
 :test: 4.4 Indented code blocks (Example 108)
-:sample: |
+:stdin: |
   - foo
 
     bar
@@ -28,7 +28,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-109
 :test: 4.4 Indented code blocks (Example 109)
-:sample: |
+:stdin: |
 1.  foo
 
     - bar
@@ -45,7 +45,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-110
 :test: 4.4 Indented code blocks (Example 110)
-:sample: |
+:stdin: |
     <a/>
     *hi*
 
@@ -60,7 +60,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-111
 :test: 4.4 Indented code blocks (Example 111)
-:sample: |
+:stdin: |
     chunk1
 
     chunk2
@@ -81,7 +81,7 @@ chunk3
 
 # https://spec.commonmark.org/0.31.2/#example-112
 :test: 4.4 Indented code blocks (Example 112)
-:sample: |
+:stdin: |
     chunk1
       
       chunk2
@@ -94,7 +94,7 @@ chunk3
 
 # https://spec.commonmark.org/0.31.2/#example-113
 :test: 4.4 Indented code blocks (Example 113)
-:sample: |
+:stdin: |
 Foo
     bar
 :expect: |
@@ -104,7 +104,7 @@ bar</p>
 
 # https://spec.commonmark.org/0.31.2/#example-114
 :test: 4.4 Indented code blocks (Example 114)
-:sample: |
+:stdin: |
     foo
 bar
 :expect: |
@@ -115,7 +115,7 @@ bar
 
 # https://spec.commonmark.org/0.31.2/#example-115
 :test: 4.4 Indented code blocks (Example 115)
-:sample: |
+:stdin: |
 # Heading
     foo
 Heading
@@ -134,7 +134,7 @@ Heading
 
 # https://spec.commonmark.org/0.31.2/#example-116
 :test: 4.4 Indented code blocks (Example 116)
-:sample: |
+:stdin: |
         foo
     bar
 :expect: |
@@ -145,7 +145,7 @@ bar
 
 # https://spec.commonmark.org/0.31.2/#example-117
 :test: 4.4 Indented code blocks (Example 117)
-:sample: |
+:stdin: |
 
     
     foo
@@ -157,7 +157,7 @@ bar
 
 # https://spec.commonmark.org/0.31.2/#example-118
 :test: 4.4 Indented code blocks (Example 118)
-:sample: |
+:stdin: |
     foo  
 :expect: |
 <pre><code>foo  

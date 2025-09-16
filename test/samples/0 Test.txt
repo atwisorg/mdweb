@@ -1,5 +1,5 @@
 :test: Testing the test
-:sample:
+:stdin:
 John MacFarlane
 :expect: |
 <p>John MacFarlane</p>

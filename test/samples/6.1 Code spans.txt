@@ -2,7 +2,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-328
 :test: 6.1 Code spans (Example 328)
-:sample: |
+:stdin: |
 `foo`
 :expect: |
 <p><code>foo</code></p>
@@ -10,7 +10,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-329
 :test: 6.1 Code spans (Example 329)
-:sample: |
+:stdin: |
 `` foo ` bar ``
 :expect: |
 <p><code>foo ` bar</code></p>
@@ -18,7 +18,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-330
 :test: 6.1 Code spans (Example 330)
-:sample: |
+:stdin: |
 ` `` `
 :expect: |
 <p><code>``</code></p>
@@ -26,7 +26,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-331
 :test: 6.1 Code spans (Example 331)
-:sample: |
+:stdin: |
 `  ``  `
 :expect: |
 <p><code> `` </code></p>
@@ -34,7 +34,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-332
 :test: 6.1 Code spans (Example 332)
-:sample: |
+:stdin: |
 ` a`
 :expect: |
 <p><code> a</code></p>
@@ -42,7 +42,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-333
 :test: 6.1 Code spans (Example 333)
-:sample: |
+:stdin: |
 ` b `
 :expect: |
 <p><code> b </code></p>
@@ -50,7 +50,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-334
 :test: 6.1 Code spans (Example 334)
-:sample: |
+:stdin: |
 ` `
 `  `
 :expect: |
@@ -60,7 +60,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-335
 :test: 6.1 Code spans (Example 335)
-:sample: |
+:stdin: |
 ``
 foo
 bar  
@@ -72,7 +72,7 @@ baz
 
 # https://spec.commonmark.org/0.31.2/#example-336
 :test: 6.1 Code spans (Example 336)
-:sample: |
+:stdin: |
 ``
 foo 
 ``
@@ -82,7 +82,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-337
 :test: 6.1 Code spans (Example 337)
-:sample: |
+:stdin: |
 `foo   bar 
 baz`
 :expect: |
@@ -91,7 +91,7 @@ baz`
 
 # https://spec.commonmark.org/0.31.2/#example-338
 :test: 6.1 Code spans (Example 338)
-:sample: |
+:stdin: |
 `foo\`bar`
 :expect: |
 <p><code>foo\</code>bar`</p>
@@ -99,7 +99,7 @@ baz`
 
 # https://spec.commonmark.org/0.31.2/#example-339
 :test: 6.1 Code spans (Example 339)
-:sample: |
+:stdin: |
 ``foo`bar``
 :expect: |
 <p><code>foo`bar</code></p>
@@ -107,7 +107,7 @@ baz`
 
 # https://spec.commonmark.org/0.31.2/#example-340
 :test: 6.1 Code spans (Example 340)
-:sample: |
+:stdin: |
 ` foo `` bar `
 :expect: |
 <p><code>foo `` bar</code></p>
@@ -115,7 +115,7 @@ baz`
 
 # https://spec.commonmark.org/0.31.2/#example-341
 :test: 6.1 Code spans (Example 341)
-:sample: |
+:stdin: |
 *foo`*`
 :expect: |
 <p>*foo<code>*</code></p>
@@ -123,7 +123,7 @@ baz`
 
 # https://spec.commonmark.org/0.31.2/#example-342
 :test: 6.1 Code spans (Example 342)
-:sample: |
+:stdin: |
 [not a `link](/foo`)
 :expect: |
 <p>[not a <code>link](/foo</code>)</p>
@@ -131,7 +131,7 @@ baz`
 
 # https://spec.commonmark.org/0.31.2/#example-343
 :test: 6.1 Code spans (Example 343)
-:sample: |
+:stdin: |
 `<a href="`">`
 :expect: |
 <p><code>&lt;a href=&quot;</code>&quot;&gt;`</p>
@@ -139,7 +139,7 @@ baz`
 
 # https://spec.commonmark.org/0.31.2/#example-344
 :test: 6.1 Code spans (Example 344)
-:sample: |
+:stdin: |
 <a href="`">`
 :expect: |
 <p><a href="`">`</p>
@@ -147,7 +147,7 @@ baz`
 
 # https://spec.commonmark.org/0.31.2/#example-345
 :test: 6.1 Code spans (Example 345)
-:sample: |
+:stdin: |
 `<https://foo.bar.`baz>`
 :expect: |
 <p><code>&lt;https://foo.bar.</code>baz&gt;`</p>
@@ -155,7 +155,7 @@ baz`
 
 # https://spec.commonmark.org/0.31.2/#example-346
 :test: 6.1 Code spans (Example 346)
-:sample: |
+:stdin: |
 <https://foo.bar.`baz>`
 :expect: |
 <p><a href="https://foo.bar.%60baz">https://foo.bar.`baz</a>`</p>
@@ -163,7 +163,7 @@ baz`
 
 # https://spec.commonmark.org/0.31.2/#example-347
 :test: 6.1 Code spans (Example 347)
-:sample: |
+:stdin: |
 ```foo``
 :expect: |
 <p>```foo``</p>
@@ -171,7 +171,7 @@ baz`
 
 # https://spec.commonmark.org/0.31.2/#example-348
 :test: 6.1 Code spans (Example 348)
-:sample: |
+:stdin: |
 `foo
 :expect: |
 <p>`foo</p>
@@ -179,7 +179,7 @@ baz`
 
 # https://spec.commonmark.org/0.31.2/#example-349
 :test: 6.1 Code spans (Example 349)
-:sample: |
+:stdin: |
 `foo``bar``
 :expect: |
 <p>`foo<code>bar</code></p>

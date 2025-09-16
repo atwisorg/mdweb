@@ -2,7 +2,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-25
 :test: 2.5 Entity and numeric character references (Example 25)
-:sample: |
+:stdin: |
 &nbsp; &amp; &copy; &AElig; &Dcaron;
 &frac34; &HilbertSpace; &DifferentialD;
 &ClockwiseContourIntegral; &ngE;
@@ -14,7 +14,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-26
 :test: 2.5 Entity and numeric character references (Example 26)
-:sample: |
+:stdin: |
 &#35; &#1234; &#992; &#0;
 :expect: |
 <p># Ӓ Ϡ �</p>
@@ -22,7 +22,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-27
 :test: 2.5 Entity and numeric character references (Example 27)
-:sample: |
+:stdin: |
 &#X22; &#XD06; &#xcab;
 :expect: |
 <p>&quot; ആ ಫ</p>
@@ -30,7 +30,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-28
 :test: 2.5 Entity and numeric character references (Example 28)
-:sample: |
+:stdin: |
 &nbsp &x; &#; &#x;
 &#87654321;
 &#abcdef0;
@@ -44,7 +44,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-29
 :test: 2.5 Entity and numeric character references (Example 29)
-:sample: |
+:stdin: |
 &copy
 :expect: |
 <p>&amp;copy</p>
@@ -52,7 +52,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-30
 :test: 2.5 Entity and numeric character references (Example 30)
-:sample: |
+:stdin: |
 &MadeUpEntity;
 :expect: |
 <p>&amp;MadeUpEntity;</p>
@@ -60,7 +60,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-31
 :test: 2.5 Entity and numeric character references (Example 31)
-:sample: |
+:stdin: |
 <a href="&ouml;&ouml;.html">
 :expect: |
 <a href="&ouml;&ouml;.html">
@@ -68,7 +68,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-32
 :test: 2.5 Entity and numeric character references (Example 32)
-:sample: |
+:stdin: |
 [foo](/f&ouml;&ouml; "f&ouml;&ouml;")
 :expect: |
 <p><a href="/f%C3%B6%C3%B6" title="föö">foo</a></p>
@@ -76,7 +76,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-33
 :test: 2.5 Entity and numeric character references (Example 33)
-:sample: |
+:stdin: |
 [foo]
 
 [foo]: /f&ouml;&ouml; "f&ouml;&ouml;"
@@ -86,7 +86,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-34
 :test: 2.5 Entity and numeric character references (Example 34)
-:sample: |
+:stdin: |
 ``` f&ouml;&ouml;
 foo
 ```
@@ -97,7 +97,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-35
 :test: 2.5 Entity and numeric character references (Example 35)
-:sample: |
+:stdin: |
 `f&ouml;&ouml;`
 :expect: |
 <p><code>f&amp;ouml;&amp;ouml;</code></p>
@@ -105,7 +105,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-36
 :test: 2.5 Entity and numeric character references (Example 36)
-:sample: |
+:stdin: |
     f&ouml;f&ouml;
 :expect: |
 <pre><code>f&amp;ouml;f&amp;ouml;
@@ -114,7 +114,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-37
 :test: 2.5 Entity and numeric character references (Example 37)
-:sample: |
+:stdin: |
 &#42;foo&#42;
 *foo*
 :expect: |
@@ -124,7 +124,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-38
 :test: 2.5 Entity and numeric character references (Example 38)
-:sample: |
+:stdin: |
 &#42; foo
 
 * foo
@@ -137,7 +137,7 @@ foo
 
 # https://spec.commonmark.org/0.31.2/#example-39
 :test: 2.5 Entity and numeric character references (Example 39)
-:sample: |
+:stdin: |
 foo&#10;&#10;bar
 :expect: |
 <p>foo
@@ -147,7 +147,7 @@ bar</p>
 
 # https://spec.commonmark.org/0.31.2/#example-40
 :test: 2.5 Entity and numeric character references (Example 40)
-:sample: |
+:stdin: |
 &#9;foo
 :expect: |
 <p>	foo</p>
@@ -155,7 +155,7 @@ bar</p>
 
 # https://spec.commonmark.org/0.31.2/#example-41
 :test: 2.5 Entity and numeric character references (Example 41)
-:sample: |
+:stdin: |
 [a](url &quot;tit&quot;)
 :expect: |
 <p>[a](url &quot;tit&quot;)</p>

@@ -2,7 +2,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-613
 :test: 6.6 Raw HTML (Example 613)
-:sample: |
+:stdin: |
 <a><bab><c2c>
 :expect: |
 <p><a><bab><c2c></p>
@@ -10,7 +10,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-614
 :test: 6.6 Raw HTML (Example 614)
-:sample: |
+:stdin: |
 <a/><b2/>
 :expect: |
 <p><a/><b2/></p>
@@ -18,7 +18,7 @@
 
 # https://spec.commonmark.org/0.31.2/#example-615
 :test: 6.6 Raw HTML (Example 615)
-:sample: |
+:stdin: |
 <a  /><b2
 data="foo" >
 :expect: |
@@ -28,7 +28,7 @@ data="foo" ></p>
 
 # https://spec.commonmark.org/0.31.2/#example-616
 :test: 6.6 Raw HTML (Example 616)
-:sample: |
+:stdin: |
 <a foo="bar" bam = 'baz <em>"</em>'
 _boolean zoop:33=zoop:33 />
 :expect: |
@@ -38,7 +38,7 @@ _boolean zoop:33=zoop:33 /></p>
 
 # https://spec.commonmark.org/0.31.2/#example-617
 :test: 6.6 Raw HTML (Example 617)
-:sample: |
+:stdin: |
 Foo <responsive-image src="foo.jpg" />
 :expect: |
 <p>Foo <responsive-image src="foo.jpg" /></p>
@@ -46,7 +46,7 @@ Foo <responsive-image src="foo.jpg" />
 
 # https://spec.commonmark.org/0.31.2/#example-618
 :test: 6.6 Raw HTML (Example 618)
-:sample: |
+:stdin: |
 <33> <__>
 :expect: |
 <p>&lt;33&gt; &lt;__&gt;</p>
@@ -54,7 +54,7 @@ Foo <responsive-image src="foo.jpg" />
 
 # https://spec.commonmark.org/0.31.2/#example-619
 :test: 6.6 Raw HTML (Example 619)
-:sample: |
+:stdin: |
 <a h*#ref="hi">
 :expect: |
 <p>&lt;a h*#ref=&quot;hi&quot;&gt;</p>
@@ -62,7 +62,7 @@ Foo <responsive-image src="foo.jpg" />
 
 # https://spec.commonmark.org/0.31.2/#example-620
 :test: 6.6 Raw HTML (Example 620)
-:sample: |
+:stdin: |
 <a href="hi'> <a href=hi'>
 :expect: |
 <p>&lt;a href=&quot;hi'&gt; &lt;a href=hi'&gt;</p>
@@ -70,7 +70,7 @@ Foo <responsive-image src="foo.jpg" />
 
 # https://spec.commonmark.org/0.31.2/#example-621
 :test: 6.6 Raw HTML (Example 621)
-:sample: |
+:stdin: |
 < a><
 foo><bar/ >
 <foo bar=baz
@@ -84,7 +84,7 @@ bim!bop /&gt;</p>
 
 # https://spec.commonmark.org/0.31.2/#example-622
 :test: 6.6 Raw HTML (Example 622)
-:sample: |
+:stdin: |
 <a href='bar'title=title>
 :expect: |
 <p>&lt;a href='bar'title=title&gt;</p>
@@ -92,7 +92,7 @@ bim!bop /&gt;</p>
 
 # https://spec.commonmark.org/0.31.2/#example-623
 :test: 6.6 Raw HTML (Example 623)
-:sample: |
+:stdin: |
 </a></foo >
 :expect: |
 <p></a></foo ></p>
@@ -100,7 +100,7 @@ bim!bop /&gt;</p>
 
 # https://spec.commonmark.org/0.31.2/#example-624
 :test: 6.6 Raw HTML (Example 624)
-:sample: |
+:stdin: |
 </a href="foo">
 :expect: |
 <p>&lt;/a href=&quot;foo&quot;&gt;</p>
@@ -108,7 +108,7 @@ bim!bop /&gt;</p>
 
 # https://spec.commonmark.org/0.31.2/#example-625
 :test: 6.6 Raw HTML (Example 625)
-:sample: |
+:stdin: |
 foo <!-- this is a --
 comment - with hyphens -->
 :expect: |
@@ -118,7 +118,7 @@ comment - with hyphens --></p>
 
 # https://spec.commonmark.org/0.31.2/#example-626
 :test: 6.6 Raw HTML (Example 626)
-:sample: |
+:stdin: |
 foo <!--> foo -->
 
 foo <!---> foo -->
@@ -129,7 +129,7 @@ foo <!---> foo -->
 
 # https://spec.commonmark.org/0.31.2/#example-627
 :test: 6.6 Raw HTML (Example 627)
-:sample: |
+:stdin: |
 foo <?php echo $a; ?>
 :expect: |
 <p>foo <?php echo $a; ?></p>
@@ -137,7 +137,7 @@ foo <?php echo $a; ?>
 
 # https://spec.commonmark.org/0.31.2/#example-628
 :test: 6.6 Raw HTML (Example 628)
-:sample: |
+:stdin: |
 foo <!ELEMENT br EMPTY>
 :expect: |
 <p>foo <!ELEMENT br EMPTY></p>
@@ -145,7 +145,7 @@ foo <!ELEMENT br EMPTY>
 
 # https://spec.commonmark.org/0.31.2/#example-629
 :test: 6.6 Raw HTML (Example 629)
-:sample: |
+:stdin: |
 foo <![CDATA[>&<]]>
 :expect: |
 <p>foo <![CDATA[>&<]]></p>
@@ -153,7 +153,7 @@ foo <![CDATA[>&<]]>
 
 # https://spec.commonmark.org/0.31.2/#example-630
 :test: 6.6 Raw HTML (Example 630)
-:sample: |
+:stdin: |
 foo <a href="&ouml;">
 :expect: |
 <p>foo <a href="&ouml;"></p>
@@ -161,7 +161,7 @@ foo <a href="&ouml;">
 
 # https://spec.commonmark.org/0.31.2/#example-631
 :test: 6.6 Raw HTML (Example 631)
-:sample: |
+:stdin: |
 foo <a href="\*">
 :expect: |
 <p>foo <a href="\*"></p>
@@ -169,7 +169,7 @@ foo <a href="\*">
 
 # https://spec.commonmark.org/0.31.2/#example-632
 :test: 6.6 Raw HTML (Example 632)
-:sample: |
+:stdin: |
 <a href="\"">
 :expect: |
 <p>&lt;a href=&quot;&quot;&quot;&gt;</p>
