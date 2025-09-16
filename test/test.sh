@@ -33,29 +33,57 @@ is_equal ()
     return 1
 }
 
+if is_not_empty "${KSH_VERSION:-}"
+then
+    PUTS=print
+    puts ()
+    {
+        print "${PUTS_OPTIONS:--r}" -- "$*"
+    }
+else
+    if type printf >/dev/null 2>&1
+    then
+        PUTS=printf
+        puts ()
+        {
+            printf "${PUTS_OPTIONS:-%s\n}" "$*"
+        }
+    elif type echo >/dev/null 2>&1
+    then
+        PUTS=echo
+        puts ()
+        {
+            echo "${PUTS_OPTIONS:-}" "$*"
+        }
+    else
+        exit 1
+    fi
+fi
+
 say ()
 {
-    RETURN="$?"
-    SAVE_ONE_LINE="${ONE_LINE:-}" ONE_LINE=
+    RETURN=$?
+    PUTS_OPTIONS=
     while is_diff $# 0
     do
         case "${1:-}" in
-            -n) 
-                ONE_LINE="-n"
+            -n)
+                is_equal "$PUTS" printf &&
+                PUTS_OPTIONS=%s ||
+                PUTS_OPTIONS=-n
                 ;;
             *[!0-9]*|"")
                 break
                 ;;
             *)
-                RETURN="$1"
+                RETURN=$1
         esac
         shift
     done
-    case "$@" in
-        ?*)
-            echo ${ONE_LINE:-} "$PKG:${FUNC_NAME:+" $FUNC_NAME:"}${1:+" $@"}"
-    esac
-    ONE_LINE="${SAVE_ONE_LINE:-}" SAVE_ONE_LINE=
+    is_empty "$@" || {
+        puts "$PACKAGE_NAME:${1:+" $@"}"
+        PUTS_OPTIONS=
+    }
 }
 
 die ()
