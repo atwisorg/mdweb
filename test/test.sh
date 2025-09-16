@@ -429,7 +429,7 @@ get_result ()
     then
         printf '%16s %s\n' "$H1" "" "stdin:" "|${STDIN//$LF/|$LF$INDENT}|"
     else
-        printf '%16s %s\n' "$H1" "" "${PREFIX[@]}" "$H2" "" "stdin:" "|${STDIN//$LF/|$LF$INDENT}|"
+        printf '%16s %s\n' "$H1" "" "${PREFIX[@]}" "$H2" "" "command:" "[$COMMAND]" "$H2" "" "stdin:" "|${STDIN//$LF/|$LF$INDENT}|"
     fi
     if cmp_results
     then
@@ -521,7 +521,7 @@ run_test_sample ()
                     :run|:run:*)
                         is_equal "$LOAD_TEST" "yes" || continue
                         PREFIX=(
-                            "test stdin:" "[$TEST_SAMPLE]"
+                            "test sample:" "[$TEST_SAMPLE]"
                             "string num:" "[$STRING_NUM_TEST]"
                             "test name:" "[$TEST_NAME]"
                             "test num:" "[$TEST_NUMBER]"
@@ -535,6 +535,11 @@ run_test_sample ()
                         STDOUT="$TEMP_DIR/${NAME_TEST_SAMPLE}_$STRING_NUM_TEST.out"
                         STDERR="$TEMP_DIR/${NAME_TEST_SAMPLE}_$STRING_NUM_TEST.err"
                         is_empty "${WORKDIR:-}" && WORKDIR="$CURRENT_DIR" || {
+                            case "$WORKDIR" in
+                                [!/]*)
+                                    WORKDIR="$PKG_DIR/$WORKDIR"
+                                ;;
+                            esac
                             is_dir   "$WORKDIR"               || make_dir   "$WORKDIR" &&
                             is_diff  "${WORKDIR_CLEAN:-}" yes || remove     "$WORKDIR"/*
                             is_empty "${WORKDIR_CHMOD:-}"     || change_mod "$WORKDIR_CHMOD" "$WORKDIR"
@@ -542,7 +547,14 @@ run_test_sample ()
                         }
                         RETURN_CODE=0
                         is_diff "${#TESTED_ARGS[@]}" 0 || TESTED_ARGS=( "${GLOBAL_ARGS[@]}" )
-                        timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_PKG" "${TESTED_ARGS[@]}" < <(sed 's%\o357\o277\o275%\o000%g' <<< "$STDIN") > "$STDOUT" 2> "$STDERR" &
+                        if is_empty "${STDIN:-}"
+                        then
+                            COMMAND="${TESTED_SHELL:+"$TESTED_SHELL"} $TESTED_PKG ${TESTED_ARGS[@]}"
+                            timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_PKG" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
+                        else
+                            COMMAND="echo $STDIN | ${TESTED_SHELL:+"$TESTED_SHELL"} $TESTED_PKG ${TESTED_ARGS[@]}"
+                            sed 's%\o357\o277\o275%\o000%g' <<< "$STDIN" | timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_PKG" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
+                        fi
                         CHILD_PID="$!"
                         wait "$CHILD_PID"
                         RETURN_CODE="$?"
@@ -579,7 +591,8 @@ run_test_sample ()
                         elif is_equal "$NEXT_LINE" "expect-stderr"
                         then
                             EXPECT_ERR="${EXPECT_ERR:+"$EXPECT_ERR$LF"}${LINE:-}"
-                        else
+                        elif is_equal "$NEXT_LINE" "stdin"
+                        then
                             STDIN="${STDIN:+"$STDIN$LF"}${LINE:-}"
                         fi
                 esac
