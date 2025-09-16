@@ -1,9 +1,9 @@
-:test:Testing the test
-:expect
+:test: Testing the test
+:sample:
+John MacFarlane
+:expect: |
 <p>John MacFarlane</p>
-:expect-err
+:expect-err: |
 mdweb.sh: converting stdin
 mdweb.sh: conversion completed
-:sample
-John MacFarlane
-:run
+:run:
