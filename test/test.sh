@@ -108,11 +108,11 @@ say ()
         *"$LF"*)
             echo "${*:-"${STATUS:-}"}" | while read -r LINE || is_not_empty "${LINE:-}"
             do
-                puts "$PACKAGE_NAME: ${LINE:-}"
+                puts "$PACKAGE_NAME: ${FUNC_NAME:+"$FUNC_NAME "}${LINE:-}"
             done
         ;;
         ?*)
-            puts "$PACKAGE_NAME: ${*:-"${STATUS:-}"}"
+            puts "$PACKAGE_NAME: ${FUNC_NAME:+"$FUNC_NAME "}${*:-"${STATUS:-}"}"
         ;;
     esac
     PUTS_OPTIONS=
@@ -180,7 +180,8 @@ exec_cmd ()
 change_dir ()
 {
     CMD="cd"
-    exec_cmd "$@"
+    FUNC_NAME=change_dir
+    exec_cmd "$@" && cd -- "${1:-}"
 }
 
 change_mod ()
@@ -528,9 +529,9 @@ run_test_sample ()
                         is_diff "${#TEST_SAMPLES[@]}" 0 || PREFIX=( "${PREFIX[@]}" "total test num:" "[$TOTAL_TEST_NUMBER]" )
                         NAME_TEST_SAMPLE="${TEST_SAMPLE##*/}"
                         NAME_TEST_SAMPLE="${NAME_TEST_SAMPLE%.txt}"
-                        WORKDIR="${GLOBAL_WORKDIR:-"${WORKDIR:-}"}"
-                        WORKDIR_CLEAN="${GLOBAL_WORKDIR_CLEAN:-"${WORKDIR_CLEAN:-}"}"
-                        WORKDIR_CHMOD="${GLOBAL_WORKDIR_CHMOD:-"${WORKDIR_CHMOD:-}"}"
+                        WORKDIR="${WORKDIR:-"${GLOBAL_WORKDIR:-}"}"
+                        WORKDIR_CLEAN="${WORKDIR_CLEAN:-"${GLOBAL_WORKDIR_CLEAN:-}"}"
+                        WORKDIR_CHMOD="${WORKDIR_CHMOD:-"${GLOBAL_WORKDIR_CHMOD:-}"}"
                         STDOUT="$TEMP_DIR/${NAME_TEST_SAMPLE}_$STRING_NUM_TEST.out"
                         STDERR="$TEMP_DIR/${NAME_TEST_SAMPLE}_$STRING_NUM_TEST.err"
                         is_empty "${WORKDIR:-}" && WORKDIR="$CURRENT_DIR" || {
@@ -541,7 +542,7 @@ run_test_sample ()
                         }
                         RETURN_CODE=0
                         is_diff "${#TESTED_ARGS[@]}" 0 || TESTED_ARGS=( "${GLOBAL_ARGS[@]}" )
-                        timeout "${GLOBAL_TIMEOUT:-"${TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_PKG" "${TESTED_ARGS[@]}" < <(sed 's%\o357\o277\o275%\o000%g' <<< "$STDIN") > "$STDOUT" 2> "$STDERR" &
+                        timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_PKG" "${TESTED_ARGS[@]}" < <(sed 's%\o357\o277\o275%\o000%g' <<< "$STDIN") > "$STDOUT" 2> "$STDERR" &
                         CHILD_PID="$!"
                         wait "$CHILD_PID"
                         RETURN_CODE="$?"
@@ -800,6 +801,8 @@ main ()
     TEMP_DIR="$PKG_DIR/tmp"
     TEST_PASSED="${TEST_PASSED:-"$PKG_DIR/test_passed"}"
     TEST_FAILED="${TEST_FAILED:-"$PKG_DIR/test_failed"}"
+
+    TEST_SAMPLES_DIR="${TEST_SAMPLES_DIR:-"$PKG_DIR/samples"}"
 
     is_dir "$TEMP_DIR"    || make_dir "$TEMP_DIR"
     is_dir "$TEST_PASSED" || make_dir "$TEST_PASSED"
