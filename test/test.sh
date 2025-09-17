@@ -580,7 +580,7 @@ run_test_sample ()
                         is_empty "${WORKDIR:-}" && WORKDIR="$CURRENT_DIR" || {
                             case "$WORKDIR" in
                                 [!/]*)
-                                    WORKDIR="$PKG_DIR/$WORKDIR"
+                                    WORKDIR="$TEST_SAMPLE_DIR/$WORKDIR"
                                 ;;
                             esac
                             is_dir "$WORKDIR" || make_dir "$WORKDIR"
@@ -727,10 +727,14 @@ run_test ()
     do
         if is_file "$TEST_SAMPLE"
         then
-            grep "^[[:blank:]]*${TEST_SAMPLE##*/}" "$TEST_SAMPLES_DIR/.testignor" &>/dev/null
+            grep "^[[:blank:]]*${TEST_SAMPLE##*/}" "$TEST_SAMPLES_DIR/.testignor" &>/dev/null || {
+                TEST_SAMPLE_DIR="${TEST_SAMPLE%/*}"
+                false
+            }
         elif is_file "$TEST_SAMPLE/test.yaml"
         then
             grep "^[[:blank:]]*${TEST_SAMPLE##*/}" "$TEST_SAMPLES_DIR/.testignor" &>/dev/null || {
+                TEST_SAMPLE_DIR="$TEST_SAMPLE"
                 TEST_SAMPLE="$TEST_SAMPLE/test.yaml"
                 false
             }
