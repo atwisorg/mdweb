@@ -480,36 +480,23 @@ run_test_sample ()
                 }
                 LOAD_TEST="yes"
                 STRING_NUM_TEST="$STRING_NUM"
-                TEST_NAME="${LINE#:test:}"
-                TEST_NAME="${TEST_NAME:-noname}"
-                trim_white_space "$TEST_NAME"
-                TEST_NAME="$STRING"
-                ;;
-            :test)
-                TEST_NUMBER="$((TEST_NUMBER + 1))"
-                TOTAL_TEST_NUMBER="$((TOTAL_TEST_NUMBER + 1))"
-                is_empty "${SPECIFIC_TEST:-}" || check_test_num || {
-                    case $? in
-                        1 ) return 1 ;;
-                        2 ) continue
-                    esac
+                set -- ${LINE#:test:}
+                is_equal "${1:-}" "|" && NEXT_LINE=test-description || {
+                    TEST_NAME="$*"
+                    TEST_NAME="${TEST_NAME:-noname}"
+                    trim_white_space "$TEST_NAME"
+                    TEST_NAME=( "$STRING" )
                 }
-                LOAD_TEST="yes"
-                STRING_NUM_TEST="$STRING_NUM"
-                TEST_NAME="${TEST_NAME:-noname}"
                 ;;
             *)
                 is_equal "$LOAD_TEST" "yes" || continue
                 case "${LINE:-}" in
-                    :args|:return|:return-code|:timeout|:workdir|:workdir-clean|:workdir-chmod)
+                    :args|:return|:return-code|:test|:timeout|:workdir|:workdir-clean|:workdir-chmod)
                         ;;
                     :args:*)
                         is_equal "$LOAD_TEST" "yes" || continue
                         set -- ${LINE#:args:} "${GLOBAL_ARGS[@]}"
-                        is_equal "${1:-}" "|" && {
-                            NEXT_LINE=args
-                            set --
-                        } || {
+                        is_equal "${1:-}" "|" && NEXT_LINE=args || {
                             TESTED_ARGS=( "$@" )
                             for ARG in "$@"
                             do
@@ -557,7 +544,7 @@ run_test_sample ()
                         PREFIX=(
                             "test sample:" "[$TEST_SAMPLE]"
                             "string num:" "[$STRING_NUM_TEST]"
-                            "test name:" "[$TEST_NAME]"
+                            "test name:" "[${TEST_NAME[*]//$LF/|$LF$INDENT}]"
                             "test num:" "[$TEST_NUMBER]"
                         )
                         is_diff "${#TEST_SAMPLES[@]}" 0 || PREFIX=( "${PREFIX[@]}" "total test num:" "[$TOTAL_TEST_NUMBER]" )
@@ -639,20 +626,24 @@ run_test_sample ()
                         WORKDIR_CHMOD="${1:-}"
                         ;;
                     *)
-                        if is_equal "$NEXT_LINE" "args"
-                        then
-                                 TESTED_ARGS+=(   "${LINE:-}"  )
-                            SHOW_TESTED_ARGS+=( "\"${LINE:-}\"" )
-                        elif is_equal "$NEXT_LINE" "expect-stdout"
-                        then
-                            EXPECT="${EXPECT:+"$EXPECT$LF"}${LINE:-}"
-                        elif is_equal "$NEXT_LINE" "expect-stderr"
-                        then
-                            EXPECT_ERR="${EXPECT_ERR:+"$EXPECT_ERR$LF"}${LINE:-}"
-                        elif is_equal "$NEXT_LINE" "stdin"
-                        then
-                            STDIN="${STDIN:+"$STDIN$LF"}${LINE:-}"
-                        fi
+                        case "$NEXT_LINE" in
+                            args)
+                                     TESTED_ARGS+=(   "${LINE:-}"  )
+                                SHOW_TESTED_ARGS+=( "\"${LINE:-}\"" )
+                            ;;
+                            expect-stdout)
+                                EXPECT="${EXPECT:+"$EXPECT$LF"}${LINE:-}"
+                            ;;
+                            expect-stderr)
+                                EXPECT_ERR="${EXPECT_ERR:+"$EXPECT_ERR$LF"}${LINE:-}"
+                            ;;
+                            stdin)
+                                STDIN="${STDIN:+"$STDIN$LF"}${LINE:-}"
+                            ;;
+                            test-description)
+                                TEST_NAME="${TEST_NAME:+"$TEST_NAME$LF"}${LINE:-}"
+                            ;;
+                        esac
                 esac
         esac
     done < <(cat "$TEST_SAMPLE" | sed 's%\o000%\o357\o277\o275%g')
