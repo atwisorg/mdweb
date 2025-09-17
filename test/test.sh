@@ -426,6 +426,15 @@ unset_vars ()
     TESTED_COMMAND=()
 }
 
+get_app_path ()
+{
+    is_exists "$PKG_DIR/$1" || die 2 "no such app: -- '$1'" 2>&3
+    TESTED_APP_DIR="$PKG_DIR/${1%/*}"
+    TESTED_APP_DIR="${TESTED_APP_DIR:-/}"
+    TESTED_APP_DIR="$(abs_dirpath "$TESTED_APP_DIR")" || die "${TESTED_APP_DIR:-}"
+    TESTED_APP="$TESTED_APP_DIR/${1##*/}"
+}
+
 get_result ()
 {
     if is_not_empty "${NO_HEADINGS:-}"
@@ -504,6 +513,8 @@ run_test_sample ()
                         is_equal "$LOAD_TEST" "yes" || continue
                         set -- ${LINE#:command:} "${GLOBAL_ARGS[@]}"
                         TESTED_COMMAND=( "$@" )
+                        get_app_path "${TESTED_COMMAND[0]}"
+                        TESTED_COMMAND[0]="$TESTED_APP"
                         ;;
                     :break|:break:*)
                         break
@@ -538,6 +549,7 @@ run_test_sample ()
                             "test num:" "[$TEST_NUMBER]"
                         )
                         is_diff "${#TEST_SAMPLES[@]}" 0 || PREFIX=( "${PREFIX[@]}" "total test num:" "[$TOTAL_TEST_NUMBER]" )
+                        is_diff "${#TESTED_ARGS[@]}"  0 || TESTED_ARGS=( "${GLOBAL_ARGS[@]}" )
                         NAME_TEST_SAMPLE="${TEST_SAMPLE##*/}"
                         NAME_TEST_SAMPLE="${NAME_TEST_SAMPLE%.txt}"
                         WORKDIR="${WORKDIR:-"${GLOBAL_WORKDIR:-}"}"
@@ -545,19 +557,25 @@ run_test_sample ()
                         WORKDIR_CHMOD="${WORKDIR_CHMOD:-"${GLOBAL_WORKDIR_CHMOD:-}"}"
                         STDOUT="$TEMP_DIR/${NAME_TEST_SAMPLE}_$STRING_NUM_TEST.out"
                         STDERR="$TEMP_DIR/${NAME_TEST_SAMPLE}_$STRING_NUM_TEST.err"
+                        RETURN_CODE=0
+
                         is_empty "${WORKDIR:-}" && WORKDIR="$CURRENT_DIR" || {
                             case "$WORKDIR" in
                                 [!/]*)
                                     WORKDIR="$PKG_DIR/$WORKDIR"
                                 ;;
                             esac
-                            is_dir   "$WORKDIR"               || make_dir   "$WORKDIR" &&
-                            is_diff  "${WORKDIR_CLEAN:-}" yes || remove     "$WORKDIR"/*
-                            is_empty "${WORKDIR_CHMOD:-}"     || change_mod "$WORKDIR_CHMOD" "$WORKDIR"
-                                                                 change_dir "$WORKDIR"
+                            is_dir "$WORKDIR" || make_dir "$WORKDIR"
+                            WORKDIR="$(abs_dirpath "$WORKDIR")" || die "${WORKDIR:-}"
+                            is_diff  "${WORKDIR_CLEAN:-}" yes || {
+                                is_diff "${TESTED_APP_DIR#"$WORKDIR"}" "$TESTED_APP_DIR" ||
+                                is_diff "${HOME#"$WORKDIR"}" "$HOME" ||
+                                is_equal "$WORKDIR" "/root" || remove "$WORKDIR"/*
+                            }
+                            is_empty "${WORKDIR_CHMOD:-}" || change_mod "$WORKDIR_CHMOD" "$WORKDIR"
+                            change_dir "$WORKDIR"
                         }
-                        RETURN_CODE=0
-                        is_diff "${#TESTED_ARGS[@]}" 0 || TESTED_ARGS=( "${GLOBAL_ARGS[@]}" )
+                        
                         if is_empty "${!TESTED_COMMAND[@]}"
                         then
                             if is_empty "${STDIN:-}"
@@ -572,6 +590,7 @@ run_test_sample ()
                             COMMAND="${TESTED_COMMAND[@]} ${TESTED_ARGS[@]}"
                             timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" "${TESTED_COMMAND[@]}" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
                         fi
+
                         CHILD_PID="$!"
                         wait "$CHILD_PID"
                         RETURN_CODE="$?"
@@ -844,7 +863,9 @@ main ()
     is_dir "$TEST_PASSED" || make_dir "$TEST_PASSED"
     is_dir "$TEST_FAILED" || make_dir "$TEST_FAILED"
 
-    is_exists "$TESTED_PKG" || die 2 "no such file: -- '$TESTED_PKG'" 2>&3
+    get_app_path "$TESTED_PKG"
+    TESTED_PKG_DIR="$TESTED_APP_DIR"
+
     argparse "$@"
     is_empty "${!TEST_NUM[@]}" || {
         get_test_nums
