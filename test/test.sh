@@ -482,7 +482,10 @@ run_test_sample ()
                 LOAD_TEST="yes"
                 STRING_NUM_TEST="$STRING_NUM"
                 set -- ${LINE#:test:}
-                is_equal "${1:-}" "|" && NEXT_LINE=test-description || {
+                is_equal "${1:-}" "|" && {
+                    NEXT_LINE=test-description
+                    TEST_NAME=
+                } || {
                     TEST_NAME="$*"
                     TEST_NAME="${TEST_NAME:-noname}"
                     trim_white_space "$TEST_NAME"
