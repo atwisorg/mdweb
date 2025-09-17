@@ -203,6 +203,16 @@ remove ()
     exec_cmd "$@"
 }
 
+has_space ()
+{
+    STRING="${1:-}"
+    case "${STRING:-}" in
+        "" | *[[:space:]]*)
+            STRING="\"${STRING:-}\""
+        ;;
+    esac
+}
+
 get_pkg_vars ()
 {
     PKG="${0##*/}"
@@ -515,7 +525,13 @@ run_test_sample ()
                             TESTED_ARGS=( "$@" )
                             for ARG in "$@"
                             do
-                                SHOW_TESTED_ARGS+=( "\"$ARG\"" )
+                                case "$ARG" in
+                                    *[[:blank:]]*)
+                                        SHOW_TESTED_ARGS+=( "\"$ARG\"" )
+                                    ;;
+                                    *)
+                                        SHOW_TESTED_ARGS+=( "$ARG" )
+                                esac
                             done
                         }
                         ;;
@@ -526,7 +542,8 @@ run_test_sample ()
                         TESTED_COMMAND[0]="$TESTED_APP"
                         for ARG in "${TESTED_COMMAND[@]}"
                         do
-                            SHOW_TESTED_COMMAND+=( "\"$ARG\"" )
+                            has_space "$ARG"
+                            SHOW_TESTED_COMMAND+=( "$STRING" )
                         done
                         ;;
                     :break|:break:*)
@@ -567,7 +584,8 @@ run_test_sample ()
                             TESTED_ARGS=( "${GLOBAL_ARGS[@]}" )
                             for ARG in "${GLOBAL_ARGS[@]}"
                             do
-                                SHOW_TESTED_ARGS+=( "\"$ARG\"" )
+                                has_space "$ARG"
+                                SHOW_TESTED_ARGS+=( "$STRING" )
                             done
                         }
                         NAME_TEST_SAMPLE="${TEST_SAMPLE##*/}"
@@ -605,24 +623,31 @@ run_test_sample ()
                                 "$@"
                             done
                         }
-
+                        has_space "$PWD"
+                        COMMAND="cd $STRING"
                         if is_empty "${!TESTED_COMMAND[@]}"
                         then
+                            has_space "$TESTED_PKG"
+                            SHOW_TESTED_PKG="$STRING"
                             if is_empty "${STDIN:-}"
                             then
-                                COMMAND="cd \"$PWD\";$LF${TESTED_SHELL:+"$TESTED_SHELL"} \"$TESTED_PKG\" ${SHOW_TESTED_ARGS[@]}"
+                                COMMAND="$COMMAND;$LF${TESTED_SHELL:+"$TESTED_SHELL"} $SHOW_TESTED_PKG ${SHOW_TESTED_ARGS[@]}"
                                 timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_PKG" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
                             else
-                                COMMAND="cd \"$PWD\";${LF}echo \"$STDIN\" | ${TESTED_SHELL:+"$TESTED_SHELL"} \"$TESTED_PKG\" ${SHOW_TESTED_ARGS[@]}"
+                                has_space "$STDIN"
+                                SHOW_STDIN="$STRING"
+                                COMMAND="$COMMAND;${LF}echo $SHOW_STDIN | ${TESTED_SHELL:+"$TESTED_SHELL"} $SHOW_TESTED_PKG ${SHOW_TESTED_ARGS[@]}"
                                 sed 's%\o357\o277\o275%\o000%g' <<< "$STDIN" | timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_PKG" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
                             fi
                         else
                             if is_empty "${STDIN:-}"
                             then
-                                COMMAND="cd \"$PWD\";$LF${SHOW_TESTED_COMMAND[@]} ${SHOW_TESTED_ARGS[@]}"
+                                COMMAND="$COMMAND;$LF${SHOW_TESTED_COMMAND[@]} ${SHOW_TESTED_ARGS[@]}"
                                 timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" "${TESTED_COMMAND[@]}" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
                             else
-                                COMMAND="cd \"$PWD\";${LF}echo \"$STDIN\" | ${TESTED_SHELL:+"$TESTED_SHELL"} \"$TESTED_PKG\" ${SHOW_TESTED_ARGS[@]}"
+                                has_space "$STDIN"
+                                SHOW_STDIN="$STRING"
+                                COMMAND="$COMMAND;${LF}echo $SHOW_STDIN | ${TESTED_SHELL:+"$TESTED_SHELL"} ${SHOW_TESTED_COMMAND[@]} ${SHOW_TESTED_ARGS[@]}"
                                 sed 's%\o357\o277\o275%\o000%g' <<< "$STDIN" | timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" "${TESTED_COMMAND[@]}" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
                             fi
                         fi
@@ -654,8 +679,9 @@ run_test_sample ()
                     *)
                         case "$NEXT_LINE" in
                             args)
-                                     TESTED_ARGS+=(   "${LINE:-}"  )
-                                SHOW_TESTED_ARGS+=( "\"${LINE:-}\"" )
+                                has_space "${LINE:-}"
+                                SHOW_TESTED_ARGS+=( "$STRING" )
+                                TESTED_ARGS+=( "${LINE:-}" )
                             ;;
                             expect-stdout)
                                 EXPECT="${EXPECT:+"$EXPECT$LF"}${LINE:-}"
