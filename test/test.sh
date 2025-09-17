@@ -434,6 +434,7 @@ unset_vars ()
     WORKDIR_CLEAN=
     WORKDIR_CHMOD=
     TESTED_COMMAND=()
+    SHOW_COMMAND=
     SHOW_TESTED_ARGS=()
     SHOW_TESTED_COMMAND=()
     PRETEST=()
@@ -466,7 +467,7 @@ get_result ()
     then
         printf '%16s %s\n' "$H1" "" "stdin:" "|${STDIN//$LF/|$LF$INDENT}|"
     else
-        printf '%16s %s\n' "$H1" "" "${PREFIX[@]}" "$H2" "" "command:" "|$LF$COMMAND" "$H2" "" "stdin:" "|${STDIN//$LF/|$LF$INDENT}|"
+        printf '%16s %s\n' "$H1" "" "${PREFIX[@]}" "$H2" "" "command:" "|$LF$SHOW_COMMAND" "$H2" "" "stdin:" "|${STDIN//$LF/|$LF$INDENT}|"
     fi
     if cmp_results
     then
@@ -614,6 +615,8 @@ run_test_sample ()
                             }
                             is_empty "${WORKDIR_CHMOD:-}" || change_mod "$WORKDIR_CHMOD" "$WORKDIR"
                             change_dir "$WORKDIR"
+                            has_space "$PWD"
+                            SHOW_COMMAND="cd $STRING;$LF"
                         }
 
                         is_empty "${!PRETEST[@]}" || {
@@ -623,31 +626,30 @@ run_test_sample ()
                                 "$@"
                             done
                         }
-                        has_space "$PWD"
-                        COMMAND="cd $STRING"
+
                         if is_empty "${!TESTED_COMMAND[@]}"
                         then
                             has_space "$TESTED_PKG"
                             SHOW_TESTED_PKG="$STRING"
                             if is_empty "${STDIN:-}"
                             then
-                                COMMAND="$COMMAND;$LF${TESTED_SHELL:+"$TESTED_SHELL"} $SHOW_TESTED_PKG ${SHOW_TESTED_ARGS[@]}"
+                                SHOW_COMMAND="${SHOW_COMMAND:-}${TESTED_SHELL:+"$TESTED_SHELL"} $SHOW_TESTED_PKG ${SHOW_TESTED_ARGS[@]}"
                                 timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_PKG" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
                             else
                                 has_space "$STDIN"
                                 SHOW_STDIN="$STRING"
-                                COMMAND="$COMMAND;${LF}echo $SHOW_STDIN | ${TESTED_SHELL:+"$TESTED_SHELL"} $SHOW_TESTED_PKG ${SHOW_TESTED_ARGS[@]}"
+                                SHOW_COMMAND="${SHOW_COMMAND:-}echo $SHOW_STDIN | ${TESTED_SHELL:+"$TESTED_SHELL"} $SHOW_TESTED_PKG ${SHOW_TESTED_ARGS[@]}"
                                 sed 's%\o357\o277\o275%\o000%g' <<< "$STDIN" | timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_PKG" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
                             fi
                         else
                             if is_empty "${STDIN:-}"
                             then
-                                COMMAND="$COMMAND;$LF${SHOW_TESTED_COMMAND[@]} ${SHOW_TESTED_ARGS[@]}"
+                                SHOW_COMMAND="${SHOW_COMMAND:-}${SHOW_TESTED_COMMAND[@]} ${SHOW_TESTED_ARGS[@]}"
                                 timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" "${TESTED_COMMAND[@]}" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
                             else
                                 has_space "$STDIN"
                                 SHOW_STDIN="$STRING"
-                                COMMAND="$COMMAND;${LF}echo $SHOW_STDIN | ${TESTED_SHELL:+"$TESTED_SHELL"} ${SHOW_TESTED_COMMAND[@]} ${SHOW_TESTED_ARGS[@]}"
+                                SHOW_COMMAND="${SHOW_COMMAND:-}echo $SHOW_STDIN | ${TESTED_SHELL:+"$TESTED_SHELL"} ${SHOW_TESTED_COMMAND[@]} ${SHOW_TESTED_ARGS[@]}"
                                 sed 's%\o357\o277\o275%\o000%g' <<< "$STDIN" | timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" "${TESTED_COMMAND[@]}" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
                             fi
                         fi
