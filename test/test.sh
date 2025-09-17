@@ -431,7 +431,19 @@ unset_vars ()
 
 get_app_path ()
 {
-    is_exists "$PKG_DIR/$1" || die 2 "no such app: -- '$1'" 2>&3
+    TESTED_APP=
+    TESTED_APP_DIR=
+    is_exists "$PKG_DIR/$1" ||
+    case "$1" in
+        */*)
+            die 2 "no such app: -- '$1'" 2>&3
+        ;;
+        *)
+            TESTED_APP="$(2>&1 type "$1")" || die 2 "no such app: -- '$1'" 2>&3
+            TESTED_APP="${TESTED_APP##*[[:blank:]]}"
+            return
+        ;;
+    esac
     TESTED_APP_DIR="$PKG_DIR/${1%/*}"
     TESTED_APP_DIR="${TESTED_APP_DIR:-/}"
     TESTED_APP_DIR="$(abs_dirpath "$TESTED_APP_DIR")" || die "${TESTED_APP_DIR:-}"
@@ -576,7 +588,9 @@ run_test_sample ()
                             is_dir "$WORKDIR" || make_dir "$WORKDIR"
                             WORKDIR="$(abs_dirpath "$WORKDIR")" || die "${WORKDIR:-}"
                             is_diff  "${WORKDIR_CLEAN:-}" yes || {
+                                is_not_empty "${TESTED_APP_DIR:-}" &&
                                 is_diff "${TESTED_APP_DIR#"$WORKDIR"}" "$TESTED_APP_DIR" ||
+                                is_diff "${TESTED_PKG_DIR#"$WORKDIR"}" "$TESTED_PKG_DIR" ||
                                 is_diff "${HOME#"$WORKDIR"}" "$HOME" ||
                                 is_equal "$WORKDIR" "/root" || remove "$WORKDIR"/*
                             }
@@ -588,7 +602,6 @@ run_test_sample ()
                             for COMMAND in "${PRETEST[@]}"
                             do
                                 set -- ${COMMAND:-}
-                                echo "$@"
                                 "$@"
                             done
                         }
@@ -604,8 +617,14 @@ run_test_sample ()
                                 sed 's%\o357\o277\o275%\o000%g' <<< "$STDIN" | timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_PKG" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
                             fi
                         else
-                            COMMAND="cd \"$PWD\";$LF${SHOW_TESTED_COMMAND[@]} ${SHOW_TESTED_ARGS[@]}"
-                            timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" "${TESTED_COMMAND[@]}" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
+                            if is_empty "${STDIN:-}"
+                            then
+                                COMMAND="cd \"$PWD\";$LF${SHOW_TESTED_COMMAND[@]} ${SHOW_TESTED_ARGS[@]}"
+                                timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" "${TESTED_COMMAND[@]}" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
+                            else
+                                COMMAND="cd \"$PWD\";${LF}echo \"$STDIN\" | ${TESTED_SHELL:+"$TESTED_SHELL"} \"$TESTED_PKG\" ${SHOW_TESTED_ARGS[@]}"
+                                sed 's%\o357\o277\o275%\o000%g' <<< "$STDIN" | timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" "${TESTED_COMMAND[@]}" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
+                            fi
                         fi
 
                         CHILD_PID="$!"
