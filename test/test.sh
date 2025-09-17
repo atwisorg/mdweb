@@ -495,7 +495,10 @@ run_test_sample ()
                     :args:*)
                         is_equal "$LOAD_TEST" "yes" || continue
                         set -- ${LINE#:args:} "${GLOBAL_ARGS[@]}"
-                        TESTED_ARGS=( "$@" )
+                        is_equal "${1:-}" "|" && {
+                            NEXT_LINE=args
+                            set --
+                        } || TESTED_ARGS=( "$@" )
                         ;;
                     :command:*)
                         is_equal "$LOAD_TEST" "yes" || continue
@@ -599,7 +602,13 @@ run_test_sample ()
                         WORKDIR_CHMOD="${1:-}"
                         ;;
                     *)
-                        if is_equal "$NEXT_LINE" "expect-stdout"
+                        if is_equal "$NEXT_LINE" "args"
+                        then
+                            TESTED_ARGS=(
+                                "${TESTED_ARGS[@]}"
+                                "${LINE:-}"
+                            )
+                        elif is_equal "$NEXT_LINE" "expect-stdout"
                         then
                             EXPECT="${EXPECT:+"$EXPECT$LF"}${LINE:-}"
                         elif is_equal "$NEXT_LINE" "expect-stderr"
