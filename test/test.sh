@@ -246,9 +246,11 @@ get_test_nums ()
 
 save_result ()
 {
-    STATUS=":test:$TEST_NAME$LF"
+    STATUS=":test: $TEST_NAME$LF"
+    is_equal "${#TESTED_COMMAND[@]}" 0 ||
+        STATUS="$STATUS:command: ${TESTED_COMMAND[@]}$LF"
     is_equal "${#TESTED_ARGS[@]}" 0 ||
-        STATUS="$STATUS:args:${TESTED_ARGS[@]}$LF"
+        STATUS="$STATUS:args: ${TESTED_ARGS[@]}$LF"
     is_empty "${COMPARE_STDOUT:-}" ||
         STATUS="$STATUS:expect: |$LF${EXPECT:+"$EXPECT$LF"}"
     is_empty "${COMPARE_STDERR:-}" ||
@@ -421,6 +423,7 @@ unset_vars ()
     WORKDIR=
     WORKDIR_CLEAN=
     WORKDIR_CHMOD=
+    TESTED_COMMAND=()
 }
 
 get_result ()
@@ -494,6 +497,11 @@ run_test_sample ()
                         set -- ${LINE#:args:} "${GLOBAL_ARGS[@]}"
                         TESTED_ARGS=( "$@" )
                         ;;
+                    :command:*)
+                        is_equal "$LOAD_TEST" "yes" || continue
+                        set -- ${LINE#:command:} "${GLOBAL_ARGS[@]}"
+                        TESTED_COMMAND=( "$@" )
+                        ;;
                     :break|:break:*)
                         break
                         ;;
@@ -547,13 +555,19 @@ run_test_sample ()
                         }
                         RETURN_CODE=0
                         is_diff "${#TESTED_ARGS[@]}" 0 || TESTED_ARGS=( "${GLOBAL_ARGS[@]}" )
-                        if is_empty "${STDIN:-}"
+                        if is_empty "${!TESTED_COMMAND[@]}"
                         then
-                            COMMAND="${TESTED_SHELL:+"$TESTED_SHELL"} $TESTED_PKG ${TESTED_ARGS[@]}"
-                            timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_PKG" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
+                            if is_empty "${STDIN:-}"
+                            then
+                                COMMAND="${TESTED_SHELL:+"$TESTED_SHELL"} $TESTED_PKG ${TESTED_ARGS[@]}"
+                                timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_PKG" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
+                            else
+                                COMMAND="echo $STDIN | ${TESTED_SHELL:+"$TESTED_SHELL"} $TESTED_PKG ${TESTED_ARGS[@]}"
+                                sed 's%\o357\o277\o275%\o000%g' <<< "$STDIN" | timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_PKG" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
+                            fi
                         else
-                            COMMAND="echo $STDIN | ${TESTED_SHELL:+"$TESTED_SHELL"} $TESTED_PKG ${TESTED_ARGS[@]}"
-                            sed 's%\o357\o277\o275%\o000%g' <<< "$STDIN" | timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_PKG" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
+                            COMMAND="${TESTED_COMMAND[@]} ${TESTED_ARGS[@]}"
+                            timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" "${TESTED_COMMAND[@]}" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
                         fi
                         CHILD_PID="$!"
                         wait "$CHILD_PID"

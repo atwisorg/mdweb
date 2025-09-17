@@ -93,6 +93,11 @@ Run a test with a time limit.
 `DURATION` is a floating point number with an optional suffix: `s` for seconds (the default), `m` for minutes, `h` for hours or `d` for days.
 A duration of 0 disables the associated timeout.
 
+***`:command`***
+
+Programm under test.
+If this directive is empty or omitted, the value of the global variable `TESTED_PKG` from the `test.conf` configuration file is used.
+
 ***`:args`***
 
 Pass options to the test program for the current test
