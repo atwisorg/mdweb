@@ -261,7 +261,7 @@ save_result ()
     STATUS="$STATUS:stdout: |$LF${STDOUT_RESULT:+$STDOUT_RESULT$LF}"
     STATUS="$STATUS:stderr: |$LF${STDERR_RESULT:+$STDERR_RESULT$LF}"
     STATUS="$STATUS:return: $RETURN_CODE$LF:end:"
-    echo "$STATUS" > "$1/${NAME_TEST_SAMPLE}_$STRING_NUM_TEST.txt"
+    echo "$STATUS" > "$1/${NAME_TEST_SAMPLE}_$STRING_NUM_TEST.yaml"
 }
 
 expect_out ()
@@ -551,7 +551,7 @@ run_test_sample ()
                         is_diff "${#TEST_SAMPLES[@]}" 0 || PREFIX=( "${PREFIX[@]}" "total test num:" "[$TOTAL_TEST_NUMBER]" )
                         is_diff "${#TESTED_ARGS[@]}"  0 || TESTED_ARGS=( "${GLOBAL_ARGS[@]}" )
                         NAME_TEST_SAMPLE="${TEST_SAMPLE##*/}"
-                        NAME_TEST_SAMPLE="${NAME_TEST_SAMPLE%.txt}"
+                        NAME_TEST_SAMPLE="${NAME_TEST_SAMPLE%.yaml}"
                         WORKDIR="${WORKDIR:-"${GLOBAL_WORKDIR:-}"}"
                         WORKDIR_CLEAN="${WORKDIR_CLEAN:-"${GLOBAL_WORKDIR_CLEAN:-}"}"
                         WORKDIR_CHMOD="${WORKDIR_CHMOD:-"${GLOBAL_WORKDIR_CHMOD:-}"}"
@@ -575,7 +575,7 @@ run_test_sample ()
                             is_empty "${WORKDIR_CHMOD:-}" || change_mod "$WORKDIR_CHMOD" "$WORKDIR"
                             change_dir "$WORKDIR"
                         }
-                        
+
                         if is_empty "${!TESTED_COMMAND[@]}"
                         then
                             if is_empty "${STDIN:-}"
@@ -707,11 +707,18 @@ run_test ()
         } || die 2 "no such file: -- '$TEST_SAMPLE'" 2>&3
         run_test_sample || break
     done ||
-    for TEST_SAMPLE in "$TEST_SAMPLES_DIR"/*.txt
+    for TEST_SAMPLE in "$TEST_SAMPLES_DIR"/*
     do
-        grep "^[[:blank:]]*${TEST_SAMPLE##*/}" "$TEST_SAMPLES_DIR/.testignor" &>/dev/null && continue
-        is_exists "$TEST_SAMPLE" || die 2 "no such file: -- '$TEST_SAMPLE'" 2>&3
-        run_test_sample || break
+        if is_file "$TEST_SAMPLE"
+        then
+            grep "^[[:blank:]]*${TEST_SAMPLE##*/}" "$TEST_SAMPLES_DIR/.testignor" &>/dev/null
+        elif is_file "$TEST_SAMPLE/test.yaml"
+        then
+            grep "^[[:blank:]]*${TEST_SAMPLE##*/}" "$TEST_SAMPLES_DIR/.testignor" &>/dev/null || {
+                TEST_SAMPLE="$TEST_SAMPLE/test.yaml"
+                false
+            }
+        fi || run_test_sample || break
     done
     report >&3
 }
@@ -864,6 +871,7 @@ main ()
     is_dir "$TEST_FAILED" || make_dir "$TEST_FAILED"
 
     get_app_path "$TESTED_PKG"
+    TESTED_PKG="$TESTED_APP"
     TESTED_PKG_DIR="$TESTED_APP_DIR"
 
     argparse "$@"
