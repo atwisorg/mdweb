@@ -479,6 +479,93 @@ get_result ()
     cd -- "$CURRENT_DIR"
 }
 
+run_unit_test ()
+{
+    PREFIX=(
+        "test sample:" "[$TEST_SAMPLE]"
+        "string num:" "[$STRING_NUM_TEST]"
+        "test name:" "[${TEST_NAME[*]//$LF/|$LF$INDENT}]"
+        "test num:" "[$TEST_NUMBER]"
+    )
+    is_diff "${#TEST_SAMPLES[@]}" 0 || PREFIX=( "${PREFIX[@]}" "total test num:" "[$TOTAL_TEST_NUMBER]" )
+    is_diff "${#TESTED_ARGS[@]}"  0 || {
+        TESTED_ARGS=( "${GLOBAL_ARGS[@]}" )
+        for ARG in "${GLOBAL_ARGS[@]}"
+        do
+            has_space "$ARG"
+            SHOW_TESTED_ARGS+=( "$STRING" )
+        done
+    }
+    NAME_TEST_SAMPLE="${TEST_SAMPLE##*/}"
+    NAME_TEST_SAMPLE="${NAME_TEST_SAMPLE%.yaml}"
+    WORKDIR="${WORKDIR:-"${GLOBAL_WORKDIR:-}"}"
+    WORKDIR_CLEAN="${WORKDIR_CLEAN:-"${GLOBAL_WORKDIR_CLEAN:-}"}"
+    WORKDIR_CHMOD="${WORKDIR_CHMOD:-"${GLOBAL_WORKDIR_CHMOD:-}"}"
+    STDOUT="$TEMP_DIR/${NAME_TEST_SAMPLE}_$STRING_NUM_TEST.out"
+    STDERR="$TEMP_DIR/${NAME_TEST_SAMPLE}_$STRING_NUM_TEST.err"
+    RETURN_CODE=0
+
+    is_empty "${WORKDIR:-}" && WORKDIR="$CURRENT_DIR" || {
+        case "$WORKDIR" in
+            [!/]*)
+                WORKDIR="$TEST_SAMPLE_DIR/$WORKDIR"
+            ;;
+        esac
+        is_dir "$WORKDIR" || make_dir "$WORKDIR"
+        WORKDIR="$(abs_dirpath "$WORKDIR")" || die "${WORKDIR:-}"
+        is_diff  "${WORKDIR_CLEAN:-}" yes || {
+            is_not_empty "${TESTED_APP_DIR:-}" &&
+            is_diff "${TESTED_APP_DIR#"$WORKDIR"}" "$TESTED_APP_DIR" ||
+            is_diff "${TESTED_PKG_DIR#"$WORKDIR"}" "$TESTED_PKG_DIR" ||
+            is_diff "${HOME#"$WORKDIR"}" "$HOME" ||
+            is_equal "$WORKDIR" "/root" || remove "$WORKDIR"/*
+        }
+        is_empty "${WORKDIR_CHMOD:-}" || change_mod "$WORKDIR_CHMOD" "$WORKDIR"
+        change_dir "$WORKDIR"
+        has_space "$PWD"
+        SHOW_COMMAND="cd $STRING;$LF"
+    }
+
+    is_empty "${!PRETEST[@]}" || {
+        for COMMAND in "${PRETEST[@]}"
+        do
+            set -- ${COMMAND:-}
+            "$@"
+        done
+    }
+
+    if is_empty "${!TESTED_COMMAND[@]}"
+    then
+        has_space "$TESTED_PKG"
+        SHOW_TESTED_PKG="$STRING"
+        if is_empty "${STDIN:-}"
+        then
+            SHOW_COMMAND="${SHOW_COMMAND:-}${TESTED_SHELL:+"$TESTED_SHELL"} $SHOW_TESTED_PKG ${SHOW_TESTED_ARGS[@]}"
+            timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_PKG" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
+        else
+            has_space "$STDIN"
+            SHOW_STDIN="$STRING"
+            SHOW_COMMAND="${SHOW_COMMAND:-}echo $SHOW_STDIN | ${TESTED_SHELL:+"$TESTED_SHELL"} $SHOW_TESTED_PKG ${SHOW_TESTED_ARGS[@]}"
+            sed 's%\o357\o277\o275%\o000%g' <<< "$STDIN" | timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_PKG" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
+        fi
+    else
+        if is_empty "${STDIN:-}"
+        then
+            SHOW_COMMAND="${SHOW_COMMAND:-}${SHOW_TESTED_COMMAND[@]} ${SHOW_TESTED_ARGS[@]}"
+            timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" "${TESTED_COMMAND[@]}" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
+        else
+            has_space "$STDIN"
+            SHOW_STDIN="$STRING"
+            SHOW_COMMAND="${SHOW_COMMAND:-}echo $SHOW_STDIN | ${TESTED_SHELL:+"$TESTED_SHELL"} ${SHOW_TESTED_COMMAND[@]} ${SHOW_TESTED_ARGS[@]}"
+            sed 's%\o357\o277\o275%\o000%g' <<< "$STDIN" | timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" "${TESTED_COMMAND[@]}" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
+        fi
+    fi
+
+    CHILD_PID="$!"
+    wait "$CHILD_PID"
+    RETURN_CODE="$?"
+}
+
 run_test_sample ()
 {
     STRING_NUM=0
@@ -574,89 +661,7 @@ run_test_sample ()
                         EXPECT_RETURN_CODE="${1:-}"
                         ;;
                     :run|:run:*)
-                        PREFIX=(
-                            "test sample:" "[$TEST_SAMPLE]"
-                            "string num:" "[$STRING_NUM_TEST]"
-                            "test name:" "[${TEST_NAME[*]//$LF/|$LF$INDENT}]"
-                            "test num:" "[$TEST_NUMBER]"
-                        )
-                        is_diff "${#TEST_SAMPLES[@]}" 0 || PREFIX=( "${PREFIX[@]}" "total test num:" "[$TOTAL_TEST_NUMBER]" )
-                        is_diff "${#TESTED_ARGS[@]}"  0 || {
-                            TESTED_ARGS=( "${GLOBAL_ARGS[@]}" )
-                            for ARG in "${GLOBAL_ARGS[@]}"
-                            do
-                                has_space "$ARG"
-                                SHOW_TESTED_ARGS+=( "$STRING" )
-                            done
-                        }
-                        NAME_TEST_SAMPLE="${TEST_SAMPLE##*/}"
-                        NAME_TEST_SAMPLE="${NAME_TEST_SAMPLE%.yaml}"
-                        WORKDIR="${WORKDIR:-"${GLOBAL_WORKDIR:-}"}"
-                        WORKDIR_CLEAN="${WORKDIR_CLEAN:-"${GLOBAL_WORKDIR_CLEAN:-}"}"
-                        WORKDIR_CHMOD="${WORKDIR_CHMOD:-"${GLOBAL_WORKDIR_CHMOD:-}"}"
-                        STDOUT="$TEMP_DIR/${NAME_TEST_SAMPLE}_$STRING_NUM_TEST.out"
-                        STDERR="$TEMP_DIR/${NAME_TEST_SAMPLE}_$STRING_NUM_TEST.err"
-                        RETURN_CODE=0
-
-                        is_empty "${WORKDIR:-}" && WORKDIR="$CURRENT_DIR" || {
-                            case "$WORKDIR" in
-                                [!/]*)
-                                    WORKDIR="$TEST_SAMPLE_DIR/$WORKDIR"
-                                ;;
-                            esac
-                            is_dir "$WORKDIR" || make_dir "$WORKDIR"
-                            WORKDIR="$(abs_dirpath "$WORKDIR")" || die "${WORKDIR:-}"
-                            is_diff  "${WORKDIR_CLEAN:-}" yes || {
-                                is_not_empty "${TESTED_APP_DIR:-}" &&
-                                is_diff "${TESTED_APP_DIR#"$WORKDIR"}" "$TESTED_APP_DIR" ||
-                                is_diff "${TESTED_PKG_DIR#"$WORKDIR"}" "$TESTED_PKG_DIR" ||
-                                is_diff "${HOME#"$WORKDIR"}" "$HOME" ||
-                                is_equal "$WORKDIR" "/root" || remove "$WORKDIR"/*
-                            }
-                            is_empty "${WORKDIR_CHMOD:-}" || change_mod "$WORKDIR_CHMOD" "$WORKDIR"
-                            change_dir "$WORKDIR"
-                            has_space "$PWD"
-                            SHOW_COMMAND="cd $STRING;$LF"
-                        }
-
-                        is_empty "${!PRETEST[@]}" || {
-                            for COMMAND in "${PRETEST[@]}"
-                            do
-                                set -- ${COMMAND:-}
-                                "$@"
-                            done
-                        }
-
-                        if is_empty "${!TESTED_COMMAND[@]}"
-                        then
-                            has_space "$TESTED_PKG"
-                            SHOW_TESTED_PKG="$STRING"
-                            if is_empty "${STDIN:-}"
-                            then
-                                SHOW_COMMAND="${SHOW_COMMAND:-}${TESTED_SHELL:+"$TESTED_SHELL"} $SHOW_TESTED_PKG ${SHOW_TESTED_ARGS[@]}"
-                                timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_PKG" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
-                            else
-                                has_space "$STDIN"
-                                SHOW_STDIN="$STRING"
-                                SHOW_COMMAND="${SHOW_COMMAND:-}echo $SHOW_STDIN | ${TESTED_SHELL:+"$TESTED_SHELL"} $SHOW_TESTED_PKG ${SHOW_TESTED_ARGS[@]}"
-                                sed 's%\o357\o277\o275%\o000%g' <<< "$STDIN" | timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_PKG" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
-                            fi
-                        else
-                            if is_empty "${STDIN:-}"
-                            then
-                                SHOW_COMMAND="${SHOW_COMMAND:-}${SHOW_TESTED_COMMAND[@]} ${SHOW_TESTED_ARGS[@]}"
-                                timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" "${TESTED_COMMAND[@]}" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
-                            else
-                                has_space "$STDIN"
-                                SHOW_STDIN="$STRING"
-                                SHOW_COMMAND="${SHOW_COMMAND:-}echo $SHOW_STDIN | ${TESTED_SHELL:+"$TESTED_SHELL"} ${SHOW_TESTED_COMMAND[@]} ${SHOW_TESTED_ARGS[@]}"
-                                sed 's%\o357\o277\o275%\o000%g' <<< "$STDIN" | timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" "${TESTED_COMMAND[@]}" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
-                            fi
-                        fi
-
-                        CHILD_PID="$!"
-                        wait "$CHILD_PID"
-                        RETURN_CODE="$?"
+                        run_unit_test
                         get_result
                         ;;
                     :stdin|:stdin:*)
