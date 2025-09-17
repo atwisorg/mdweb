@@ -426,6 +426,7 @@ unset_vars ()
     TESTED_COMMAND=()
     SHOW_TESTED_ARGS=()
     SHOW_TESTED_COMMAND=()
+    PRETEST=()
 }
 
 get_app_path ()
@@ -491,10 +492,9 @@ run_test_sample ()
             *)
                 is_equal "$LOAD_TEST" "yes" || continue
                 case "${LINE:-}" in
-                    :args|:return|:return-code|:test|:timeout|:workdir|:workdir-clean|:workdir-chmod)
+                    :args|:return|:return-code|:pretest|:test|:timeout|:workdir|:workdir-clean|:workdir-chmod)
                         ;;
                     :args:*)
-                        is_equal "$LOAD_TEST" "yes" || continue
                         set -- ${LINE#:args:} "${GLOBAL_ARGS[@]}"
                         is_equal "${1:-}" "|" && NEXT_LINE=args || {
                             TESTED_ARGS=( "$@" )
@@ -505,7 +505,6 @@ run_test_sample ()
                         }
                         ;;
                     :command:*)
-                        is_equal "$LOAD_TEST" "yes" || continue
                         set -- ${LINE#:command:} "${GLOBAL_ARGS[@]}"
                         TESTED_COMMAND=( "$@" )
                         get_app_path "${TESTED_COMMAND[0]}"
@@ -529,18 +528,19 @@ run_test_sample ()
                         NEXT_LINE="expect-stderr"
                         COMPARE_STDERR="yes"
                         ;;
+                    :pretest:*)
+                        set -- ${LINE#:pretest:}
+                        is_equal "${1:-}" "|" && NEXT_LINE=pretest || PRETEST=( "$*" )
+                        ;;
                     :return:*)
-                        is_equal "$LOAD_TEST" "yes" || continue
                         set -- ${LINE#:return:}
                         EXPECT_RETURN_CODE="${1:-}"
                         ;;
                     :return-code:*)
-                        is_equal "$LOAD_TEST" "yes" || continue
                         set -- ${LINE#:return-code:}
                         EXPECT_RETURN_CODE="${1:-}"
                         ;;
                     :run|:run:*)
-                        is_equal "$LOAD_TEST" "yes" || continue
                         PREFIX=(
                             "test sample:" "[$TEST_SAMPLE]"
                             "string num:" "[$STRING_NUM_TEST]"
@@ -581,6 +581,15 @@ run_test_sample ()
                             change_dir "$WORKDIR"
                         }
 
+                        is_empty "${!PRETEST[@]}" || {
+                            for COMMAND in "${PRETEST[@]}"
+                            do
+                                set -- ${COMMAND:-}
+                                echo "$@"
+                                "$@"
+                            done
+                        }
+
                         if is_empty "${!TESTED_COMMAND[@]}"
                         then
                             if is_empty "${STDIN:-}"
@@ -602,26 +611,21 @@ run_test_sample ()
                         get_result
                         ;;
                     :stdin|:stdin:*)
-                        is_equal "$LOAD_TEST" "yes" || continue
                         NEXT_LINE="stdin"
                         ;;
                     :timeout:*)
-                        is_equal "$LOAD_TEST" "yes" || continue
                         set -- ${LINE#:timeout:}
                         TIMEOUT="${1:-}"
                         ;;
                     :workdir:*)
-                        is_equal "$LOAD_TEST" "yes" || continue
                         set -- ${LINE#:workdir:}
                         WORKDIR="${1:-}"
                         ;;
                     :workdir-clean:*)
-                        is_equal "$LOAD_TEST" "yes" || continue
                         set -- ${LINE#:workdir-clean:}
                         WORKDIR_CLEAN="${1:-}"
                         ;;
                     :workdir-chmod:*)
-                        is_equal "$LOAD_TEST" "yes" || continue
                         set -- ${LINE#:workdir-chmod:}
                         WORKDIR_CHMOD="${1:-}"
                         ;;
@@ -639,6 +643,9 @@ run_test_sample ()
                             ;;
                             stdin)
                                 STDIN="${STDIN:+"$STDIN$LF"}${LINE:-}"
+                            ;;
+                            pretest)
+                                PRETEST+=( "${LINE:-}" )
                             ;;
                             test-description)
                                 TEST_NAME="${TEST_NAME:+"$TEST_NAME$LF"}${LINE:-}"

@@ -114,6 +114,10 @@ Expected result received on `stdout` from the program under test
 
 Expected result received on `stderr` from the program under test
 
+***`:pretest`***
+
+Run commands before starting testing in the working directory
+
 ***`:return`***
 
 Expected return code of the program under test
