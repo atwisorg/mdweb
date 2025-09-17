@@ -512,7 +512,7 @@ run_test_sample ()
                             TESTED_ARGS=( "$@" )
                             for ARG in "$@"
                             do
-                                SHOW_TESTED_ARGS+=( "'$ARG'" )
+                                SHOW_TESTED_ARGS+=( "\"$ARG\"" )
                             done
                         }
                         ;;
@@ -557,8 +557,11 @@ run_test_sample ()
                         )
                         is_diff "${#TEST_SAMPLES[@]}" 0 || PREFIX=( "${PREFIX[@]}" "total test num:" "[$TOTAL_TEST_NUMBER]" )
                         is_diff "${#TESTED_ARGS[@]}"  0 || {
-                                 TESTED_ARGS=( "${GLOBAL_ARGS[@]}" )
-                            SHOW_TESTED_ARGS=( "${GLOBAL_ARGS[@]}" )
+                            TESTED_ARGS=( "${GLOBAL_ARGS[@]}" )
+                            for ARG in "${GLOBAL_ARGS[@]}"
+                            do
+                                SHOW_TESTED_ARGS+=( "\"$ARG\"" )
+                            done
                         }
                         NAME_TEST_SAMPLE="${TEST_SAMPLE##*/}"
                         NAME_TEST_SAMPLE="${NAME_TEST_SAMPLE%.yaml}"
@@ -593,7 +596,7 @@ run_test_sample ()
                                 COMMAND="${TESTED_SHELL:+"$TESTED_SHELL"} $TESTED_PKG ${SHOW_TESTED_ARGS[@]}"
                                 timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_PKG" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
                             else
-                                COMMAND="echo '$STDIN' | ${TESTED_SHELL:+"$TESTED_SHELL"} $TESTED_PKG ${SHOW_TESTED_ARGS[@]}"
+                                COMMAND="echo \"$STDIN\" | ${TESTED_SHELL:+"$TESTED_SHELL"} $TESTED_PKG ${SHOW_TESTED_ARGS[@]}"
                                 sed 's%\o357\o277\o275%\o000%g' <<< "$STDIN" | timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_PKG" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
                             fi
                         else
@@ -633,8 +636,8 @@ run_test_sample ()
                     *)
                         if is_equal "$NEXT_LINE" "args"
                         then
-                                 TESTED_ARGS+=(  "${LINE:-}"  )
-                            SHOW_TESTED_ARGS+=( "'${LINE:-}'" )
+                                 TESTED_ARGS+=(   "${LINE:-}"  )
+                            SHOW_TESTED_ARGS+=( "\"${LINE:-}\"" )
                         elif is_equal "$NEXT_LINE" "expect-stdout"
                         then
                             EXPECT="${EXPECT:+"$EXPECT$LF"}${LINE:-}"
