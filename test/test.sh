@@ -443,7 +443,7 @@ get_result ()
     then
         printf '%16s %s\n' "$H1" "" "stdin:" "|${STDIN//$LF/|$LF$INDENT}|"
     else
-        printf '%16s %s\n' "$H1" "" "${PREFIX[@]}" "$H2" "" "command:" "[$COMMAND]" "$H2" "" "stdin:" "|${STDIN//$LF/|$LF$INDENT}|"
+        printf '%16s %s\n' "$H1" "" "${PREFIX[@]}" "$H2" "" "command:" "|$LF$COMMAND" "$H2" "" "stdin:" "|${STDIN//$LF/|$LF$INDENT}|"
     fi
     if cmp_results
     then
@@ -598,14 +598,14 @@ run_test_sample ()
                         then
                             if is_empty "${STDIN:-}"
                             then
-                                COMMAND="${TESTED_SHELL:+"$TESTED_SHELL"} \"$TESTED_PKG\" ${SHOW_TESTED_ARGS[@]}"
+                                COMMAND="cd \"$PWD\";$LF${TESTED_SHELL:+"$TESTED_SHELL"} \"$TESTED_PKG\" ${SHOW_TESTED_ARGS[@]}"
                                 timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_PKG" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
                             else
-                                COMMAND="echo \"$STDIN\" | ${TESTED_SHELL:+"$TESTED_SHELL"} \"$TESTED_PKG\" ${SHOW_TESTED_ARGS[@]}"
+                                COMMAND="cd \"$PWD\";${LF}echo \"$STDIN\" | ${TESTED_SHELL:+"$TESTED_SHELL"} \"$TESTED_PKG\" ${SHOW_TESTED_ARGS[@]}"
                                 sed 's%\o357\o277\o275%\o000%g' <<< "$STDIN" | timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_PKG" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
                             fi
                         else
-                            COMMAND="${SHOW_TESTED_COMMAND[@]} ${SHOW_TESTED_ARGS[@]}"
+                            COMMAND="cd \"$PWD\";$LF${SHOW_TESTED_COMMAND[@]} ${SHOW_TESTED_ARGS[@]}"
                             timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" "${TESTED_COMMAND[@]}" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
                         fi
 
