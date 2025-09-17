@@ -425,6 +425,7 @@ unset_vars ()
     WORKDIR_CHMOD=
     TESTED_COMMAND=()
     SHOW_TESTED_ARGS=()
+    SHOW_TESTED_COMMAND=()
 }
 
 get_app_path ()
@@ -522,6 +523,10 @@ run_test_sample ()
                         TESTED_COMMAND=( "$@" )
                         get_app_path "${TESTED_COMMAND[0]}"
                         TESTED_COMMAND[0]="$TESTED_APP"
+                        for ARG in "${TESTED_COMMAND[@]}"
+                        do
+                            SHOW_TESTED_COMMAND+=( "\"$ARG\"" )
+                        done
                         ;;
                     :break|:break:*)
                         break
@@ -593,14 +598,14 @@ run_test_sample ()
                         then
                             if is_empty "${STDIN:-}"
                             then
-                                COMMAND="${TESTED_SHELL:+"$TESTED_SHELL"} $TESTED_PKG ${SHOW_TESTED_ARGS[@]}"
+                                COMMAND="${TESTED_SHELL:+"$TESTED_SHELL"} \"$TESTED_PKG\" ${SHOW_TESTED_ARGS[@]}"
                                 timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_PKG" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
                             else
-                                COMMAND="echo \"$STDIN\" | ${TESTED_SHELL:+"$TESTED_SHELL"} $TESTED_PKG ${SHOW_TESTED_ARGS[@]}"
+                                COMMAND="echo \"$STDIN\" | ${TESTED_SHELL:+"$TESTED_SHELL"} \"$TESTED_PKG\" ${SHOW_TESTED_ARGS[@]}"
                                 sed 's%\o357\o277\o275%\o000%g' <<< "$STDIN" | timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_PKG" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
                             fi
                         else
-                            COMMAND="${TESTED_COMMAND[@]} ${SHOW_TESTED_ARGS[@]}"
+                            COMMAND="${SHOW_TESTED_COMMAND[@]} ${SHOW_TESTED_ARGS[@]}"
                             timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" "${TESTED_COMMAND[@]}" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
                         fi
 
