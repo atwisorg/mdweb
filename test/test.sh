@@ -474,6 +474,7 @@ get_result ()
         is_equal "$SAVE_RESULTS" "no" || save_result "$TEST_PASSED"
     else
         save_result "$TEST_FAILED"
+        TEST_RETURN_CODE=1
     fi
     unset_vars
     cd -- "$CURRENT_DIR"
@@ -925,6 +926,7 @@ main ()
     LOAD_TEST="no"
     TEST_NUMBER=0
     STRING_NUM=0
+    TEST_RETURN_CODE=0
     LF=$'\n'
 
     GLOBAL_TIMEOUT="${TIMEOUT:-}"
@@ -956,6 +958,7 @@ main ()
     is_equal "$CLEAR_RESULTS" "no" || remove "$TEST_PASSED"/* "$TEST_FAILED"/*
     run_test
     remove "$TEMP_DIR"
+    return "$TEST_RETURN_CODE"
 }
 
 out ()
