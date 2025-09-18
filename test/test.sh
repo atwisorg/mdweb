@@ -213,6 +213,13 @@ has_space ()
     esac
 }
 
+trim_string ()
+{
+    STRING="${1#"${1%%[![:space:]]*}"}"
+    STRING="${STRING%"${STRING##*[![:space:]]}"}"
+    echo "$STRING"
+}
+
 get_pkg_vars ()
 {
     PKG="${0##*/}"
@@ -424,8 +431,13 @@ unset_vars ()
     EXPECT_ERR=
     EXPECT_RETURN_CODE=
     LOAD_TEST="no"
+    PRETEST=
+    SHOW_COMMAND=
+    SHOW_TESTED_PKG=
+    SHOW_TESTED_ARGS=()
     STDIN=
     TESTED_ARGS=()
+    TESTED_COMMAND=
     TIMEOUT=
     REPORT_STDOUT=()
     REPORT_STDERR=()
@@ -433,11 +445,6 @@ unset_vars ()
     WORKDIR=
     WORKDIR_CLEAN=
     WORKDIR_CHMOD=
-    TESTED_COMMAND=()
-    SHOW_COMMAND=
-    SHOW_TESTED_ARGS=()
-    SHOW_TESTED_COMMAND=()
-    PRETEST=()
 }
 
 get_app_path ()
@@ -489,14 +496,12 @@ run_unit_test ()
         "test num:" "[$TEST_NUMBER]"
     )
     is_diff "${#TEST_SAMPLES[@]}" 0 || PREFIX=( "${PREFIX[@]}" "total test num:" "[$TOTAL_TEST_NUMBER]" )
-    is_diff "${#TESTED_ARGS[@]}"  0 || {
-        TESTED_ARGS=( "${GLOBAL_ARGS[@]}" )
-        for ARG in "${GLOBAL_ARGS[@]}"
-        do
-            has_space "$ARG"
-            SHOW_TESTED_ARGS+=( "$STRING" )
-        done
-    }
+    is_diff "${#TESTED_ARGS[@]}"  0 || TESTED_ARGS=( "${GLOBAL_ARGS[@]}" )
+    for ARG in "${TESTED_ARGS[@]}"
+    do
+        has_space "$ARG"
+        SHOW_TESTED_ARGS+=( "$STRING" )
+    done
     NAME_TEST_SAMPLE="${TEST_SAMPLE##*/}"
     NAME_TEST_SAMPLE="${NAME_TEST_SAMPLE%.yaml}"
     WORKDIR="${WORKDIR:-"${GLOBAL_WORKDIR:-}"}"
@@ -527,38 +532,31 @@ run_unit_test ()
         SHOW_COMMAND="cd $STRING;$LF"
     }
 
-    is_empty "${!PRETEST[@]}" || {
-        for COMMAND in "${PRETEST[@]}"
-        do
-            set -- ${COMMAND:-}
-            "$@"
-        done
-    }
-
-    if is_empty "${!TESTED_COMMAND[@]}"
+    is_empty "${PRETEST:-}" || eval "$PRETEST"
+    if is_empty "${TESTED_COMMAND:-}"
     then
         has_space "$TESTED_PKG"
         SHOW_TESTED_PKG="$STRING"
         if is_empty "${STDIN:-}"
         then
-            SHOW_COMMAND="${SHOW_COMMAND:-}${TESTED_SHELL:+"$TESTED_SHELL"} $SHOW_TESTED_PKG ${SHOW_TESTED_ARGS[@]}"
-            timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_PKG" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
+            SHOW_COMMAND="${SHOW_COMMAND:-}${TESTED_SHELL:+"$TESTED_SHELL "}$SHOW_TESTED_PKG ${SHOW_TESTED_ARGS[@]}"
+            eval timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_PKG" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
         else
             has_space "$STDIN"
             SHOW_STDIN="$STRING"
-            SHOW_COMMAND="${SHOW_COMMAND:-}echo $SHOW_STDIN | ${TESTED_SHELL:+"$TESTED_SHELL"} $SHOW_TESTED_PKG ${SHOW_TESTED_ARGS[@]}"
-            sed 's%\o357\o277\o275%\o000%g' <<< "$STDIN" | timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_PKG" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
+            SHOW_COMMAND="${SHOW_COMMAND:-}echo $SHOW_STDIN | ${TESTED_SHELL:+"$TESTED_SHELL "}$SHOW_TESTED_PKG ${SHOW_TESTED_ARGS[@]}"
+            eval sed 's%\o357\o277\o275%\o000%g' <<< "$STDIN" | timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_PKG" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
         fi
     else
         if is_empty "${STDIN:-}"
         then
-            SHOW_COMMAND="${SHOW_COMMAND:-}${SHOW_TESTED_COMMAND[@]} ${SHOW_TESTED_ARGS[@]}"
-            timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" "${TESTED_COMMAND[@]}" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
+            SHOW_COMMAND="${SHOW_COMMAND:-}$TETED_COMMAND ${SHOW_TESTED_ARGS[@]}"
+            eval timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" "$TESTED_COMMAND" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
         else
             has_space "$STDIN"
             SHOW_STDIN="$STRING"
-            SHOW_COMMAND="${SHOW_COMMAND:-}echo $SHOW_STDIN | ${TESTED_SHELL:+"$TESTED_SHELL"} ${SHOW_TESTED_COMMAND[@]} ${SHOW_TESTED_ARGS[@]}"
-            sed 's%\o357\o277\o275%\o000%g' <<< "$STDIN" | timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" "${TESTED_COMMAND[@]}" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
+            SHOW_COMMAND="${SHOW_COMMAND:-}echo $SHOW_STDIN | ${TESTED_SHELL:+"$TESTED_SHELL "}$TESTED_COMMAND ${SHOW_TESTED_ARGS[@]}"
+            eval sed 's%\o357\o277\o275%\o000%g' <<< "$STDIN" | timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" "$TESTED_COMMAND" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
         fi
     fi
 
@@ -609,31 +607,22 @@ run_test_sample ()
                     :args|:return|:return-code|:pretest|:test|:timeout|:workdir|:workdir-clean|:workdir-chmod)
                         ;;
                     :args:*)
-                        set -- ${LINE#:args:} "${GLOBAL_ARGS[@]}"
-                        is_equal "${1:-}" "|" && NEXT_LINE=args || {
-                            TESTED_ARGS=( "$@" )
-                            for ARG in "$@"
-                            do
-                                case "$ARG" in
-                                    *[[:blank:]]*)
-                                        SHOW_TESTED_ARGS+=( "\"$ARG\"" )
-                                    ;;
-                                    *)
-                                        SHOW_TESTED_ARGS+=( "$ARG" )
-                                esac
-                            done
-                        }
+                        TESTED_ARGS=( "$(trim_string "${LINE#:args:}")" )
+                        case "${TESTED_ARGS:-}" in
+                            \|*)
+                                NEXT_LINE=args
+                                TESTED_ARGS=()
+                            ;;
+                        esac
                         ;;
                     :command:*)
-                        set -- ${LINE#:command:} "${GLOBAL_ARGS[@]}"
-                        TESTED_COMMAND=( "$@" )
-                        get_app_path "${TESTED_COMMAND[0]}"
-                        TESTED_COMMAND[0]="$TESTED_APP"
-                        for ARG in "${TESTED_COMMAND[@]}"
-                        do
-                            has_space "$ARG"
-                            SHOW_TESTED_COMMAND+=( "$STRING" )
-                        done
+                        TESTED_COMMAND="$(trim_string "${LINE#:command:}")"
+                        case "${TESTED_COMMAND:-}" in
+                            \|*)
+                                NEXT_LINE=command
+                                TESTED_COMMAND=
+                            ;;
+                        esac
                         ;;
                     :break|:break:*)
                         break
@@ -650,8 +639,13 @@ run_test_sample ()
                         COMPARE_STDERR="yes"
                         ;;
                     :pretest:*)
-                        set -- ${LINE#:pretest:}
-                        is_equal "${1:-}" "|" && NEXT_LINE=pretest || PRETEST=( "$*" )
+                        PRETEST="$(trim_string "${LINE#:pretest:}")"
+                        case "${PRETEST:-}" in
+                            \|*)
+                                NEXT_LINE=pretest
+                                PRETEST=
+                            ;;
+                        esac
                         ;;
                     :return:*)
                         set -- ${LINE#:return:}
@@ -673,8 +667,7 @@ run_test_sample ()
                         TIMEOUT="${1:-}"
                         ;;
                     :workdir:*)
-                        set -- ${LINE#:workdir:}
-                        WORKDIR="${1:-}"
+                        WORKDIR="$(trim_string "${LINE#:workdir:}")"
                         ;;
                     :workdir-clean:*)
                         set -- ${LINE#:workdir-clean:}
@@ -687,9 +680,10 @@ run_test_sample ()
                     *)
                         case "$NEXT_LINE" in
                             args)
-                                has_space "${LINE:-}"
-                                SHOW_TESTED_ARGS+=( "$STRING" )
                                 TESTED_ARGS+=( "${LINE:-}" )
+                            ;;
+                            command)
+                                TESTED_COMMAND="${TESTED_COMMAND:+"$TESTED_COMMAND$LF"}${LINE:-}"
                             ;;
                             expect-stdout)
                                 EXPECT="${EXPECT:+"$EXPECT$LF"}${LINE:-}"
@@ -701,7 +695,7 @@ run_test_sample ()
                                 STDIN="${STDIN:+"$STDIN$LF"}${LINE:-}"
                             ;;
                             pretest)
-                                PRETEST+=( "${LINE:-}" )
+                                PRETEST="${PRETEST:+"$PRETEST$LF"}${LINE:-}"
                             ;;
                             test-description)
                                 TEST_NAME="${TEST_NAME:+"$TEST_NAME$LF"}${LINE:-}"
@@ -750,7 +744,6 @@ get_range_nums ()
 
 report ()
 {
-
     echo "$H1"
     is_not_empty "${NO_REPORT:-}" || {
         is_empty ${!FAIL[@]} || {
@@ -956,6 +949,7 @@ main ()
     }
 
     is_equal "$CLEAR_RESULTS" "no" || remove "$TEST_PASSED"/* "$TEST_FAILED"/*
+    say "starting testing"
     run_test
     remove "$TEMP_DIR"
     return "$TEST_RETURN_CODE"
