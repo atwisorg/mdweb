@@ -487,6 +487,16 @@ get_result ()
     cd -- "$CURRENT_DIR"
 }
 
+run_command ()
+{
+    if is_empty "${TIMEOUT:-}"
+    then
+        eval "${TESTED_COMMAND:-"$TESTED_PKG"}" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR"
+    else
+        eval timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" "${TESTED_COMMAND:-"$TESTED_PKG"}" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR"
+    fi
+}
+
 run_unit_test ()
 {
     PREFIX=(
@@ -504,6 +514,7 @@ run_unit_test ()
     done
     NAME_TEST_SAMPLE="${TEST_SAMPLE##*/}"
     NAME_TEST_SAMPLE="${NAME_TEST_SAMPLE%.yaml}"
+    TIMEOUT="${TIMEOUT:-"${GLOBAL_TIMEOUT:-}"}"
     WORKDIR="${WORKDIR:-"${GLOBAL_WORKDIR:-}"}"
     WORKDIR_CLEAN="${WORKDIR_CLEAN:-"${GLOBAL_WORKDIR_CLEAN:-}"}"
     WORKDIR_CHMOD="${WORKDIR_CHMOD:-"${GLOBAL_WORKDIR_CHMOD:-}"}"
@@ -536,31 +547,16 @@ run_unit_test ()
     }
 
     is_empty "${PRETEST:-}" || eval "$PRETEST"
-    if is_empty "${TESTED_COMMAND:-}"
+
+    if is_empty "${STDIN:-}"
     then
-        has_space "$TESTED_PKG"
-        SHOW_TESTED_PKG="$STRING"
-        if is_empty "${STDIN:-}"
-        then
-            SHOW_COMMAND="${SHOW_COMMAND:-}${TESTED_SHELL:+"$TESTED_SHELL "}$SHOW_TESTED_PKG ${SHOW_TESTED_ARGS[@]}"
-            eval timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_PKG" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
-        else
-            has_space "$STDIN"
-            SHOW_STDIN="$STRING"
-            SHOW_COMMAND="${SHOW_COMMAND:-}echo $SHOW_STDIN | ${TESTED_SHELL:+"$TESTED_SHELL "}$SHOW_TESTED_PKG ${SHOW_TESTED_ARGS[@]}"
-            eval sed 's%\o357\o277\o275%\o000%g' <<< "$STDIN" | timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" ${TESTED_SHELL:+"$TESTED_SHELL"} "$TESTED_PKG" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
-        fi
+        SHOW_COMMAND="${SHOW_COMMAND:-}${TESTED_COMMAND:-"$SHOW_TESTED_PKG"} ${SHOW_TESTED_ARGS[@]}"
+        run_command &
     else
-        if is_empty "${STDIN:-}"
-        then
-            SHOW_COMMAND="${SHOW_COMMAND:-}$TESTED_COMMAND ${SHOW_TESTED_ARGS[@]}"
-            eval timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" "$TESTED_COMMAND" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
-        else
-            has_space "$STDIN"
-            SHOW_STDIN="$STRING"
-            SHOW_COMMAND="${SHOW_COMMAND:-}echo $SHOW_STDIN | ${TESTED_SHELL:+"$TESTED_SHELL "}$TESTED_COMMAND ${SHOW_TESTED_ARGS[@]}"
-            eval sed 's%\o357\o277\o275%\o000%g' <<< "$STDIN" | timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" "$TESTED_COMMAND" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
-        fi
+        has_space "$STDIN"
+        SHOW_STDIN="$STRING"
+        SHOW_COMMAND="${SHOW_COMMAND:-}echo $SHOW_STDIN | ${TESTED_COMMAND:-"$SHOW_TESTED_PKG"} ${SHOW_TESTED_ARGS[@]}"
+        run_command < <(sed 's%\o357\o277\o275%\o000%g' <<< "$STDIN") &
     fi
 
     CHILD_PID="$!"
@@ -938,8 +934,8 @@ main ()
     TEST_RETURN_CODE=0
     LF=$'\n'
 
-    GLOBAL_TIMEOUT="${TIMEOUT:-}"
-    GLOBAL_WORKDIR="${WORKDIR:-}"
+    GLOBAL_TIMEOUT="${TIMEOUT:-}" TIMEOUT=
+    GLOBAL_WORKDIR="${WORKDIR:-}" WORKDIR=
     GLOBAL_WORKDIR_CLEAN="${WORKDIR_CLEAN:-}"
     GLOBAL_WORKDIR_CHMOD="${WORKDIR_CHMOD:-}"
 
@@ -957,6 +953,8 @@ main ()
     get_app_path "$TESTED_PKG"
     TESTED_PKG="$TESTED_APP"
     TESTED_PKG_DIR="$TESTED_APP_DIR"
+    has_space "$TESTED_PKG"
+    SHOW_TESTED_PKG="$STRING"
 
     argparse "$@"
     is_empty "${!TEST_NUM[@]}" || {
