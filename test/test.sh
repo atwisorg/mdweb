@@ -425,22 +425,22 @@ trim_white_space ()
 
 unset_vars ()
 {
-    COMPARE_STDOUT=
     COMPARE_STDERR=
+    COMPARE_STDOUT=
     EXPECT=
     EXPECT_ERR=
     EXPECT_RETURN_CODE=
     LOAD_TEST="no"
     PRETEST=
     SHOW_COMMAND=
-    SHOW_TESTED_PKG=
     SHOW_TESTED_ARGS=()
+    SHOW_TESTED_PKG=
     STDIN=
     TESTED_ARGS=()
     TESTED_COMMAND=
     TIMEOUT=
-    REPORT_STDOUT=()
     REPORT_STDERR=()
+    REPORT_STDOUT=()
     REPORT_RETURN=()
     WORKDIR=
     WORKDIR_CLEAN=
@@ -550,7 +550,7 @@ run_unit_test ()
     else
         if is_empty "${STDIN:-}"
         then
-            SHOW_COMMAND="${SHOW_COMMAND:-}$TETED_COMMAND ${SHOW_TESTED_ARGS[@]}"
+            SHOW_COMMAND="${SHOW_COMMAND:-}$TESTED_COMMAND ${SHOW_TESTED_ARGS[@]}"
             eval timeout "${TIMEOUT:-"${GLOBAL_TIMEOUT:-3}"}" "$TESTED_COMMAND" "${TESTED_ARGS[@]}" > "$STDOUT" 2> "$STDERR" &
         else
             has_space "$STDIN"
@@ -605,8 +605,10 @@ run_test_sample ()
                 is_equal "$LOAD_TEST" "yes" || continue
                 case "${LINE:-}" in
                     :args|:return|:return-code|:pretest|:test|:timeout|:workdir|:workdir-clean|:workdir-chmod)
+                        NEXT_LINE=
                         ;;
                     :args:*)
+                        NEXT_LINE=
                         TESTED_ARGS=( "$(trim_string "${LINE#:args:}")" )
                         case "${TESTED_ARGS:-}" in
                             \|*)
@@ -616,6 +618,7 @@ run_test_sample ()
                         esac
                         ;;
                     :command:*)
+                        NEXT_LINE=
                         TESTED_COMMAND="$(trim_string "${LINE#:command:}")"
                         case "${TESTED_COMMAND:-}" in
                             \|*)
@@ -625,9 +628,11 @@ run_test_sample ()
                         esac
                         ;;
                     :break|:break:*)
+                        NEXT_LINE=
                         break
                         ;;
                     :exit|:exit:*)
+                        NEXT_LINE=
                         return 1
                         ;;
                     :expect|:expect-out|:expect-stdout|:expect:*|:expect-out:*|:expect-stdout:*)
@@ -639,6 +644,7 @@ run_test_sample ()
                         COMPARE_STDERR="yes"
                         ;;
                     :pretest:*)
+                        NEXT_LINE=
                         PRETEST="$(trim_string "${LINE#:pretest:}")"
                         case "${PRETEST:-}" in
                             \|*)
@@ -648,14 +654,17 @@ run_test_sample ()
                         esac
                         ;;
                     :return:*)
+                        NEXT_LINE=
                         set -- ${LINE#:return:}
                         EXPECT_RETURN_CODE="${1:-}"
                         ;;
                     :return-code:*)
+                        NEXT_LINE=
                         set -- ${LINE#:return-code:}
                         EXPECT_RETURN_CODE="${1:-}"
                         ;;
                     :run|:run:*)
+                        NEXT_LINE=
                         run_unit_test
                         get_result
                         ;;
@@ -663,17 +672,21 @@ run_test_sample ()
                         NEXT_LINE="stdin"
                         ;;
                     :timeout:*)
+                        NEXT_LINE=
                         set -- ${LINE#:timeout:}
                         TIMEOUT="${1:-}"
                         ;;
                     :workdir:*)
+                        NEXT_LINE=
                         WORKDIR="$(trim_string "${LINE#:workdir:}")"
                         ;;
                     :workdir-clean:*)
+                        NEXT_LINE=
                         set -- ${LINE#:workdir-clean:}
                         WORKDIR_CLEAN="${1:-}"
                         ;;
                     :workdir-chmod:*)
+                        NEXT_LINE=
                         set -- ${LINE#:workdir-chmod:}
                         WORKDIR_CHMOD="${1:-}"
                         ;;
