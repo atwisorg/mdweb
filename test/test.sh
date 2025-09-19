@@ -470,12 +470,6 @@ get_app_path ()
 
 get_result ()
 {
-    if is_not_empty "${NO_HEADINGS:-}"
-    then
-        printf '%16s %s\n' "$H1" "" "stdin:" "|${STDIN//$LF/|$LF$INDENT}|"
-    else
-        printf '%16s %s\n' "$H1" "" "${PREFIX[@]}" "$H2" "" "command:" "|$LF$SHOW_COMMAND" "$H2" "" "stdin:" "|${STDIN//$LF/|$LF$INDENT}|"
-    fi
     if cmp_results
     then
         is_equal "$SAVE_RESULTS" "no" || save_result "$TEST_PASSED"
@@ -485,6 +479,16 @@ get_result ()
     fi
     unset_vars
     cd -- "$CURRENT_DIR"
+}
+
+puts_heading ()
+{
+    if is_not_empty "${NO_HEADINGS:-}"
+    then
+        printf '%16s %s\n' "$H1" "" "stdin:" "|${STDIN//$LF/|$LF$INDENT}|"
+    else
+        printf '%16s %s\n' "$H1" "" "${PREFIX[@]}" "$H2" "" "command:" "|$LF$SHOW_COMMAND" "$H2" "" "stdin:" "|${STDIN//$LF/|$LF$INDENT}|"
+    fi
 }
 
 run_command ()
@@ -514,6 +518,8 @@ run_unit_test ()
     done
     NAME_TEST_SAMPLE="${TEST_SAMPLE##*/}"
     NAME_TEST_SAMPLE="${NAME_TEST_SAMPLE%.yaml}"
+    puts_heading
+
     TIMEOUT="${TIMEOUT:-"${GLOBAL_TIMEOUT:-}"}"
     WORKDIR="${WORKDIR:-"${GLOBAL_WORKDIR:-}"}"
     WORKDIR_CLEAN="${WORKDIR_CLEAN:-"${GLOBAL_WORKDIR_CLEAN:-}"}"
