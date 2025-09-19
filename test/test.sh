@@ -511,7 +511,10 @@ run_unit_test ()
     STDERR="$TEMP_DIR/${NAME_TEST_SAMPLE}_$STRING_NUM_TEST.err"
     RETURN_CODE=0
 
-    is_empty "${WORKDIR:-}" && WORKDIR="$CURRENT_DIR" || {
+    is_empty "${WORKDIR:-}" && {
+        WORKDIR="$TEST_SAMPLE_DIR"
+        change_dir "$WORKDIR"
+    } || {
         case "$WORKDIR" in
             [!/]*)
                 WORKDIR="$TEST_SAMPLE_DIR/$WORKDIR"
