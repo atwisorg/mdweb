@@ -436,6 +436,7 @@ unset_vars ()
     SHOW_COMMAND=
     SHOW_TESTED_ARGS=()
     SHOW_TESTED_PKG=
+    SOURCE=()
     STDIN=
     TESTED_ARGS=()
     TESTED_COMMAND=
@@ -553,7 +554,12 @@ run_unit_test ()
         has_space "$PWD"
         SHOW_COMMAND="cd $STRING;$LF"
     }
-
+    is_empty "${!SOURCE[@]}" || {
+        for i in "${SOURCE[@]}"
+        do
+            source "$TEST_SAMPLE_DIR/source/$i" || die
+        done
+    }
     is_empty "${PRETEST:-}" || eval "$PRETEST"
 
     if is_empty "${STDIN:-}"
@@ -665,7 +671,7 @@ run_test_sample ()
                         POSTEST="$(trim_string "${LINE#:postest:}")"
                         case "${POSTEST:-}" in
                             \|*)
-                                NEXT_LINE=pretest
+                                NEXT_LINE=postest
                                 POSTEST=
                             ;;
                         esac
@@ -684,6 +690,16 @@ run_test_sample ()
                         NEXT_LINE=
                         run_unit_test
                         get_result
+                        ;;
+                    :source:*)
+                        NEXT_LINE=
+                        SOURCE=( "$(trim_string "${LINE#:source:}")" )
+                        case "${SOURCE[0]:-}" in
+                            \|*)
+                                NEXT_LINE=source
+                                SOURCE=()
+                            ;;
+                        esac
                         ;;
                     :stdin|:stdin:*)
                         NEXT_LINE="stdin"
@@ -720,6 +736,9 @@ run_test_sample ()
                             ;;
                             expect-stderr)
                                 EXPECT_ERR="${EXPECT_ERR:+"$EXPECT_ERR$LF"}${LINE:-}"
+                            ;;
+                            source)
+                                SOURCE+=( "${LINE:-}" )
                             ;;
                             stdin)
                                 STDIN="${STDIN:+"$STDIN$LF"}${LINE:-}"
