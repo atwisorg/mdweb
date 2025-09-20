@@ -489,9 +489,29 @@ puts_heading ()
 {
     if is_not_empty "${NO_HEADINGS:-}"
     then
-        printf '%16s %s\n' "$H1" "" "stdin:" "|${STDIN//$LF/|$LF$INDENT}|"
+        printf '%16s %s\n' "$H1" ""
     else
-        printf '%16s %s\n' "$H1" "" "${PREFIX[@]}" "$H2" "" "command:" "|$LF$SHOW_COMMAND" "$H2" "" "stdin:" "|${STDIN//$LF/|$LF$INDENT}|"
+        printf '%16s %s\n' "$H1" "" "${PREFIX[@]}" "$H2" ""
+    fi
+}
+
+puts_pretest_start ()
+{
+    is_not_empty "${NO_HEADINGS:-}" || printf '%16s %s\n' "pretest" "" "$H2" ""
+}
+
+puts_pretest_end ()
+{
+    is_not_empty "${NO_HEADINGS:-}" || printf '%16s %s\n' "$H2" ""
+}
+
+puts_command ()
+{
+    if is_not_empty "${NO_HEADINGS:-}"
+    then
+        printf '%16s %s\n' "stdin:" "|${STDIN//$LF/|$LF$INDENT}|"
+    else
+        printf '%16s %s\n' "command:" "|$LF$SHOW_COMMAND" "$H2" "" "stdin:" "|${STDIN//$LF/|$LF$INDENT}|"
     fi
 }
 
@@ -563,16 +583,22 @@ run_unit_test ()
             source "$TEST_SAMPLE_DIR/source/$i" || die
         done
     }
-    is_empty "${PRETEST:-}" || eval "$PRETEST"
+    is_empty "${PRETEST:-}" || {
+        puts_pretest_start
+        eval "$PRETEST"
+        puts_pretest_end
+    }
 
     if is_empty "${STDIN:-}"
     then
         SHOW_COMMAND="${SHOW_COMMAND:-}${TESTED_COMMAND:-"$SHOW_TESTED_PKG"} ${SHOW_TESTED_ARGS[@]}"
+        puts_command
         run_command &
     else
         has_space "$STDIN"
         SHOW_STDIN="$STRING"
         SHOW_COMMAND="${SHOW_COMMAND:-}echo $SHOW_STDIN | ${TESTED_COMMAND:-"$SHOW_TESTED_PKG"} ${SHOW_TESTED_ARGS[@]}"
+        puts_command
         run_command < <(sed 's%\o357\o277\o275%\o000%g' <<< "$STDIN") &
     fi
 
