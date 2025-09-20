@@ -230,6 +230,16 @@ get_pkg_vars ()
     PKG_PATH="$PKG_DIR/$PKG"
 }
 
+set_color ()
+{
+          RED="\033[31m"
+        GREEN="\033[32m"
+       YELLOW="\033[33m"
+         CYAN="\033[36m"
+         BOLD="\033[1m"
+    CLR_RESET="\033[0;0m"
+}
+
 get_test_nums ()
 {
     TEST_NUM=( $(IFS="$IFS,"; set -- ${TEST_NUM[@]}; echo "$@") )
@@ -283,22 +293,22 @@ save_result ()
 
 expect_out ()
 {
-    echo -e "|\033[0;33m${1//$LF/\\033\[0m|$LF$INDENT\\033\[0;33m}\033[0m|"
+    echo -e "|$YELLOW${1//$LF/$CLR_RESET|$LF$INDENT$YELLOW}$CLR_RESET|"
 }
 
 success_out ()
 {
-    echo -e "|\033[1;32m${1//$LF/\\033\[0m|$LF$INDENT\\033\[1;32m}\033[0m|"
+    echo -e "|$BOLD$GREEN${1//$LF/$CLR_RESET|$LF$INDENT$BOLD$GREEN}$CLR_RESET|"
 }
 
 failed_out ()
 {
-    echo -e "|\033[1;31m${1//$LF/\\033\[0m|$LF$INDENT\\033\[1;31m}\033[0m|"
+    echo -e "|$BOLD$RED${1//$LF/$CLR_RESET|$LF$INDENT$BOLD$RED}$CLR_RESET|"
 }
 
 info_out ()
 {
-    echo -e "|\033[0;36m${1//$LF/\\033\[0m|$LF$INDENT\\033\[0;36m}\033[0m|"
+    echo -e "|$CYAN${1//$LF/$CLR_RESET|$LF$INDENT$CYAN}$CLR_RESET|"
 }
 
 cmp_results ()
@@ -847,14 +857,14 @@ report ()
     echo "$H1"
     is_not_empty "${NO_REPORT:-}" || {
         is_empty ${!FAIL[@]} || {
-            printf '\033[0;31m%15s\033[0m: \033[1;31m%s\033[0m\n' "${FAIL[@]}"
+            printf "$RED%15s$CLR_RESET: $BOLD$RED%s$CLR_RESET\n" "${FAIL[@]}"
             get_range_nums
-            printf '\033[0;31m%15s\033[0m: [\033[1;31m%s\033[0m]\n' "failed tests" "$RANGE_NUMS"
+            printf "$RED%15s$CLR_RESET: [$BOLD$RED%s$CLR_RESET]\n" "failed tests" "$RANGE_NUMS"
         }
-        printf '\033[0;31m%15s\033[0m: [\033[1;31m%s\033[0m]\n' "failed" "$FAILED"
-        printf '\033[0;32m%15s\033[0m: [\033[1;32m%s\033[0m]\n' "passed" "$PASSED"
+        printf "$RED%15s$CLR_RESET: [$BOLD$RED%s$CLR_RESET]\n" "failed" "$FAILED"
+        printf "$GREEN%15s$CLR_RESET: [$BOLD$GREEN%s$CLR_RESET]\n" "passed" "$PASSED"
         is_empty "${SPECIFIC_TEST:-}" || TOTAL_TEST_NUMBER="$SPECIFIC_TEST"
-        printf '\033[0;33m%15s\033[0m: [\033[1;33m%s\033[0m]\n' "total tests" "$TOTAL_TEST_NUMBER"
+        printf "$YELLOW%15s$CLR_RESET: [$BOLD$YELLOW%s$CLR_RESET]\n" "total tests" "$TOTAL_TEST_NUMBER"
         echo "$H1"
     }
 }
@@ -999,6 +1009,7 @@ main ()
 {
     exec 3>&1
     get_pkg_vars
+    set_color
 
     can_read_file "$PKG_DIR/${PKG%.sh}.conf" &&
            source "$PKG_DIR/${PKG%.sh}.conf" || die
