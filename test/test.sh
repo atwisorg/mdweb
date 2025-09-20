@@ -271,6 +271,24 @@ get_test_nums ()
     TEST_NUM=( $(printf '%s\n' ${TEST_NUM[@]} | sort -n | uniq) )
 }
 
+puts_flow ()
+{
+    case "${2:-}" in
+        "")
+            printf "$3%15s$CLR_RESET:\n" "$1"
+            printf "$3%s$CLR_RESET\n" "$H2"
+        ;;
+        *"$LF"*)
+            printf "$3%15s$CLR_RESET:\n" "$1"
+            printf "$3%s$CLR_RESET\n%s\n$3%s$CLR_RESET\n" "$H2" "$2" "$H2"
+        ;;
+        ?*)
+            printf "$3%15s$CLR_RESET: $3[$CLR_RESET%s$3]$CLR_RESET\n" "$1" "$2"
+            printf "%s\n" "$H2"
+        ;;
+    esac
+}
+
 save_result ()
 {
     STATUS=":test: $TEST_NAME$LF"
@@ -291,26 +309,6 @@ save_result ()
     echo "$STATUS" > "$1/${NAME_TEST_SAMPLE}_$STRING_NUM_TEST.yaml"
 }
 
-expect_out ()
-{
-    echo -e "|$YELLOW${1//$LF/$CLR_RESET|$LF$INDENT$YELLOW}$CLR_RESET|"
-}
-
-success_out ()
-{
-    echo -e "|$BOLD$GREEN${1//$LF/$CLR_RESET|$LF$INDENT$BOLD$GREEN}$CLR_RESET|"
-}
-
-failed_out ()
-{
-    echo -e "|$BOLD$RED${1//$LF/$CLR_RESET|$LF$INDENT$BOLD$RED}$CLR_RESET|"
-}
-
-info_out ()
-{
-    echo -e "|$CYAN${1//$LF/$CLR_RESET|$LF$INDENT$CYAN}$CLR_RESET|"
-}
-
 cmp_results ()
 {
     RETURN=0
@@ -321,17 +319,12 @@ cmp_results ()
     is_empty "${COMPARE_STDOUT:-}" || {
         if is_equal "${STDOUT_RESULT:-}" "${EXPECT:-}"
         then
-            REPORT_STDOUT=(
-                "$H2" ""
-                "stdout:" "$(success_out "$STDOUT_RESULT")"
-            )
+            REPORT_STDOUT="$(puts_flow "stdout" "${STDOUT_RESULT:-}" "$BOLD$GREEN")"
         else
-            REPORT_STDOUT=(
-                "$H2" ""
-                "expect-stdout:" "$(expect_out "$EXPECT")"
-                "$H2" ""
-                "stdout:" "$(failed_out "$STDOUT_RESULT")"
-            )
+            REPORT_STDOUT="$(
+                puts_flow "expect-stdout" "${EXPECT:-}" "$YELLOW"
+                puts_flow "stdout" "${STDOUT_RESULT:-}" "$BOLD$RED"
+            )"
             FAIL+=( "${PREFIX[0]%:}" "${PREFIX[*]:1}: stdout" )
             RETURN=1
         fi
@@ -340,17 +333,12 @@ cmp_results ()
     is_empty "${COMPARE_STDERR:-}" || {
         if is_equal "${STDERR_RESULT:-}" "$EXPECT_ERR"
         then
-            REPORT_STDERR=(
-                "$H2" ""
-                "stderr:" "$(success_out "$STDERR_RESULT")"
-            )
+            REPORT_STDERR="$(puts_flow "stderr" "${STDERR_RESULT:-}" "$BOLD$GREEN")"
         else
-            REPORT_STDERR=(
-                "$H2" ""
-                "expect-stderr:" "$(expect_out "$EXPECT_ERR")"
-                "$H2" ""
-                "stderr:" "$(success_out "$STDERR_RESULT")"
-            )
+            REPORT_STDERR="$(
+                puts_flow "expect-stderr" "${EXPECT_ERR:-}" "$YELLOW"
+                puts_flow "stderr" "${STDERR_RESULT:-}" "$BOLD$RED"
+            )"
             FAIL+=( "${PREFIX[0]%:}" "${PREFIX[*]:1}: stderr" )
             RETURN=1
         fi
@@ -359,17 +347,12 @@ cmp_results ()
     is_empty "${EXPECT_RETURN_CODE:-}" || {
         if is_equal "${RETURN_CODE:-}" "${EXPECT_RETURN_CODE:-}"
         then
-            REPORT_RETURN=(
-                "$H2" ""
-                "return:" "$(success_out "${RETURN_CODE:-}")"
-            )
+            REPORT_RETURN="$(puts_flow "return" "${RETURN_CODE:-}" "$BOLD$GREEN")"
         else
-            REPORT_RETURN=(
-                "$H2" ""
-                "expect-return:" "$(expect_out "$EXPECT_RETURN_CODE")"
-                "$H2" ""
-                "return:" "$(failed_out "$RETURN_CODE")"
-            )
+            REPORT_RETURN="$(
+                puts_flow "expect-return" "$EXPECT_RETURN_CODE" "$YELLOW"
+                puts_flow "return" "$RETURN_CODE" "$BOLD$RED"
+            )"
             FAIL+=( "${PREFIX[0]%:}" "${PREFIX[*]:1}: return" )
             RETURN=1
         fi
@@ -383,37 +366,22 @@ cmp_results ()
     is_not_empty "${COMPARE_STDOUT:-}" || {
         is_empty "${ALL_STREAMS:-"${SHOW_STDOUT:-}"}" && {
             is_not_empty "${NO_STREAMS:-}" || is_equal "$RETURN" 0
-        } || {
-            REPORT_STDOUT=(
-                "$H2" ""
-                "stdout:" "$(info_out "${STDOUT_RESULT:-}")"
-            )
-        }
+        } || REPORT_STDOUT="$(puts_flow "stdout" "${STDOUT_RESULT:-}" "$CYAN")"
     }
 
     is_not_empty "${COMPARE_STDERR:-}" || {
         is_empty "${ALL_STREAMS:-"${SHOW_STDERR:-}"}" && {
             is_not_empty "${NO_STREAMS:-}" || is_equal "$RETURN" 0
-        } || {
-            REPORT_STDERR=(
-                "$H2" ""
-                "stderr:" "$(info_out "${STDERR_RESULT:-}")"
-            )
-        }
+        } || REPORT_STDERR="$(puts_flow "stderr" "${STDERR_RESULT:-}" "$CYAN")"
     }
 
     is_not_empty "${EXPECT_RETURN_CODE:-}" || {
         is_empty "${ALL_STREAMS:-"${SHOW_RETCODE:-}"}" && {
             is_not_empty "${NO_STREAMS:-}" || is_equal "$RETURN" 0
-        } || {
-            REPORT_RETURN=(
-                "$H2" ""
-                "return:" "$(info_out "${RETURN_CODE:-}")"
-            )
-        }
+        } || REPORT_RETURN="$(puts_flow "return" "$RETURN_CODE" "$CYAN")"
     }
 
-    printf '%16s %s\n' "${REPORT_STDOUT[@]}" "${REPORT_STDERR[@]}" "${REPORT_RETURN[@]}"
+    printf '%s\n' "${REPORT_STDOUT[@]}" "${REPORT_STDERR[@]}" "${REPORT_RETURN:-}"
 
     return "$RETURN"
 }
@@ -499,37 +467,31 @@ puts_heading ()
 {
     if is_not_empty "${NO_HEADINGS:-}"
     then
-        printf '%16s %s\n' "$H1" ""
+        printf '%s\n' "$H1"
     else
-        printf '%16s %s\n' "$H1" "" "${PREFIX[@]}" "$H2" ""
+        printf '%16s %s\n' "${PREFIX[@]}"
+        printf '%s\n' "$H1"
     fi
 }
 
 puts_pretest_start ()
 {
-    is_not_empty "${NO_HEADINGS:-}" || printf '%16s %s\n' "pretest" "" "$H2" ""
+    puts_flow "pretest" "" "$YELLOW"
 }
 
-puts_pretest_end ()
+puts_h ()
 {
-    is_not_empty "${NO_HEADINGS:-}" || printf '%16s %s\n' "$H2" ""
+    is_equal "$1" 1 && H="$H1" || H="$H2"
+    case "${2:-}" in
+        ?*) printf "$2%s$CLR_RESET\n" "$H" ;;
+        *)  printf "%s\n" "$H" ;;
+    esac
 }
 
 puts_command ()
 {
-    if is_not_empty "${NO_HEADINGS:-}"
-    then
-        printf '%16s %s\n' "stdin:" "|${STDIN//$LF/|$LF$INDENT}|"
-    else
-        case "$SHOW_COMMAND" in
-            *"$LF"*)
-                printf '%16s %s\n' "command:" "|$LF$SHOW_COMMAND" "$H2" "" "stdin:" "|${STDIN//$LF/|$LF$INDENT}|"
-            ;;
-            *)
-                printf '%16s %s\n' "command:"    "[$SHOW_COMMAND]" "$H2" "" "stdin:" "|${STDIN//$LF/|$LF$INDENT}|"
-            ;;
-        esac
-    fi
+    puts_flow "command" "$SHOW_COMMAND" "$CYAN"
+    is_empty "${STDIN:-}" || puts_flow "stdin" "$STDIN" "$CYAN"
 }
 
 run_command ()
@@ -603,7 +565,7 @@ run_unit_test ()
     is_empty "${PRETEST:-}" || {
         puts_pretest_start
         eval "$PRETEST"
-        puts_pretest_end
+        puts_h 2 "$YELLOW"
     }
 
     if is_empty "${STDIN:-}"
@@ -854,7 +816,6 @@ get_range_nums ()
 
 report ()
 {
-    echo "$H1"
     is_not_empty "${NO_REPORT:-}" || {
         is_empty ${!FAIL[@]} || {
             printf "$RED%15s$CLR_RESET: $BOLD$RED%s$CLR_RESET\n" "${FAIL[@]}"
@@ -1063,6 +1024,7 @@ main ()
 
     is_equal "$CLEAR_RESULTS" "no" || remove "$TEST_PASSED"/* "$TEST_FAILED"/*
     say "starting testing"
+    puts_h 1
     run_test
     remove "$TEMP_DIR"
     return "$TEST_RETURN_CODE"
