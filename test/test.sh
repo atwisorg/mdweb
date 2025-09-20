@@ -510,7 +510,7 @@ run_unit_test ()
     PREFIX=(
         "test sample:" "[$TEST_SAMPLE]"
         "string num:" "[$STRING_NUM_TEST]"
-        "test name:" "[${TEST_NAME[*]//$LF/|$LF$INDENT}]"
+        "test name:" "|${TEST_NAME//$LF/$LF$INDENT}"
         "test num:" "[$TEST_NUMBER]"
     )
     is_diff "${#TEST_SAMPLES[@]}" 0 || PREFIX=( "${PREFIX[@]}" "total test num:" "[$TOTAL_TEST_NUMBER]" )
@@ -606,16 +606,15 @@ run_test_sample ()
                 }
                 LOAD_TEST="yes"
                 STRING_NUM_TEST="$STRING_NUM"
-                set -- ${LINE#:test:}
-                is_equal "${1:-}" "|" && {
-                    NEXT_LINE=test-description
-                    TEST_NAME=
-                } || {
-                    TEST_NAME="$*"
-                    TEST_NAME="${TEST_NAME:-noname}"
-                    trim_white_space "$TEST_NAME"
-                    TEST_NAME=( "$STRING" )
-                }
+
+                TEST_NAME="$(trim_string "${LINE#:test:}")"
+                TEST_NAME="${TEST_NAME:-noname}"
+                case "${TEST_NAME:-}" in
+                    \|*)
+                        NEXT_LINE=test-description
+                        TEST_NAME=
+                    ;;
+                esac
                 ;;
             *)
                 is_equal "$LOAD_TEST" "yes" || continue
@@ -763,7 +762,7 @@ run_test_sample ()
                                 POSTEST="${POSTEST:+"$POSTEST$LF"}${LINE:-}"
                             ;;
                             test-description)
-                                TEST_NAME="${TEST_NAME:+"$TEST_NAME$LF"}${LINE:-}"
+                                TEST_NAME="${TEST_NAME:+"$TEST_NAME$LF"}$(trim_string "${LINE#:test:}")"
                             ;;
                             vars)
                                 VARS="${VARS:+"$VARS$LF"}$(trim_string "${LINE#:vars:}")"
