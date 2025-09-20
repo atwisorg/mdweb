@@ -432,6 +432,7 @@ unset_vars ()
     EXPECT_RETURN_CODE=
     LOAD_TEST="no"
     PRETEST=
+    POSTEST=
     SHOW_COMMAND=
     SHOW_TESTED_ARGS=()
     SHOW_TESTED_PKG=
@@ -477,6 +478,7 @@ get_result ()
         save_result "$TEST_FAILED"
         TEST_RETURN_CODE=1
     fi
+    is_empty "${POSTEST:-}" || eval "$POSTEST"
     unset_vars
     cd -- "$CURRENT_DIR"
 }
@@ -658,6 +660,16 @@ run_test_sample ()
                             ;;
                         esac
                         ;;
+                    :postest:*)
+                        NEXT_LINE=
+                        POSTEST="$(trim_string "${LINE#:postest:}")"
+                        case "${POSTEST:-}" in
+                            \|*)
+                                NEXT_LINE=pretest
+                                POSTEST=
+                            ;;
+                        esac
+                        ;;
                     :return:*)
                         NEXT_LINE=
                         set -- ${LINE#:return:}
@@ -714,6 +726,9 @@ run_test_sample ()
                             ;;
                             pretest)
                                 PRETEST="${PRETEST:+"$PRETEST$LF"}${LINE:-}"
+                            ;;
+                            postest)
+                                POSTEST="${POSTEST:+"$POSTEST$LF"}${LINE:-}"
                             ;;
                             test-description)
                                 TEST_NAME="${TEST_NAME:+"$TEST_NAME$LF"}${LINE:-}"
