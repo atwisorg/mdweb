@@ -751,7 +751,7 @@ run_test_sample ()
                                 EXPECT_ERR="${EXPECT_ERR:+"$EXPECT_ERR$LF"}${LINE:-}"
                             ;;
                             source)
-                                SOURCE+=( "${LINE:-}" )
+                                SOURCE+=( "$(trim_string "${LINE#:source:}")" )
                             ;;
                             stdin)
                                 STDIN="${STDIN:+"$STDIN$LF"}${LINE:-}"
