@@ -511,7 +511,14 @@ puts_command ()
     then
         printf '%16s %s\n' "stdin:" "|${STDIN//$LF/|$LF$INDENT}|"
     else
-        printf '%16s %s\n' "command:" "|$LF$SHOW_COMMAND" "$H2" "" "stdin:" "|${STDIN//$LF/|$LF$INDENT}|"
+        case "$SHOW_COMMAND" in
+            *"$LF"*)
+                printf '%16s %s\n' "command:" "|$LF$SHOW_COMMAND" "$H2" "" "stdin:" "|${STDIN//$LF/|$LF$INDENT}|"
+            ;;
+            *)
+                printf '%16s %s\n' "command:"    "[$SHOW_COMMAND]" "$H2" "" "stdin:" "|${STDIN//$LF/|$LF$INDENT}|"
+            ;;
+        esac
     fi
 }
 
@@ -591,13 +598,13 @@ run_unit_test ()
 
     if is_empty "${STDIN:-}"
     then
-        SHOW_COMMAND="${SHOW_COMMAND:-}${TESTED_COMMAND:-"$SHOW_TESTED_PKG"} ${SHOW_TESTED_ARGS[@]}"
+        SHOW_COMMAND="${SHOW_COMMAND:-}${TESTED_COMMAND:-"$SHOW_TESTED_PKG"}${SHOW_TESTED_ARGS[@]:+" ${SHOW_TESTED_ARGS[@]}"}"
         puts_command
         run_command &
     else
         has_space "$STDIN"
         SHOW_STDIN="$STRING"
-        SHOW_COMMAND="${SHOW_COMMAND:-}echo $SHOW_STDIN | ${TESTED_COMMAND:-"$SHOW_TESTED_PKG"} ${SHOW_TESTED_ARGS[@]}"
+        SHOW_COMMAND="${SHOW_COMMAND:-}echo $SHOW_STDIN | ${TESTED_COMMAND:-"$SHOW_TESTED_PKG"}${SHOW_TESTED_ARGS[@]:+" ${SHOW_TESTED_ARGS[@]}"}"
         puts_command
         run_command < <(sed 's%\o357\o277\o275%\o000%g' <<< "$STDIN") &
     fi
@@ -767,7 +774,7 @@ run_test_sample ()
                                 TESTED_ARGS+=( "${LINE:-}" )
                             ;;
                             command)
-                                TESTED_COMMAND="${TESTED_COMMAND:+"$TESTED_COMMAND$LF"}${LINE:-}"
+                                TESTED_COMMAND="${TESTED_COMMAND:+"$TESTED_COMMAND$LF"}$(trim_string "${LINE#:command:}")"
                             ;;
                             expect-stdout)
                                 EXPECT="${EXPECT:+"$EXPECT$LF"}${LINE:-}"
