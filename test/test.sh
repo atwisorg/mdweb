@@ -444,6 +444,7 @@ unset_vars ()
     REPORT_STDERR=()
     REPORT_STDOUT=()
     REPORT_RETURN=()
+    VARS=
     WORKDIR=
     WORKDIR_CLEAN=
     WORKDIR_CHMOD=
@@ -530,6 +531,8 @@ run_unit_test ()
     STDOUT="$TEMP_DIR/${NAME_TEST_SAMPLE}_$STRING_NUM_TEST.out"
     STDERR="$TEMP_DIR/${NAME_TEST_SAMPLE}_$STRING_NUM_TEST.err"
     RETURN_CODE=0
+
+    is_empty "${VARS:-}" || eval "$VARS"
 
     is_empty "${WORKDIR:-}" && {
         WORKDIR="$TEST_SAMPLE_DIR"
@@ -709,6 +712,16 @@ run_test_sample ()
                         set -- ${LINE#:timeout:}
                         TIMEOUT="${1:-}"
                         ;;
+                    :vars:*)
+                        NEXT_LINE=
+                        VARS="$(trim_string "${LINE#:vars:}")"
+                        case "${VARS:-}" in
+                            \|*)
+                                NEXT_LINE=vars
+                                VARS=
+                            ;;
+                        esac
+                        ;;
                     :workdir:*)
                         NEXT_LINE=
                         WORKDIR="$(trim_string "${LINE#:workdir:}")"
@@ -751,6 +764,9 @@ run_test_sample ()
                             ;;
                             test-description)
                                 TEST_NAME="${TEST_NAME:+"$TEST_NAME$LF"}${LINE:-}"
+                            ;;
+                            vars)
+                                VARS="${VARS:+"$VARS$LF"}$(trim_string "${LINE#:vars:}")"
                             ;;
                         esac
                 esac
