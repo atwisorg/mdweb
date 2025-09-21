@@ -506,10 +506,15 @@ run_command ()
 
 run_unit_test ()
 {
+    case "$TEST_NAME" in
+        *"$LF"*)
+            TEST_NAME="|${TEST_NAME//$LF/$LF$INDENT}" ;;
+        *)  TEST_NAME="[$TEST_NAME]" ;;
+    esac
     PREFIX=(
         "test sample:" "[$TEST_SAMPLE]"
         "string num:" "[$STRING_NUM_TEST]"
-        "test name:" "|${TEST_NAME//$LF/$LF$INDENT}"
+        "test name:" "$TEST_NAME"
         "test num:" "[$TEST_NUMBER]"
     )
     is_diff "${#TEST_SAMPLES[@]}" 0 || PREFIX=( "${PREFIX[@]}" "total test num:" "[$TOTAL_TEST_NUMBER]" )
