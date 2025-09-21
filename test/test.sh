@@ -599,6 +599,14 @@ run_test_sample ()
     do
         STRING_NUM="$((STRING_NUM + 1))"
         case "${LINE:-}" in
+            :exit|:exit:*)
+                NEXT_LINE=
+                return 1
+            ;;                
+            :break|:break:*)
+                NEXT_LINE=
+                break
+            ;;
             \#:test|\#:test:*)
                 TEST_NUMBER="$((TEST_NUMBER + 1))"
                 TOTAL_TEST_NUMBER="$((TOTAL_TEST_NUMBER + 1))"
@@ -651,14 +659,6 @@ run_test_sample ()
                                 TESTED_COMMAND=
                             ;;
                         esac
-                        ;;
-                    :break|:break:*)
-                        NEXT_LINE=
-                        break
-                        ;;
-                    :exit|:exit:*)
-                        NEXT_LINE=
-                        return 1
                         ;;
                     :expect|:expect-out|:expect-stdout|:expect:*|:expect-out:*|:expect-stdout:*)
                         NEXT_LINE="expect-stdout"
