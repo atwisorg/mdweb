@@ -409,6 +409,7 @@ unset_vars ()
     EXPECT_ERR=
     EXPECT_RETURN_CODE=
     LOAD_TEST="no"
+    NO_RUN=
     PRETEST=
     POSTEST=
     SHOW_COMMAND=
@@ -573,22 +574,26 @@ run_unit_test ()
         puts_h 2 "$YELLOW"
     }
 
-    if is_empty "${STDIN:-}"
-    then
-        SHOW_COMMAND="${SHOW_COMMAND:-}${TESTED_COMMAND:-"$SHOW_TESTED_PKG"}${SHOW_TESTED_ARGS[@]:+" ${SHOW_TESTED_ARGS[@]}"}"
-        puts_command
-        run_command &
-    else
-        has_space "$STDIN"
-        SHOW_STDIN="$STRING"
-        SHOW_COMMAND="${SHOW_COMMAND:-}echo $SHOW_STDIN | ${TESTED_COMMAND:-"$SHOW_TESTED_PKG"}${SHOW_TESTED_ARGS[@]:+" ${SHOW_TESTED_ARGS[@]}"}"
-        puts_command
-        run_command < <(sed 's%\o357\o277\o275%\o000%g' <<< "$STDIN") &
-    fi
+    is_not_empty "${NO_RUN:-}" || {
+        TESTED_COMMAND="${TESTED_COMMAND:-"$SHOW_TESTED_PKG"}"
+        if is_empty "${STDIN:-}"
+        then
+            SHOW_COMMAND="${SHOW_COMMAND:-}$TESTED_COMMAND${SHOW_TESTED_ARGS[@]:+" ${SHOW_TESTED_ARGS[@]}"}"
+            puts_command
+            run_command &
+        else
+            has_space "$STDIN"
+            SHOW_STDIN="$STRING"
+            SHOW_COMMAND="${SHOW_COMMAND:-}echo $SHOW_STDIN | $TESTED_COMMAND${SHOW_TESTED_ARGS[@]:+" ${SHOW_TESTED_ARGS[@]}"}"
+            puts_command
+            run_command < <(sed 's%\o357\o277\o275%\o000%g' <<< "$STDIN") &
+        fi
 
-    CHILD_PID="$!"
-    wait "$CHILD_PID"
-    RETURN_CODE="$?"
+        CHILD_PID="$!"
+        wait "$CHILD_PID"
+        RETURN_CODE="$?"
+        get_result
+    }
 }
 
 run_test_sample ()
@@ -668,6 +673,9 @@ run_test_sample ()
                         NEXT_LINE="expect-stderr"
                         COMPARE_STDERR="yes"
                         ;;
+                    :no-run|:no-run:*)
+                        NO_RUN=1
+                        ;;
                     :pretest:*)
                         NEXT_LINE=
                         PRETEST="$(trim_string "${LINE#:pretest:}")"
@@ -701,7 +709,6 @@ run_test_sample ()
                     :run|:run:*)
                         NEXT_LINE=
                         run_unit_test
-                        get_result
                         ;;
                     :source:*)
                         NEXT_LINE=
@@ -770,7 +777,7 @@ run_test_sample ()
                                 SOURCE+=( "$(trim_string "${LINE:-}")" )
                             ;;
                             stdin)
-                                STDIN="${STDIN:+"$STDIN$LF"}${LINE:-}"
+                                STDIN="${STDIN:+"$STDIN$LF"}$(trim_string "${LINE:-}")"
                             ;;
                             pretest)
                                 PRETEST="${PRETEST:+"$PRETEST$LF"}${LINE:-}"
