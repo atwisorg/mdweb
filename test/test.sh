@@ -417,6 +417,7 @@ unset_vars ()
     SHOW_TESTED_PKG=
     SOURCE=()
     STDIN=
+    STDIN_ENV=
     TESTED_ARGS=()
     TESTED_COMMAND=
     TIMEOUT=
@@ -459,9 +460,6 @@ get_result ()
         save_result "$TEST_FAILED"
         TEST_RETURN_CODE=1
     fi
-    is_empty "${POSTEST:-}" || eval "$POSTEST"
-    unset_vars
-    cd -- "$CURRENT_DIR"
 }
 
 puts_heading ()
@@ -522,9 +520,11 @@ run_unit_test ()
     is_diff "${#TESTED_ARGS[@]}"  0 || TESTED_ARGS=( "${GLOBAL_ARGS[@]}" )
     for ARG in "${TESTED_ARGS[@]}"
     do
+        eval ARG="$ARG"
         has_space "$ARG"
         SHOW_TESTED_ARGS+=( "$STRING" )
     done
+    TESTED_ARGS=( "${SHOW_TESTED_ARGS[@]}" )
     NAME_TEST_SAMPLE="${TEST_SAMPLE##*/}"
     NAME_TEST_SAMPLE="${NAME_TEST_SAMPLE%.yaml}"
     puts_heading
@@ -573,27 +573,29 @@ run_unit_test ()
         eval "$PRETEST"
         puts_h 2 "$YELLOW"
     }
-
-    is_not_empty "${NO_RUN:-}" || {
+    is_not_empty "${NO_RUN:-}" && PASSED="$((PASSED+1))" || {
         TESTED_COMMAND="${TESTED_COMMAND:-"$SHOW_TESTED_PKG"}"
+        is_empty "${STDIN_ENV:-}" || eval STDIN=\"$STDIN_ENV\"
         if is_empty "${STDIN:-}"
         then
-            SHOW_COMMAND="${SHOW_COMMAND:-}$TESTED_COMMAND${SHOW_TESTED_ARGS[@]:+" ${SHOW_TESTED_ARGS[@]}"}"
+            eval SHOW_COMMAND=\"\${SHOW_COMMAND:-}$TESTED_COMMAND${SHOW_TESTED_ARGS[@]:+" ${SHOW_TESTED_ARGS[@]}"}\"
             puts_command
             run_command &
         else
             has_space "$STDIN"
             SHOW_STDIN="$STRING"
-            SHOW_COMMAND="${SHOW_COMMAND:-}echo $SHOW_STDIN | $TESTED_COMMAND${SHOW_TESTED_ARGS[@]:+" ${SHOW_TESTED_ARGS[@]}"}"
+            eval SHOW_COMMAND=\"\${SHOW_COMMAND:-}echo \$SHOW_STDIN \| $TESTED_COMMAND${SHOW_TESTED_ARGS[@]:+" ${SHOW_TESTED_ARGS[@]}"}\"
             puts_command
             run_command < <(sed 's%\o357\o277\o275%\o000%g' <<< "$STDIN") &
         fi
-
         CHILD_PID="$!"
         wait "$CHILD_PID"
         RETURN_CODE="$?"
         get_result
     }
+    is_empty "${POSTEST:-}" || eval "$POSTEST"
+    unset_vars
+    cd -- "$CURRENT_DIR"
 }
 
 run_test_sample ()
@@ -722,11 +724,23 @@ run_test_sample ()
                         ;;
                     :stdin:*)
                         NEXT_LINE=
+                        STDIN_ENV=
                         STDIN="$(trim_string "${LINE#:stdin:}")"
                         case "${STDIN:-}" in
                             \|*)
                                 NEXT_LINE=stdin
                                 STDIN=
+                            ;;
+                        esac
+                        ;;
+                    :stdin-env:*)
+                        NEXT_LINE=
+                        STDIN=
+                        STDIN_ENV="$(trim_string "${LINE#:stdin-env:}")"
+                        case "${STDIN_ENV:-}" in
+                            \|*)
+                                NEXT_LINE=stdin-env
+                                STDIN_ENV=
                             ;;
                         esac
                         ;;
@@ -777,7 +791,12 @@ run_test_sample ()
                                 SOURCE+=( "$(trim_string "${LINE:-}")" )
                             ;;
                             stdin)
-                                STDIN="${STDIN:+"$STDIN$LF"}$(trim_string "${LINE:-}")"
+                                STDIN="${STDIN:+"$STDIN$LF"}${LINE:-}"
+                                STDIN_ENV=
+                            ;;
+                            stdin-env)
+                                STDIN=
+                                STDIN_ENV="${STDIN_ENV:+"$STDIN_ENV$LF"}$(trim_string "${LINE:-}")"
                             ;;
                             pretest)
                                 PRETEST="${PRETEST:+"$PRETEST$LF"}${LINE:-}"
