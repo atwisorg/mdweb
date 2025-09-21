@@ -624,7 +624,7 @@ run_test_sample ()
             *)
                 is_equal "$LOAD_TEST" "yes" || continue
                 case "${LINE:-}" in
-                    :args|:return|:return-code|:pretest|:test|:timeout|:workdir|:workdir-clean|:workdir-chmod)
+                    :args|:command|:postest|:pretest|:return|:return-code|:source|:stdin|:test|:timeout|:vars|:workdir|:workdir-clean|:workdir-chmod)
                         NEXT_LINE=
                         ;;
                     :args:*)
@@ -708,8 +708,15 @@ run_test_sample ()
                             ;;
                         esac
                         ;;
-                    :stdin|:stdin:*)
-                        NEXT_LINE="stdin"
+                    :stdin:*)
+                        NEXT_LINE=
+                        STDIN="$(trim_string "${LINE#:stdin:}")"
+                        case "${STDIN:-}" in
+                            \|*)
+                                NEXT_LINE=stdin
+                                STDIN=
+                            ;;
+                        esac
                         ;;
                     :timeout:*)
                         NEXT_LINE=
