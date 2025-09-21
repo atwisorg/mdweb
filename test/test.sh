@@ -750,10 +750,10 @@ run_test_sample ()
                     *)
                         case "$NEXT_LINE" in
                             args)
-                                TESTED_ARGS+=( "${LINE:-}" )
+                                TESTED_ARGS+=( "$(trim_string "${LINE:-}")" )
                             ;;
                             command)
-                                TESTED_COMMAND="${TESTED_COMMAND:+"$TESTED_COMMAND$LF"}$(trim_string "${LINE#:command:}")"
+                                TESTED_COMMAND="${TESTED_COMMAND:+"$TESTED_COMMAND$LF"}$(trim_string "${LINE:-}")"
                             ;;
                             expect-stdout)
                                 EXPECT="${EXPECT:+"$EXPECT$LF"}${LINE:-}"
@@ -762,7 +762,7 @@ run_test_sample ()
                                 EXPECT_ERR="${EXPECT_ERR:+"$EXPECT_ERR$LF"}${LINE:-}"
                             ;;
                             source)
-                                SOURCE+=( "$(trim_string "${LINE#:source:}")" )
+                                SOURCE+=( "$(trim_string "${LINE:-}")" )
                             ;;
                             stdin)
                                 STDIN="${STDIN:+"$STDIN$LF"}${LINE:-}"
@@ -774,10 +774,10 @@ run_test_sample ()
                                 POSTEST="${POSTEST:+"$POSTEST$LF"}${LINE:-}"
                             ;;
                             test-description)
-                                TEST_NAME="${TEST_NAME:+"$TEST_NAME$LF"}$(trim_string "${LINE#:test:}")"
+                                TEST_NAME="${TEST_NAME:+"$TEST_NAME$LF"}$(trim_string "${LINE:-}")"
                             ;;
                             vars)
-                                VARS="${VARS:+"$VARS$LF"}$(trim_string "${LINE#:vars:}")"
+                                VARS="${VARS:+"$VARS$LF"}$(trim_string "${LINE:-}")"
                             ;;
                         esac
                 esac
